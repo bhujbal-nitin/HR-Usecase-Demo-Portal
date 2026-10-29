@@ -1,0 +1,65 @@
+/* AutomationEdge Live Execution Modal & Step Tracker Styling */
+
+.ae-step-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.ae-step-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  transition: var(--transition-normal);
+}
+
+.ae-step-item.pending {
+  opacity: 0.5;
+}
+
+.ae-step-item.active {
+  border-color: var(--accent-primary);
+  background: rgba(249, 115, 22, 0.08);
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+}
+
+.ae-step-item.done {
+  border-color: var(--accent-emerald);
+  background: rgba(5, 150, 105, 0.08);
+}
+
+.ae-step-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.ae-step-item.pending .ae-step-icon { background: rgba(0,0,0,0.1); color: var(--text-dim); }
+.ae-step-item.active .ae-step-icon { background: var(--accent-gradient); color: #fff; animation: spin 1s infinite linear; }
+.ae-step-item.done .ae-step-icon { background: var(--accent-emerald); color: #fff; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ae-payload-box {
+  background: #0b0f19;
+  color: #38bdf8;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,24 @@
+# Secrets & local config
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Runtime data (candidate PII, uploaded documents, generated letters)
+backend/data/
+backend/generated_offers/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

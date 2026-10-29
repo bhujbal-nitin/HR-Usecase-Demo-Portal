@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "unicorn"],
+  "categories": { "correctness": "error" },
+  "overrides": [
+    {
+      "files": ["src/features/agents/data/*.jsx"],
+      "rules": {
+        "react/jsx-key": "off"
+      }
+    }
+  ]
+}

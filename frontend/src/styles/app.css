@@ -1,0 +1,195 @@
+/* Additions for the React app. The Piraji stylesheets are used unchanged; this file only adds the few
+   classes the reference markup did not need (inline styles there), plus states for the live features. */
+
+/* ---- Fluid scaling ------------------------------------------------------
+   Piraji's design is rem-based but was drawn for a ~1900px-wide window. On laptops (or with Windows
+   display scaling of 125-150%) the browser window is only ~1000-1400 CSS px wide, so the UI looked
+   oversized. The root font size now follows the window width: 16px at >=1700px, ~13px at 1280px,
+   11.5px minimum. Everything sized in rem/em scales with it, and the px-based layout widths below
+   are converted to rem so the sidebar and page container keep the same proportions. */
+html { font-size: clamp(11px, 0.62vw + 4px, 15px); }
+.sidebar { width: 16rem; }
+.main-wrapper { margin-left: 16rem; }
+.sidebar-tab-btn .tab-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-card-header { gap: 0.5rem; }
+.agent-catalog-grid { gap: 1.25rem; }
+.app-container { max-width: 87.5rem; transition: max-width 0.25s ease; }
+@media (max-width: 900px) {
+  html { font-size: clamp(13px, 1.2vw + 4px, 15px); } /* phones/tablets: keep text readable */
+  .main-wrapper { margin-left: 0; }
+}
+
+.text-accent { color: var(--accent-primary); }
+
+a { color: var(--accent-secondary); }
+a:hover { text-decoration: underline; }
+.sidebar-tab-btn, .btn, .btn:hover { text-decoration: none; }
+button { font-family: inherit; }
+button:disabled, .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+
+/* ---- Layout / header --------------------------------------------------- */
+/* Flex children default to min-width:auto, so a wide table would stretch the whole page. */
+.main-wrapper, .app-container { min-width: 0; }
+.app-container { width: 100%; }
+.wizard-title-group { flex: 1; min-width: 0; }
+.wizard-title-bar { gap: 1.5rem; }
+.wizard-title-bar .btn { white-space: nowrap; }
+.app-brand-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff; font-size: 1.15rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+.header-btn { padding: 0.45rem 0.9rem; font-size: 0.8rem; height: 38px; }
+.header-select {
+  padding: 0.45rem 0.75rem; font-size: 0.8rem; height: 38px; width: auto;
+  border-radius: var(--radius-sm); font-weight: 600; cursor: pointer;
+}
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+.header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: flex-end; }
+.system-subbanner { gap: 0.75rem; flex-wrap: wrap; }
+
+/* ---- Modal ------------------------------------------------------------- */
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem; }
+.modal-head h3 { display: flex; align-items: center; gap: 0.5rem; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.modal-content { max-height: 90vh; }
+
+/* ---- Forms ------------------------------------------------------------- */
+.field-error { color: var(--accent-rose); font-size: 0.8rem; font-weight: 600; }
+.file-name { flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.terms-label { cursor: pointer; display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.875rem; color: var(--text-muted); }
+.terms-label input { margin-top: 4px; }
+.summary-confirmation {
+  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  padding: 1.25rem; margin: 1.5rem 0;
+}
+.form-group + .form-group { margin-top: 0; }
+@media (max-width: 700px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .form-group { grid-column: auto !important; }
+}
+
+/* Equal-width upload boxes: a long file name must truncate, never widen its column. */
+.document-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.document-grid > .form-group { min-width: 0; }
+.uploaded-file-preview { min-width: 0; overflow: hidden; }
+@media (max-width: 900px) {
+  .document-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- Success panel ----------------------------------------------------- */
+.success-card { text-align: center; padding: 3rem 1.75rem; }
+.success-icon { font-size: 3.5rem; color: var(--accent-emerald); margin-bottom: 0.75rem; }
+.success-summary { margin: 0 auto; max-width: 460px; text-align: left; }
+
+/* ---- Catalog ----------------------------------------------------------- */
+.empty-catalog {
+  grid-column: 1 / -1; text-align: center; padding: 3rem; background: var(--bg-card);
+  border-radius: var(--radius-lg); border: 1px dashed var(--border-color);
+}
+.empty-catalog i { font-size: 2rem; color: var(--text-dim); margin-bottom: 0.75rem; }
+.empty-catalog p { color: var(--text-muted); font-size: 0.88rem; }
+
+/* ---- Approvals --------------------------------------------------------- */
+.stat-card { font: inherit; color: inherit; text-align: left; width: 100%; }
+.dashboard-header { gap: 1rem; flex-wrap: wrap; }
+.btn-secondary.btn-sm, .btn-sm { white-space: nowrap; }
+.data-table td a { font-weight: 600; }
+.candidate-email { font-size: 0.8rem; color: var(--text-muted); }
+.data-table.compact th, .data-table.compact td { padding: 0.6rem 0.9rem; font-size: 0.85rem; }
+
+.icon-btn.approve { background: var(--accent-emerald); border-color: transparent; color: #fff; }
+.icon-btn.reject { background: var(--accent-rose); border-color: transparent; color: #fff; }
+.icon-btn.approve:hover, .icon-btn.reject:hover { color: #fff; filter: brightness(1.1); }
+/* Keep Approve / Reject visible without horizontal scrolling on a normal desktop width. */
+.approvals-table th, .approvals-table td { padding-left: 0.85rem; padding-right: 0.85rem; }
+.approvals-table td.wrap { white-space: normal; min-width: 170px; max-width: 240px; }
+.progress-cell { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; font-weight: 700; min-width: 90px; }
+.progress-track { flex: 1; height: 6px; border-radius: 999px; background: var(--border-color); overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent-emerald); border-radius: 999px; transition: width 0.4s ease; }
+.progress-bar.has-errors { background: var(--accent-amber); }
+
+.inline-warning {
+  display: flex; gap: 0.5rem; align-items: flex-start; margin: 0.75rem 0; padding: 0.7rem 1rem;
+  border-radius: var(--radius-md); font-size: 0.85rem;
+  background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: var(--text-main);
+}
+.link-btn { background: none; border: none; color: var(--accent-secondary); font-weight: 600; cursor: pointer; padding: 0 0.25rem; font-size: inherit; }
+.link-btn:hover { text-decoration: underline; }
+.sensitive { display: inline-flex; align-items: center; gap: 0.4rem; }
+.sensitive code { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+
+/* ---- Candidate detail -------------------------------------------------- */
+.detail-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 1rem; flex-wrap: wrap; }
+.detail-section { margin-top: 1.25rem; }
+.detail-section h4 { margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.detail-section .chat-widget-table { width: 100%; }
+.detail-section .chat-widget-table td:first-child { width: 36%; color: var(--text-muted); vertical-align: top; }
+.detail-section .chat-widget-table td { overflow-wrap: anywhere; }
+.doc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.doc-row {
+  display: flex; align-items: center; gap: 0.85rem; padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card);
+}
+.doc-row > i { color: var(--accent-rose); font-size: 1.3rem; }
+
+/* ---- Pipeline tracker states (extends Piraji .ae-step-item) ------------- */
+.ae-step-item.failed { border-color: var(--accent-rose); background: rgba(239, 68, 68, 0.08); }
+.ae-step-item.failed .ae-step-icon { background: var(--accent-rose); color: #fff; }
+.ae-step-item.skipped { border-style: dashed; opacity: 0.85; }
+.ae-step-item.skipped .ae-step-icon { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+.ae-step-item.pending .ae-step-icon { font-size: 0.8rem; }
+.ae-step-container .ae-step-item { gap: 0.85rem; }
+.step-meta { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.75rem; gap: 2px; white-space: nowrap; }
+.step-state { font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+.step-state-success { color: var(--accent-emerald); }
+.step-state-failed { color: var(--accent-rose); }
+.step-state-running { color: var(--accent-primary); }
+.step-state-skipped { color: var(--accent-amber); }
+.step-state-pending { color: var(--text-dim); }
+
+/* ---- Small screens ----------------------------------------------------- */
+@media (max-width: 700px) {
+  .top-header, .system-subbanner { padding-left: 1rem; padding-right: 1rem; }
+  .app-container { padding: 0 1rem 3rem; }
+  .top-header-right .header-btn, .top-header-right .header-select { display: none; } /* palette button stays */
+  .header-breadcrumbs { min-width: 0; }
+  .header-breadcrumbs strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top-header-left { min-width: 0; }
+  .wizard-title-bar { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .chat-quick-prompts-bar { flex-wrap: wrap; }
+}
+
+/* ---- Collapsible sidebar ------------------------------------------------ */
+.sidebar-toggle-btn { display: inline-flex; }
+.sidebar, .main-wrapper { transition: width 0.25s ease, margin-left 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+@media (min-width: 901px) {
+  .sidebar-collapsed .sidebar { width: 4.75rem; }
+  .sidebar-collapsed .main-wrapper { margin-left: 4.75rem; }
+  /* The freed sidebar width goes to the content instead of becoming empty margins. */
+  .sidebar-collapsed .app-container { max-width: 140rem; }
+  .sidebar-collapsed .sidebar-header { padding-inline: 0; justify-content: center; }
+  .sidebar-collapsed .sidebar-brand-text,
+  .sidebar-collapsed .tab-info,
+  .sidebar-collapsed .sidebar-status-box > div span:last-child,
+  .sidebar-collapsed .sidebar-status-box > span { display: none; }
+  .sidebar-collapsed .sidebar-section-title { font-size: 0; height: 1px; margin: 0.6rem 0.9rem; padding: 0; background: var(--border-color); }
+  .sidebar-collapsed .sidebar-nav { padding-inline: 0.6rem; overflow-x: hidden; }
+  .sidebar-collapsed .sidebar-tab-btn { justify-content: center; padding-inline: 0; position: relative; }
+  .sidebar-collapsed .sidebar-tab-btn .tab-badge { position: absolute; top: 2px; right: 2px; min-width: 1.1rem; height: 1.1rem; padding: 0 0.25rem; font-size: 0.6rem; display: grid; place-items: center; }
+  .sidebar-collapsed .sidebar-footer { padding-inline: 0.5rem; }
+  .sidebar-collapsed .sidebar-status-box { justify-content: center; padding-inline: 0; }
+}
+@media (max-width: 900px) { .sidebar { width: 16rem; } }
+
+/* ---- Light / dark switch ---------------------------------------------------- */
+.mode-switch { position: relative; display: inline-flex; align-items: center; justify-content: space-between; width: 3.6rem; height: 2rem; padding: 0 0.55rem; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-secondary, var(--bg-card)); color: var(--text-muted); cursor: pointer; font-size: 0.8rem; flex: none; transition: background 0.25s ease, border-color 0.25s ease; }
+.mode-switch .fa-sun { color: #f59e0b; }
+.mode-switch .fa-moon { color: #6366f1; }
+.mode-knob { position: absolute; top: 3px; left: 3px; width: calc(2rem - 8px); height: calc(2rem - 8px); border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.25s ease; }
+.mode-switch.on { background: #1e293b; border-color: #334155; }
+.mode-switch.on .mode-knob { transform: translateX(1.6rem); background: #0f172a; border-color: #475569; }
+.mode-switch i { position: relative; z-index: 0; opacity: 0.55; }
+.mode-switch:not(.on) .fa-sun, .mode-switch.on .fa-moon { opacity: 0; }

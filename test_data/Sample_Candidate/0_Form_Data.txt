@@ -1,0 +1,47 @@
+ONBOARDING FORM DATA - copy these values into the portal
+==========================================================
+Candidate: Sneha Deshpande   (all values below are fictional)
+
+Use the three PDFs in this folder as the documents:
+  1_Aadhaar_Card.pdf   -> Aadhaar card
+  2_PAN_Card.pdf       -> PAN card
+  3_Salary_Slip.pdf    -> Latest salary slip
+
+PERSONAL DETAILS
+----------------
+Full Legal Name ............ Sneha Deshpande
+Personal Email Address ..... sneha.deshpande.test@example.com
+Phone Number ............... +91 98220 45612
+Date of Birth .............. 1997-08-14   (14 August 1997)
+Aadhaar Number ............. 4738 2916 5047
+EPFO UAN Number ............ 100214578963   (only if the form asks; the Agent Demo does not)
+Emergency Contact Name ..... Rajesh Deshpande (Father)
+Emergency Contact Phone .... +91 98220 77001
+Residential Address ........ Flat 12, Sai Residency, Kothrud, Pune, Maharashtra 411038
+
+EMPLOYMENT DETAILS
+------------------
+Department ................. Engineering
+Job Title .................. Senior Software Engineer
+Reporting Manager .......... Vikram Joshi (Director of Engineering)
+Joining Date ............... 2027-01-11
+Annual CTC (INR) ........... 1500000
+Preferred Workstation ...... Dell XPS 15 9530 (i9 64GB RTX)
+Work Location .............. Hybrid
+
+WHAT THE DOCUMENTS SHOW (they agree with the form, so the checks should pass)
+------------------------------------------------------------------------------
+Aadhaar : Sneha Deshpande, DOB 14/08/1997, number 4738 2916 5047
+PAN     : SNEHA DESHPANDE, DOB 14/08/1997, number BXKPD4821M
+Payslip : Sneha Deshpande, September 2026, gross INR 1,25,000
+
+TRY THESE FAILURE CASES TOO
+---------------------------
+- Upload the PAN PDF where the Aadhaar is asked      -> rejected: wrong document type
+- Type a different Full Legal Name in the form       -> every document is rejected: name mismatch
+- Change the form's name only slightly (e.g. "Sneha R. Deshpande") -> still accepted
+
+NOTE
+----
+The PDFs are plain, generated test documents. A real OpenAI check reads them as printed text, which normally works; if the model
+judges one "not genuine" because it is obviously a plain template, test with a photo/PDF of your own sample card instead.

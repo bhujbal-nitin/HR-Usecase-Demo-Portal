@@ -1,0 +1,246 @@
+/* Multi-step Onboarding Wizard Styling */
+
+.wizard-header {
+  margin-bottom: 2rem;
+}
+
+.wizard-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.wizard-title-group h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.wizard-title-group p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Stepper Progress Bar (2-Step Streamlined) */
+.stepper {
+  display: flex;
+  justify-content: space-around;
+  position: relative;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stepper::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 25%;
+  width: 50%;
+  height: 3px;
+  background: var(--border-color);
+  z-index: 1;
+}
+
+.stepper-progress {
+  position: absolute;
+  top: 22px;
+  left: 25%;
+  height: 3px;
+  background: var(--accent-gradient);
+  z-index: 1;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.step-item {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: var(--transition-normal);
+  box-shadow: 0 0 0 4px var(--bg-primary);
+}
+
+.step-item.active .step-circle {
+  border-color: var(--accent-primary);
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--bg-primary), 0 0 16px rgba(79, 70, 229, 0.4);
+}
+
+.step-item.completed .step-circle {
+  background: var(--accent-emerald);
+  border-color: var(--accent-emerald);
+  color: #fff;
+}
+
+.step-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+.step-item.active .step-label { color: var(--text-main); font-weight: 700; }
+.step-item.completed .step-label { color: var(--accent-emerald); }
+
+/* Form Layouts */
+.step-content {
+  display: none;
+}
+.step-content.active {
+  display: block;
+  animation: fadeInStep 0.3s ease;
+}
+
+@keyframes fadeInStep {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-group label span.required {
+  color: var(--accent-rose);
+}
+
+.form-control {
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.925rem;
+  transition: var(--transition-fast);
+  width: 100%;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--border-glow);
+}
+
+/* Document Dropzone & Verification Badge */
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .document-grid { grid-template-columns: 1fr; }
+}
+
+.dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 160px;
+}
+[data-theme="dark"] .dropzone {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--accent-primary);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.dropzone-icon {
+  font-size: 2rem;
+  color: var(--accent-primary);
+}
+
+.uploaded-file-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+}
+
+/* E-Signature Canvas */
+.signature-box {
+  background: #ffffff;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+  height: 150px;
+}
+
+canvas#signatureCanvas {
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.signature-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+/* Wizard Footer Navigation */
+.wizard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
