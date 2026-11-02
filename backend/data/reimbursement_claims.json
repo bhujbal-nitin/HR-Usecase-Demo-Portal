@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "id": "RC-829199",
+      "employeeId": "AE-299597",
+      "fullName": "Rohit Jindal",
+      "workEmail": "rohit.jindal@automationedge.ai",
+      "department": "Engineering",
+      "jobTitle": "Lead Cloud Solutions Architect",
+      "manager": "Suresh Nair (Director of Cloud Infrastructure)",
+      "items": [
+        {
+          "fileName": "spice_route_restaurant_bill.pdf",
+          "expenseType": "Food",
+          "date": "2026-10-30",
+          "amount": 1860.0,
+          "vendor": "Spice Route Restaurant",
+          "withinPolicy": true,
+          "approved": true
+        },
+        {
+          "fileName": "ola_ride_receipt.pdf",
+          "expenseType": "Travel",
+          "date": "2026-10-31",
+          "amount": 642.0,
+          "vendor": "Ola Cabs",
+          "withinPolicy": true,
+          "approved": true
+        },
+        {
+          "fileName": "hotel_sunrise_invoice.pdf",
+          "expenseType": "Stay",
+          "date": "2026-10-27",
+          "amount": 7400.0,
+          "vendor": "Hotel Sunrise Residency",
+          "withinPolicy": false,
+          "approved": true
+        }
+      ],
+      "totalAmount": 9902.0,
+      "approvedTotal": 9902.0,
+      "status": "Approved",
+      "submittedAt": "2026-11-02T15:25:52.572897",
+      "decidedAt": "2026-11-02T15:27:05.949923",
+      "applied": true,
+      "appliedAt": "2026-11-02T15:27:31.758313",
+      "orangeHrmId": 1,
+      "orangeHrmUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/claim/assignClaim/id/1",
+      "expensesRecorded": 3
+    }
+  ]
+}

@@ -1,0 +1,714 @@
+{
+  "offboardings": [
+    {
+      "id": "OFF-350100",
+      "employeeId": "AE-299597",
+      "fullName": "Rohit Jindal",
+      "workEmail": "rohit.jindal@automationedge.ai",
+      "personalEmail": "rohit.jindal@example.com",
+      "department": "Engineering",
+      "jobTitle": "Lead Cloud Solutions Architect",
+      "manager": "Suresh Nair (Director of Cloud Infrastructure)",
+      "hardware": "Apple MacBook Pro M3 Max",
+      "annualCtc": 3600000,
+      "empNumber": 3,
+      "userPrincipalName": "rohit.jindal@automationedge.ai",
+      "reason": "Better opportunity",
+      "comments": "",
+      "resignationDate": "2026-11-02",
+      "lastWorkingDay": "2026-11-23",
+      "noticePeriodDays": 30,
+      "leaveBalanceDays": 5,
+      "status": "Completed",
+      "submittedAt": "2026-11-02T16:07:26.407234",
+      "approvedAt": "2026-11-02T16:07:55.138538",
+      "rejectedAt": null,
+      "completedAt": "2026-11-02T16:09:10.147205",
+      "intake": [
+        {
+          "key": "servicenow_ticket",
+          "label": "ServiceNow offboarding ticket",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Ticket INC0040697 created",
+          "startedAt": "2026-11-02T16:07:26.462885",
+          "finishedAt": "2026-11-02T16:07:26.836248",
+          "details": {
+            "ticket": "INC0040697",
+            "sysId": "db8d3cb13318d3105e900e570e5c7bae",
+            "url": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=db8d3cb13318d3105e900e570e5c7bae"
+          }
+        },
+        {
+          "key": "exit_details",
+          "label": "Exit details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Exit details workflow completed (request #3433772)",
+          "startedAt": "2026-11-02T16:07:26.854645",
+          "finishedAt": "2026-11-02T16:07:36.205189",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Exit Details",
+                "requestId": 3433772,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433772",
+                "message": "Retrieved exit details.",
+                "response": {
+                  "message": "Retrieved exit details.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "exit_approval",
+          "label": "Exit management approval",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Exit management approval workflow completed (request #3433774)",
+          "startedAt": "2026-11-02T16:07:55.166821",
+          "finishedAt": "2026-11-02T16:08:03.485974",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Exit Management Approval",
+                "requestId": 3433774,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433774",
+                "message": "Received Exit Management Approval",
+                "response": {
+                  "message": "Received Exit Management Approval",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "ad_disable",
+          "label": "Disable the Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account disabled (request #3433778)",
+          "startedAt": "2026-11-02T16:08:03.509623",
+          "finishedAt": "2026-11-02T16:08:13.897096",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user disable",
+                "requestId": 3433778,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433778",
+                "message": "User 'Rohit.Jindal' Deleted in AD successfully.",
+                "response": {
+                  "message": "User 'Rohit.Jindal' Deleted in AD successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "UserDelete_Status.xlsx",
+                      "value": "79cd49ad-5439-4186-b89e-e8aaac172522",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserDelete_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "o365_block",
+          "label": "Block the Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "rohit.jindal@automationedge.ai: sign-in blocked, sessions revoked, 0 licence(s) removed",
+          "startedAt": "2026-11-02T16:08:13.912018",
+          "finishedAt": "2026-11-02T16:08:27.111830",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Offboarding",
+                "requestId": 3433780,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433780",
+                "message": "O365 User Offboarding Completed",
+                "response": {
+                  "message": "O365 User Offboarding Completed",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userId": "d724640e-49d3-41db-8e0e-c227f42b07e7",
+            "displayName": "Rohit Jindal",
+            "signInBlocked": true,
+            "sessionsRevoked": true,
+            "licencesRemoved": 0,
+            "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/d724640e-49d3-41db-8e0e-c227f42b07e7"
+          }
+        },
+        {
+          "key": "hrm_terminate",
+          "label": "End the employment in OrangeHRM",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "Employment ended on 2026-11-23 (OrangeHRM #3)",
+          "startedAt": "2026-11-02T16:08:27.129059",
+          "finishedAt": "2026-11-02T16:08:41.783998",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Terminate emp OrangeHRM",
+                "requestId": 3433781,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433781",
+                "message": "Employee Terminated Successfully...",
+                "response": {
+                  "message": "Employee Terminated Successfully...",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "empNumber": 3,
+            "terminationDate": "2026-11-23",
+            "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/3"
+          }
+        },
+        {
+          "key": "asset_return",
+          "label": "Raise the asset-return ticket",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Asset-return ticket INC0040698 created",
+          "startedAt": "2026-11-02T16:08:41.800086",
+          "finishedAt": "2026-11-02T16:08:48.409972",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Asset Return Request",
+                "requestId": 3433783,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433783",
+                "message": "Requested For Asset Return",
+                "response": {
+                  "message": "Requested For Asset Return",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "ticket": "INC0040698",
+            "url": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=83dd34f13318d3105e900e570e5c7bfe",
+            "asset": "Apple MacBook Pro M3 Max"
+          }
+        },
+        {
+          "key": "clearances",
+          "label": "Raise the department clearances",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Clearance ticket INC0040699 created for IT, Finance, Admin",
+          "startedAt": "2026-11-02T16:08:48.435175",
+          "finishedAt": "2026-11-02T16:08:57.096511",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Exit Clearance",
+                "requestId": 3433784,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433784",
+                "message": "Exit Clearance has been completed successfully",
+                "response": {
+                  "message": "Exit Clearance has been completed successfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "ticket": "INC0040699",
+            "url": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=d1edb4f13318d3105e900e570e5c7b42",
+            "departments": [
+              "IT",
+              "Finance",
+              "Admin"
+            ]
+          }
+        },
+        {
+          "key": "settlement",
+          "label": "Calculate the final settlement",
+          "system": "Backend",
+          "status": "success",
+          "message": "Final settlement calculated: net payable INR 165,000.",
+          "startedAt": "2026-11-02T16:08:57.113526",
+          "finishedAt": "2026-11-02T16:08:57.133209",
+          "details": {
+            "monthlyGross": 300000,
+            "dailyRate": 10000,
+            "daysPaidInFinalMonth": 23,
+            "salaryPayable": 230000,
+            "leaveDays": 5,
+            "leaveEncashment": 25000,
+            "noticePeriodDays": 30,
+            "noticeDaysServed": 21,
+            "noticeShortfallDays": 9,
+            "noticeRecovery": 90000,
+            "netPayable": 165000,
+            "rules": [
+              "Monthly gross = annual CTC / 12; daily rate = monthly gross / 30.",
+              "Salary for the final month = daily rate x the day of the month of the last working day (max 30).",
+              "Leave encashment = unused leave days x the basic daily rate (basic = a share of the gross).",
+              "Notice shortfall = notice period days - days actually served; recovered at the daily rate.",
+              "Net payable = salary + leave encashment - notice recovery. Tax and statutory deductions are not included."
+            ]
+          }
+        },
+        {
+          "key": "relieving_letter",
+          "label": "Send the relieving letter",
+          "system": "E-mail",
+          "status": "success",
+          "message": "Relieving letter Relieving_Letter_Rohit_Jindal_OFF-350100.pdf generated",
+          "startedAt": "2026-11-02T16:08:57.159251",
+          "finishedAt": "2026-11-02T16:09:09.464786",
+          "details": {
+            "filename": "Relieving_Letter_Rohit_Jindal_OFF-350100.pdf",
+            "emailed": true,
+            "recipient": "nitin.bhujbal@automationedge.com",
+            "workflows": [
+              {
+                "workflowName": "HR Demo Send mail Offboarding",
+                "requestId": 3433787,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433787",
+                "message": "Mail sent",
+                "response": {
+                  "message": "Mail sent",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "servicenow_close",
+          "label": "Close the ServiceNow ticket",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Ticket INC0040697 resolved",
+          "startedAt": "2026-11-02T16:09:09.483341",
+          "finishedAt": "2026-11-02T16:09:10.124170",
+          "details": {}
+        }
+      ],
+      "pipelineStatus": "completed",
+      "relievingLetter": {
+        "filename": "Relieving_Letter_Rohit_Jindal_OFF-350100.pdf",
+        "emailed": true,
+        "recipient": "nitin.bhujbal@automationedge.com",
+        "workflows": [
+          {
+            "workflowName": "HR Demo Send mail Offboarding",
+            "requestId": 3433787,
+            "status": "Complete",
+            "agent": "mahesh@mspevent-win-1",
+            "url": "https://t4.automationedge.com/#/workflowinstances/3433787",
+            "message": "Mail sent",
+            "response": {
+              "message": "Mail sent",
+              "error": null,
+              "currentStatus": null,
+              "outputParameters": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "OFF-527820",
+      "employeeId": "EMP-139860",
+      "fullName": "Rahul Kamath",
+      "workEmail": "rahul.kamath@automationedge.ai",
+      "personalEmail": "rahul.kamath@example.com",
+      "department": "Product Management",
+      "jobTitle": "Senior Technical Product Manager",
+      "manager": "Pooja Deshmukh (VP of Product)",
+      "hardware": "Apple MacBook Pro M3 Max",
+      "annualCtc": 3100000,
+      "empNumber": 2,
+      "userPrincipalName": "rahul.kamath@automationedge.ai",
+      "reason": "Better opportunity",
+      "comments": "",
+      "resignationDate": "2026-11-02",
+      "lastWorkingDay": "2026-11-23",
+      "noticePeriodDays": 30,
+      "leaveBalanceDays": 5,
+      "status": "Completed",
+      "submittedAt": "2026-11-02T13:05:13.544122",
+      "approvedAt": "2026-11-02T13:06:02.760220",
+      "rejectedAt": null,
+      "completedAt": "2026-11-02T13:07:16.466281",
+      "intake": [
+        {
+          "key": "servicenow_ticket",
+          "label": "ServiceNow offboarding ticket",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Ticket INC0040687 created",
+          "startedAt": "2026-11-02T13:05:13.565537",
+          "finishedAt": "2026-11-02T13:05:13.966808",
+          "details": {
+            "ticket": "INC0040687",
+            "sysId": "1ed390fdebdc9310b02df1b4cad0cd8d",
+            "url": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=1ed390fdebdc9310b02df1b4cad0cd8d"
+          }
+        },
+        {
+          "key": "exit_details",
+          "label": "Exit details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Exit details workflow completed (request #3433140)",
+          "startedAt": "2026-11-02T13:05:13.983257",
+          "finishedAt": "2026-11-02T13:05:18.774604",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Exit Details",
+                "requestId": 3433140,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433140",
+                "message": "Retrieved exit details.",
+                "response": {
+                  "message": "Retrieved exit details.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "exit_approval",
+          "label": "Exit management approval",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Exit management approval workflow completed (request #3433146)",
+          "startedAt": "2026-11-02T13:06:02.766067",
+          "finishedAt": "2026-11-02T13:06:08.971241",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Exit Management Approval",
+                "requestId": 3433146,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433146",
+                "message": "Received Exit Management Approval",
+                "response": {
+                  "message": "Received Exit Management Approval",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "ad_disable",
+          "label": "Disable the Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account disabled (request #3433147)",
+          "startedAt": "2026-11-02T13:06:08.979311",
+          "finishedAt": "2026-11-02T13:06:21.349434",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user disable",
+                "requestId": 3433147,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433147",
+                "message": "User 'Rahul.Kamath' Deleted in AD successfully.",
+                "response": {
+                  "message": "User 'Rahul.Kamath' Deleted in AD successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "UserDelete_Status.xlsx",
+                      "value": "5f410aaf-9842-403d-b657-657868ae0dd5",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserDelete_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "o365_block",
+          "label": "Block the Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "rahul.kamath@automationedge.ai: sign-in blocked, sessions revoked, 0 licence(s) removed",
+          "startedAt": "2026-11-02T13:06:21.362003",
+          "finishedAt": "2026-11-02T13:06:31.799360",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Offboarding",
+                "requestId": 3433149,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433149",
+                "message": "O365 User Offboarding Completed",
+                "response": {
+                  "message": "O365 User Offboarding Completed",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userId": "5488d3c5-901a-4386-80bf-d7020c99ade3",
+            "displayName": "Rahul Kamath",
+            "signInBlocked": true,
+            "sessionsRevoked": true,
+            "licencesRemoved": 0,
+            "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/5488d3c5-901a-4386-80bf-d7020c99ade3"
+          }
+        },
+        {
+          "key": "hrm_terminate",
+          "label": "End the employment in OrangeHRM",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "Employment ended on 2026-11-23 (OrangeHRM #2)",
+          "startedAt": "2026-11-02T13:06:31.817956",
+          "finishedAt": "2026-11-02T13:06:46.918866",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Terminate emp OrangeHRM",
+                "requestId": 3433151,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433151",
+                "message": "Employee Terminated Successfully...",
+                "response": {
+                  "message": "Employee Terminated Successfully...",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "empNumber": 2,
+            "terminationDate": "2026-11-23",
+            "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/2"
+          }
+        },
+        {
+          "key": "asset_return",
+          "label": "Raise the asset-return ticket",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Asset-return ticket INC0040688 created",
+          "startedAt": "2026-11-02T13:06:46.934666",
+          "finishedAt": "2026-11-02T13:06:55.617551",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Asset Return Request",
+                "requestId": 3433153,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433153",
+                "message": "Requested For Asset Return",
+                "response": {
+                  "message": "Requested For Asset Return",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "ticket": "INC0040688",
+            "url": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=8b345cfdebdc9310b02df1b4cad0cd70",
+            "asset": "Apple MacBook Pro M3 Max"
+          }
+        },
+        {
+          "key": "clearances",
+          "label": "Raise the department clearances",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Clearance ticket INC0040689 created for IT, Finance, Admin",
+          "startedAt": "2026-11-02T13:06:55.628653",
+          "finishedAt": "2026-11-02T13:07:04.289264",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Exit Clearance",
+                "requestId": 3433154,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433154",
+                "message": "Exit Clearance has been completed successfully",
+                "response": {
+                  "message": "Exit Clearance has been completed successfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "ticket": "INC0040689",
+            "url": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=c5449cfdebdc9310b02df1b4cad0cd67",
+            "departments": [
+              "IT",
+              "Finance",
+              "Admin"
+            ]
+          }
+        },
+        {
+          "key": "settlement",
+          "label": "Calculate the final settlement",
+          "system": "Backend",
+          "status": "success",
+          "message": "Final settlement calculated: net payable INR 142,084.",
+          "startedAt": "2026-11-02T13:07:04.302426",
+          "finishedAt": "2026-11-02T13:07:04.304759",
+          "details": {
+            "monthlyGross": 258333,
+            "dailyRate": 8611,
+            "daysPaidInFinalMonth": 23,
+            "salaryPayable": 198056,
+            "leaveDays": 5,
+            "leaveEncashment": 21528,
+            "noticePeriodDays": 30,
+            "noticeDaysServed": 21,
+            "noticeShortfallDays": 9,
+            "noticeRecovery": 77500,
+            "netPayable": 142084,
+            "rules": [
+              "Monthly gross = annual CTC / 12; daily rate = monthly gross / 30.",
+              "Salary for the final month = daily rate x the day of the month of the last working day (max 30).",
+              "Leave encashment = unused leave days x the basic daily rate (basic = a share of the gross).",
+              "Notice shortfall = notice period days - days actually served; recovered at the daily rate.",
+              "Net payable = salary + leave encashment - notice recovery. Tax and statutory deductions are not included."
+            ]
+          }
+        },
+        {
+          "key": "relieving_letter",
+          "label": "Send the relieving letter",
+          "system": "E-mail",
+          "status": "success",
+          "message": "Relieving letter Relieving_Letter_Rahul_Kamath_OFF-527820.pdf generated",
+          "startedAt": "2026-11-02T13:07:04.321520",
+          "finishedAt": "2026-11-02T13:07:15.770516",
+          "details": {
+            "filename": "Relieving_Letter_Rahul_Kamath_OFF-527820.pdf",
+            "emailed": true,
+            "recipient": "nitin.bhujbal@automationedge.com",
+            "workflows": [
+              {
+                "workflowName": "HR Demo Send mail Offboarding",
+                "requestId": 3433157,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433157",
+                "message": "Mail sent",
+                "response": {
+                  "message": "Mail sent",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "servicenow_close",
+          "label": "Close the ServiceNow ticket",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Ticket INC0040687 resolved",
+          "startedAt": "2026-11-02T13:07:15.782419",
+          "finishedAt": "2026-11-02T13:07:16.433660",
+          "details": {}
+        }
+      ],
+      "pipelineStatus": "completed",
+      "relievingLetter": {
+        "filename": "Relieving_Letter_Rahul_Kamath_OFF-527820.pdf",
+        "emailed": true,
+        "recipient": "nitin.bhujbal@automationedge.com",
+        "workflows": [
+          {
+            "workflowName": "HR Demo Send mail Offboarding",
+            "requestId": 3433157,
+            "status": "Complete",
+            "agent": "mahesh@mspevent-win-1",
+            "url": "https://t4.automationedge.com/#/workflowinstances/3433157",
+            "message": "Mail sent",
+            "response": {
+              "message": "Mail sent",
+              "error": null,
+              "currentStatus": null,
+              "outputParameters": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,2376 @@
+{
+  "employees": [
+    {
+      "id": "AE-401588",
+      "fullName": "Alok Khanna",
+      "email": "alok.khanna@example.com",
+      "phone": "+91 9649 87326",
+      "dob": "1996-11-19",
+      "aadhaar": "245695411069",
+      "uan": "",
+      "emergencyName": "Yash Khanna (Father)",
+      "emergencyPhone": "+91 9548 50468",
+      "address": "1200 Silicon Residency, Sector 5, HSR Layout, Bengaluru, Karnataka 560102",
+      "department": "Product Management",
+      "jobTitle": "Senior Technical Product Manager",
+      "manager": "Pooja Deshmukh (VP of Product)",
+      "startDate": "2026-11-16",
+      "annualCtc": 3100000,
+      "hardware": "Apple MacBook Pro M3 Max",
+      "workLocation": "On-Site (Pune Tech Park)",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 979
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 902
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 910
+        }
+      },
+      "signatureFile": null,
+      "status": "Approved",
+      "provisioningStatus": "completed",
+      "submittedAt": "2026-11-02T16:04:10.847502",
+      "approvedAt": "2026-11-02T16:06:08.353330",
+      "rejectedAt": null,
+      "approvalSource": "HR Portal",
+      "serviceNow": {
+        "reqNumber": "REQ0012150",
+        "ritmNumber": "RITM0012079",
+        "reqSysId": "6bcc70713318d3105e900e570e5c7bdb",
+        "ritmSysId": "27cc70713318d3105e900e570e5c7bdc",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=6bcc70713318d3105e900e570e5c7bdb",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=27cc70713318d3105e900e570e5c7bdc",
+        "approvalStatus": "Approved",
+        "stage": "Approved - Provisioning",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433755,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433755",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T16:04:24.724274"
+        },
+        {
+          "workflowName": "HR Demo Management Approval",
+          "automationRequestId": 3433760,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Approved",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433760",
+          "response": {
+            "message": "Approved",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T16:05:08.770587"
+        },
+        {
+          "workflowName": "HR Demo AD user creation and Assign role",
+          "automationRequestId": 3433761,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "User 'Alok.Khanna' created successfully.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433761",
+          "response": {
+            "message": "User 'Alok.Khanna' created successfully.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": [
+              {
+                "name": "log_20261102.log",
+                "value": "c84a839f-17c2-4056-89f5-7c2828d1c71e",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "log_20261102.log",
+                "extension": "log",
+                "poolCredential": false
+              },
+              {
+                "name": "UserCreation_Status.xlsx",
+                "value": "7257d5b3-04eb-4f7a-98f9-618fd48506b9",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "UserCreation_Status.xlsx",
+                "extension": "xlsx",
+                "poolCredential": false
+              }
+            ]
+          },
+          "executedAt": "2026-11-02T16:05:23.321158"
+        },
+        {
+          "workflowName": "HR Demo O365 User Creation",
+          "automationRequestId": 3433762,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "O365 User Created",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433762",
+          "response": {
+            "message": "O365 User Created",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T16:05:29.605561"
+        },
+        {
+          "workflowName": "HR Demo Add emp OrangeHRM",
+          "automationRequestId": 3433763,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Added in the Orange HRM",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433763",
+          "response": {
+            "message": "Employee Details Added in the Orange HRM",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T16:05:37.724599"
+        },
+        {
+          "workflowName": "HR Demo Create Laptop Request",
+          "automationRequestId": 3433767,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Laptop request submitted.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433767",
+          "response": {
+            "message": "Laptop request submitted.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T16:06:07.738396"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012150 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T16:04:10.905590",
+          "finishedAt": "2026-11-02T16:04:16.434880",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433755): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T16:04:16.456205",
+          "finishedAt": "2026-11-02T16:04:24.724274",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433755,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433755",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "servicenow_approval",
+          "label": "ServiceNow request approval",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012150 approved",
+          "startedAt": "2026-11-02T16:05:00.919132",
+          "finishedAt": "2026-11-02T16:05:02.407318",
+          "details": {}
+        },
+        {
+          "key": "management_approval",
+          "label": "Management approval workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Management approval workflow completed (request #3433760)",
+          "startedAt": "2026-11-02T16:05:02.432724",
+          "finishedAt": "2026-11-02T16:05:08.770587",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Management Approval",
+                "requestId": 3433760,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433760",
+                "message": "Approved",
+                "response": {
+                  "message": "Approved",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "active_directory",
+          "label": "Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account workflow completed (request #3433761)",
+          "startedAt": "2026-11-02T16:05:08.811642",
+          "finishedAt": "2026-11-02T16:05:23.321158",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user creation and Assign role",
+                "requestId": 3433761,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433761",
+                "message": "User 'Alok.Khanna' created successfully.",
+                "response": {
+                  "message": "User 'Alok.Khanna' created successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "log_20261102.log",
+                      "value": "c84a839f-17c2-4056-89f5-7c2828d1c71e",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "log_20261102.log",
+                      "extension": "log",
+                      "poolCredential": false
+                    },
+                    {
+                      "name": "UserCreation_Status.xlsx",
+                      "value": "7257d5b3-04eb-4f7a-98f9-618fd48506b9",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserCreation_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "office365",
+          "label": "Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "Microsoft 365 account ready: alok.khanna@automationedge.ai",
+          "startedAt": "2026-11-02T16:05:23.357696",
+          "finishedAt": "2026-11-02T16:05:31.398639",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Creation",
+                "requestId": 3433762,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433762",
+                "message": "O365 User Created",
+                "response": {
+                  "message": "O365 User Created",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userPrincipalName": "alok.khanna@automationedge.ai"
+          }
+        },
+        {
+          "key": "orangehrm",
+          "label": "OrangeHRM employee profile",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "OrangeHRM profile #6 created with work e-mail alok.khanna@automationedge.ai",
+          "startedAt": "2026-11-02T16:05:31.451072",
+          "finishedAt": "2026-11-02T16:06:01.430338",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Add emp OrangeHRM",
+                "requestId": 3433763,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433763",
+                "message": "Employee Details Added in the Orange HRM",
+                "response": {
+                  "message": "Employee Details Added in the Orange HRM",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "warnings": [],
+            "notes": []
+          }
+        },
+        {
+          "key": "laptop",
+          "label": "Laptop request & hardware incident",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Laptop requested; incident INC0040696",
+          "startedAt": "2026-11-02T16:06:01.450692",
+          "finishedAt": "2026-11-02T16:06:08.312320",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Create Laptop Request",
+                "requestId": 3433767,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433767",
+                "message": "Laptop request submitted.",
+                "response": {
+                  "message": "Laptop request submitted.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "office365": {
+        "userId": "3965bc55-6273-4d1e-bcb1-b322bf30ace6",
+        "userPrincipalName": "alok.khanna@automationedge.ai",
+        "displayName": "Alok Khanna",
+        "initialPassword": "",
+        "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/3965bc55-6273-4d1e-bcb1-b322bf30ace6",
+        "alreadyExisted": false
+      },
+      "orangeHrm": {
+        "empNumber": 6,
+        "employeeId": "401588",
+        "workEmail": "alok.khanna@automationedge.ai",
+        "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/6",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ]
+      },
+      "laptop": {
+        "ticketNumber": "INC0040696",
+        "ticketUrl": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=044d34b13318d3105e900e570e5c7b56",
+        "hardware": "Apple MacBook Pro M3 Max"
+      }
+    },
+    {
+      "id": "AE-766649",
+      "fullName": "Gaurav Bansal",
+      "email": "gaurav.bansal@example.com",
+      "phone": "+91 9727 34625",
+      "dob": "1997-08-13",
+      "aadhaar": "447290565271",
+      "uan": "",
+      "emergencyName": "Siddharth Bansal (Sister)",
+      "emergencyPhone": "+91 9787 84197",
+      "address": "Plot 45, Jubilee Hills, Road No. 36, Hyderabad, Telangana 500033",
+      "department": "Engineering",
+      "jobTitle": "Senior Backend Platform Engineer",
+      "manager": "Amit Deshmukh (VP of Engineering)",
+      "startDate": "2026-11-16",
+      "annualCtc": 2700000,
+      "hardware": "Apple MacBook Pro M3 Max",
+      "workLocation": "On-Site (Pune Tech Park)",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 972
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 904
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 912
+        }
+      },
+      "signatureFile": null,
+      "status": "Approved",
+      "provisioningStatus": "completed",
+      "submittedAt": "2026-11-02T15:57:29.103937",
+      "approvedAt": "2026-11-02T15:59:21.038895",
+      "rejectedAt": null,
+      "approvalSource": "HR Portal",
+      "serviceNow": {
+        "reqNumber": "REQ0012149",
+        "ritmNumber": "RITM0012078",
+        "reqSysId": "ed4b74bd33d4d3105e900e570e5c7bb7",
+        "ritmSysId": "a94b74bd33d4d3105e900e570e5c7bb8",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=ed4b74bd33d4d3105e900e570e5c7bb7",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=a94b74bd33d4d3105e900e570e5c7bb8",
+        "approvalStatus": "Approved",
+        "stage": "Approved - Provisioning",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433726,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433726",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T15:57:40.957070"
+        },
+        {
+          "workflowName": "HR Demo Management Approval",
+          "automationRequestId": 3433730,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Approved",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433730",
+          "response": {
+            "message": "Approved",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T15:58:32.716190"
+        },
+        {
+          "workflowName": "HR Demo AD user creation and Assign role",
+          "automationRequestId": 3433731,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "User 'Gaurav.Bansal' created successfully.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433731",
+          "response": {
+            "message": "User 'Gaurav.Bansal' created successfully.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": [
+              {
+                "name": "log_20261102.log",
+                "value": "21cca815-1574-46f9-9d6f-1c438cfff9b2",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "log_20261102.log",
+                "extension": "log",
+                "poolCredential": false
+              },
+              {
+                "name": "UserCreation_Status.xlsx",
+                "value": "11a07423-3a9c-4604-af2a-da8c3137545e",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "UserCreation_Status.xlsx",
+                "extension": "xlsx",
+                "poolCredential": false
+              }
+            ]
+          },
+          "executedAt": "2026-11-02T15:58:47.500172"
+        },
+        {
+          "workflowName": "HR Demo O365 User Creation",
+          "automationRequestId": 3433732,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "O365 User Created",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433732",
+          "response": {
+            "message": "O365 User Created",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T15:58:53.796115"
+        },
+        {
+          "workflowName": "HR Demo Add emp OrangeHRM",
+          "automationRequestId": 3433733,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Added in the Orange HRM",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433733",
+          "response": {
+            "message": "Employee Details Added in the Orange HRM",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T15:58:59.610276"
+        },
+        {
+          "workflowName": "HR Demo Create Laptop Request",
+          "automationRequestId": 3433735,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Laptop request submitted.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433735",
+          "response": {
+            "message": "Laptop request submitted.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T15:59:20.232040"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012149 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T15:57:29.163046",
+          "finishedAt": "2026-11-02T15:57:34.662587",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433726): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T15:57:34.682619",
+          "finishedAt": "2026-11-02T15:57:40.959751",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433726,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433726",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "servicenow_approval",
+          "label": "ServiceNow request approval",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012149 approved",
+          "startedAt": "2026-11-02T15:58:24.787729",
+          "finishedAt": "2026-11-02T15:58:26.174942",
+          "details": {}
+        },
+        {
+          "key": "management_approval",
+          "label": "Management approval workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Management approval workflow completed (request #3433730)",
+          "startedAt": "2026-11-02T15:58:26.208737",
+          "finishedAt": "2026-11-02T15:58:32.716190",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Management Approval",
+                "requestId": 3433730,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433730",
+                "message": "Approved",
+                "response": {
+                  "message": "Approved",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "active_directory",
+          "label": "Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account workflow completed (request #3433731)",
+          "startedAt": "2026-11-02T15:58:32.764816",
+          "finishedAt": "2026-11-02T15:58:47.500172",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user creation and Assign role",
+                "requestId": 3433731,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433731",
+                "message": "User 'Gaurav.Bansal' created successfully.",
+                "response": {
+                  "message": "User 'Gaurav.Bansal' created successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "log_20261102.log",
+                      "value": "21cca815-1574-46f9-9d6f-1c438cfff9b2",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "log_20261102.log",
+                      "extension": "log",
+                      "poolCredential": false
+                    },
+                    {
+                      "name": "UserCreation_Status.xlsx",
+                      "value": "11a07423-3a9c-4604-af2a-da8c3137545e",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserCreation_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "office365",
+          "label": "Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "Microsoft 365 account ready: gaurav.bansal@automationedge.ai",
+          "startedAt": "2026-11-02T15:58:47.532211",
+          "finishedAt": "2026-11-02T15:58:55.410144",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Creation",
+                "requestId": 3433732,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433732",
+                "message": "O365 User Created",
+                "response": {
+                  "message": "O365 User Created",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userPrincipalName": "gaurav.bansal@automationedge.ai"
+          }
+        },
+        {
+          "key": "orangehrm",
+          "label": "OrangeHRM employee profile",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "OrangeHRM profile #5 created with work e-mail gaurav.bansal@automationedge.ai",
+          "startedAt": "2026-11-02T15:58:55.432663",
+          "finishedAt": "2026-11-02T15:59:13.948160",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Add emp OrangeHRM",
+                "requestId": 3433733,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433733",
+                "message": "Employee Details Added in the Orange HRM",
+                "response": {
+                  "message": "Employee Details Added in the Orange HRM",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "warnings": [],
+            "notes": []
+          }
+        },
+        {
+          "key": "laptop",
+          "label": "Laptop request & hardware incident",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Laptop requested; incident INC0040695",
+          "startedAt": "2026-11-02T15:59:13.966372",
+          "finishedAt": "2026-11-02T15:59:20.999243",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Create Laptop Request",
+                "requestId": 3433735,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433735",
+                "message": "Laptop request submitted.",
+                "response": {
+                  "message": "Laptop request submitted.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "office365": {
+        "userId": "bb2e2d64-4f0c-48fc-9dc0-e7b44c2db1a0",
+        "userPrincipalName": "gaurav.bansal@automationedge.ai",
+        "displayName": "Gaurav Bansal",
+        "initialPassword": "",
+        "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/bb2e2d64-4f0c-48fc-9dc0-e7b44c2db1a0",
+        "alreadyExisted": false
+      },
+      "orangeHrm": {
+        "empNumber": 5,
+        "employeeId": "766649",
+        "workEmail": "gaurav.bansal@automationedge.ai",
+        "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/5",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ]
+      },
+      "laptop": {
+        "ticketNumber": "INC0040695",
+        "ticketUrl": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=24bbf4bd33d4d3105e900e570e5c7b0b",
+        "hardware": "Apple MacBook Pro M3 Max"
+      }
+    },
+    {
+      "id": "AE-897018",
+      "fullName": "Siddharth Chopra",
+      "email": "siddharth.chopra@example.com",
+      "phone": "+91 9764 67459",
+      "dob": "1999-12-13",
+      "aadhaar": "839368192244",
+      "uan": "",
+      "emergencyName": "Ramesh Chopra (Mother)",
+      "emergencyPhone": "+91 9336 26998",
+      "address": "Row House 7, Amanora Sweet Water Villas, Hadapsar, Pune, Maharashtra 411028",
+      "department": "Cybersecurity",
+      "jobTitle": "Enterprise Security Architect",
+      "manager": "Vikram Malhotra (CISO)",
+      "startDate": "2026-11-16",
+      "annualCtc": 3300000,
+      "hardware": "Lenovo ThinkPad P1 Gen 6",
+      "workLocation": "Remote",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 986
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 907
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 915
+        }
+      },
+      "signatureFile": null,
+      "status": "Pending Review",
+      "provisioningStatus": "not_started",
+      "submittedAt": "2026-11-02T15:54:22.875101",
+      "approvedAt": null,
+      "rejectedAt": null,
+      "approvalSource": null,
+      "serviceNow": {
+        "reqNumber": "REQ0012148",
+        "ritmNumber": "RITM0012077",
+        "reqSysId": "4c9a307d33d4d3105e900e570e5c7bdb",
+        "ritmSysId": "089a307d33d4d3105e900e570e5c7bdc",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=4c9a307d33d4d3105e900e570e5c7bdb",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=089a307d33d4d3105e900e570e5c7bdc",
+        "approvalStatus": "Pending Approval",
+        "stage": "HR Document Verification",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433715,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433715",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T15:54:35.804717"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012148 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T15:54:22.925598",
+          "finishedAt": "2026-11-02T15:54:29.407263",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433715): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T15:54:29.440563",
+          "finishedAt": "2026-11-02T15:54:35.804717",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433715,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433715",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [],
+      "office365": null,
+      "orangeHrm": null,
+      "laptop": null
+    },
+    {
+      "id": "AE-563896",
+      "fullName": "Ashwin Sawant",
+      "email": "ashwin.sawant@example.com",
+      "phone": "+91 9321 80450",
+      "dob": "1999-09-13",
+      "aadhaar": "374590786275",
+      "uan": "",
+      "emergencyName": "Soham Sawant (Father)",
+      "emergencyPhone": "+91 9834 58080",
+      "address": "Tower 8, Apt 1104, Blue Ridge Town, Hinjawadi Phase 2, Pune, Maharashtra 411057",
+      "department": "Product Management",
+      "jobTitle": "Senior Technical Product Manager",
+      "manager": "Pooja Deshmukh (VP of Product)",
+      "startDate": "2026-11-16",
+      "annualCtc": 3100000,
+      "hardware": "Apple MacBook Pro M3 Max",
+      "workLocation": "On-Site (Pune Tech Park)",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 987
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 904
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 912
+        }
+      },
+      "signatureFile": null,
+      "status": "Approved",
+      "provisioningStatus": "completed",
+      "submittedAt": "2026-11-02T14:33:00.733627",
+      "approvedAt": "2026-11-02T14:35:07.577867",
+      "rejectedAt": null,
+      "approvalSource": "HR Portal",
+      "serviceNow": {
+        "reqNumber": "REQ0012147",
+        "ritmNumber": "RITM0012076",
+        "reqSysId": "54f768b5eb90d310b02df1b4cad0cdc4",
+        "ritmSysId": "50f768b5eb90d310b02df1b4cad0cdc5",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=54f768b5eb90d310b02df1b4cad0cdc4",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=50f768b5eb90d310b02df1b4cad0cdc5",
+        "approvalStatus": "Approved",
+        "stage": "Approved - Provisioning",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433427,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433427",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T14:33:10.740432"
+        },
+        {
+          "workflowName": "HR Demo Management Approval",
+          "automationRequestId": 3433431,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Approved",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433431",
+          "response": {
+            "message": "Approved",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T14:34:13.590563"
+        },
+        {
+          "workflowName": "HR Demo AD user creation and Assign role",
+          "automationRequestId": 3433432,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "User 'Ashwin.Sawant' created successfully.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433432",
+          "response": {
+            "message": "User 'Ashwin.Sawant' created successfully.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": [
+              {
+                "name": "log_20261102.log",
+                "value": "290a170a-5921-4cd3-8196-6fb7fd15b019",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "log_20261102.log",
+                "extension": "log",
+                "poolCredential": false
+              },
+              {
+                "name": "UserCreation_Status.xlsx",
+                "value": "9e40f05a-349d-4b2e-b09f-193d3d055485",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "UserCreation_Status.xlsx",
+                "extension": "xlsx",
+                "poolCredential": false
+              }
+            ]
+          },
+          "executedAt": "2026-11-02T14:34:26.006330"
+        },
+        {
+          "workflowName": "HR Demo O365 User Creation",
+          "automationRequestId": 3433433,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "O365 User Created",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433433",
+          "response": {
+            "message": "O365 User Created",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T14:34:32.264228"
+        },
+        {
+          "workflowName": "HR Demo Add emp OrangeHRM",
+          "automationRequestId": 3433434,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Added in the Orange HRM",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433434",
+          "response": {
+            "message": "Employee Details Added in the Orange HRM",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T14:34:42.025487"
+        },
+        {
+          "workflowName": "HR Demo Create Laptop Request",
+          "automationRequestId": 3433435,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Laptop request submitted.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433435",
+          "response": {
+            "message": "Laptop request submitted.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T14:35:06.957878"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012147 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T14:33:00.765722",
+          "finishedAt": "2026-11-02T14:33:06.522916",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433427): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T14:33:06.544976",
+          "finishedAt": "2026-11-02T14:33:10.740432",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433427,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433427",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "servicenow_approval",
+          "label": "ServiceNow request approval",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012147 approved",
+          "startedAt": "2026-11-02T14:34:03.971699",
+          "finishedAt": "2026-11-02T14:34:05.262004",
+          "details": {}
+        },
+        {
+          "key": "management_approval",
+          "label": "Management approval workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Management approval workflow completed (request #3433431)",
+          "startedAt": "2026-11-02T14:34:05.283460",
+          "finishedAt": "2026-11-02T14:34:13.593442",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Management Approval",
+                "requestId": 3433431,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433431",
+                "message": "Approved",
+                "response": {
+                  "message": "Approved",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "active_directory",
+          "label": "Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account workflow completed (request #3433432)",
+          "startedAt": "2026-11-02T14:34:13.606938",
+          "finishedAt": "2026-11-02T14:34:26.006330",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user creation and Assign role",
+                "requestId": 3433432,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433432",
+                "message": "User 'Ashwin.Sawant' created successfully.",
+                "response": {
+                  "message": "User 'Ashwin.Sawant' created successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "log_20261102.log",
+                      "value": "290a170a-5921-4cd3-8196-6fb7fd15b019",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "log_20261102.log",
+                      "extension": "log",
+                      "poolCredential": false
+                    },
+                    {
+                      "name": "UserCreation_Status.xlsx",
+                      "value": "9e40f05a-349d-4b2e-b09f-193d3d055485",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserCreation_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "office365",
+          "label": "Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "Microsoft 365 account ready: ashwin.sawant@automationedge.ai",
+          "startedAt": "2026-11-02T14:34:26.018851",
+          "finishedAt": "2026-11-02T14:34:33.659641",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Creation",
+                "requestId": 3433433,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433433",
+                "message": "O365 User Created",
+                "response": {
+                  "message": "O365 User Created",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userPrincipalName": "ashwin.sawant@automationedge.ai"
+          }
+        },
+        {
+          "key": "orangehrm",
+          "label": "OrangeHRM employee profile",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "OrangeHRM profile #4 created with work e-mail ashwin.sawant@automationedge.ai",
+          "startedAt": "2026-11-02T14:34:33.679007",
+          "finishedAt": "2026-11-02T14:34:58.661724",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Add emp OrangeHRM",
+                "requestId": 3433434,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433434",
+                "message": "Employee Details Added in the Orange HRM",
+                "response": {
+                  "message": "Employee Details Added in the Orange HRM",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "warnings": [],
+            "notes": []
+          }
+        },
+        {
+          "key": "laptop",
+          "label": "Laptop request & hardware incident",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Laptop requested; incident INC0040694",
+          "startedAt": "2026-11-02T14:34:58.676333",
+          "finishedAt": "2026-11-02T14:35:07.554959",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Create Laptop Request",
+                "requestId": 3433435,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433435",
+                "message": "Laptop request submitted.",
+                "response": {
+                  "message": "Laptop request submitted.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "office365": {
+        "userId": "ff3fbda6-e65f-4f30-8caf-e0bef7c4dca3",
+        "userPrincipalName": "ashwin.sawant@automationedge.ai",
+        "displayName": "Ashwin Sawant",
+        "initialPassword": "",
+        "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/ff3fbda6-e65f-4f30-8caf-e0bef7c4dca3",
+        "alreadyExisted": false
+      },
+      "orangeHrm": {
+        "empNumber": 4,
+        "employeeId": "563896",
+        "workEmail": "ashwin.sawant@automationedge.ai",
+        "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/4",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ]
+      },
+      "laptop": {
+        "ticketNumber": "INC0040694",
+        "ticketUrl": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=cf6828f5eb90d310b02df1b4cad0cd49",
+        "hardware": "Apple MacBook Pro M3 Max"
+      }
+    },
+    {
+      "id": "AE-655210",
+      "fullName": "Swati Iyer",
+      "email": "swati.iyer@example.com",
+      "phone": "+91 9588 40154",
+      "dob": "1999-07-03",
+      "aadhaar": "703922786831",
+      "uan": "",
+      "emergencyName": "Aryan Iyer (Sister)",
+      "emergencyPhone": "+91 9367 82505",
+      "address": "Tower 8, Apt 1104, Blue Ridge Town, Hinjawadi Phase 2, Pune, Maharashtra 411057",
+      "department": "Engineering",
+      "jobTitle": "Staff AI Systems Engineer",
+      "manager": "Amit Deshmukh (VP of Engineering)",
+      "startDate": "2026-11-16",
+      "annualCtc": 3450000,
+      "hardware": "Apple MacBook Pro M3 Max",
+      "workLocation": "Hybrid",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 984
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 901
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 909
+        }
+      },
+      "signatureFile": null,
+      "status": "Pending Review",
+      "provisioningStatus": "not_started",
+      "submittedAt": "2026-11-02T13:41:33.863411",
+      "approvedAt": null,
+      "rejectedAt": null,
+      "approvalSource": null,
+      "serviceNow": {
+        "reqNumber": "REQ0012146",
+        "ritmNumber": "RITM0012075",
+        "reqSysId": "ee2c9c71eb50d310b02df1b4cad0cd2e",
+        "ritmSysId": "aa2c9c71eb50d310b02df1b4cad0cd2f",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=ee2c9c71eb50d310b02df1b4cad0cd2e",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=aa2c9c71eb50d310b02df1b4cad0cd2f",
+        "approvalStatus": "Pending Approval",
+        "stage": "HR Document Verification",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433278,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433278",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T13:41:41.547418"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012146 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T13:41:33.899656",
+          "finishedAt": "2026-11-02T13:41:39.376329",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433278): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T13:41:39.386707",
+          "finishedAt": "2026-11-02T13:41:41.547418",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433278,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433278",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [],
+      "office365": null,
+      "orangeHrm": null,
+      "laptop": null
+    },
+    {
+      "id": "AE-299597",
+      "fullName": "Rohit Jindal",
+      "email": "rohit.jindal@example.com",
+      "phone": "+91 9945 96067",
+      "dob": "1998-09-02",
+      "aadhaar": "249269659188",
+      "uan": "",
+      "emergencyName": "Aryan Jindal (Mother)",
+      "emergencyPhone": "+91 9654 20429",
+      "address": "Villa 12, Palm Meadows, Kharadi, Pune, Maharashtra 411014",
+      "department": "Engineering",
+      "jobTitle": "Lead Cloud Solutions Architect",
+      "manager": "Suresh Nair (Director of Cloud Infrastructure)",
+      "startDate": "2026-11-16",
+      "annualCtc": 3600000,
+      "hardware": "Apple MacBook Pro M3 Max",
+      "workLocation": "Hybrid",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 964
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 903
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 911
+        }
+      },
+      "signatureFile": null,
+      "status": "Approved",
+      "provisioningStatus": "completed",
+      "submittedAt": "2026-11-02T13:23:23.448622",
+      "approvedAt": "2026-11-02T13:25:06.338756",
+      "rejectedAt": null,
+      "approvalSource": "HR Portal",
+      "serviceNow": {
+        "reqNumber": "REQ0012145",
+        "ritmNumber": "RITM0012074",
+        "reqSysId": "d0081839eb10d310b02df1b4cad0cd5c",
+        "ritmSysId": "9c081839eb10d310b02df1b4cad0cd5c",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=d0081839eb10d310b02df1b4cad0cd5c",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=9c081839eb10d310b02df1b4cad0cd5c",
+        "approvalStatus": "Approved",
+        "stage": "Approved - Provisioning",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433213,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433213",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T13:23:40.948660"
+        },
+        {
+          "workflowName": "HR Demo Management Approval",
+          "automationRequestId": 3433220,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Approved",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433220",
+          "response": {
+            "message": "Approved",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T13:24:11.018650"
+        },
+        {
+          "workflowName": "HR Demo AD user creation and Assign role",
+          "automationRequestId": 3433221,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "User 'Rohit.Jindal' created successfully.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433221",
+          "response": {
+            "message": "User 'Rohit.Jindal' created successfully.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": [
+              {
+                "name": "UserCreation_Status.xlsx",
+                "value": "84dc0a87-c2ef-453c-a757-5fb139164ae5",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "UserCreation_Status.xlsx",
+                "extension": "xlsx",
+                "poolCredential": false
+              },
+              {
+                "name": "log_20261102.log",
+                "value": "3d17df8f-545a-4eb8-934b-aeae65c46eb7",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "log_20261102.log",
+                "extension": "log",
+                "poolCredential": false
+              }
+            ]
+          },
+          "executedAt": "2026-11-02T13:24:25.670996"
+        },
+        {
+          "workflowName": "HR Demo O365 User Creation",
+          "automationRequestId": 3433223,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "O365 User Created",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433223",
+          "response": {
+            "message": "O365 User Created",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T13:24:31.952381"
+        },
+        {
+          "workflowName": "HR Demo Add emp OrangeHRM",
+          "automationRequestId": 3433225,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Added in the Orange HRM",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433225",
+          "response": {
+            "message": "Employee Details Added in the Orange HRM",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T13:24:37.715995"
+        },
+        {
+          "workflowName": "HR Demo Create Laptop Request",
+          "automationRequestId": 3433226,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Laptop request submitted.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433226",
+          "response": {
+            "message": "Laptop request submitted.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T13:25:05.735010"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012145 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T13:23:23.483921",
+          "finishedAt": "2026-11-02T13:23:30.352858",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433213): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T13:23:30.365731",
+          "finishedAt": "2026-11-02T13:23:40.949363",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433213,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433213",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "servicenow_approval",
+          "label": "ServiceNow request approval",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012145 approved",
+          "startedAt": "2026-11-02T13:24:00.449806",
+          "finishedAt": "2026-11-02T13:24:02.498665",
+          "details": {}
+        },
+        {
+          "key": "management_approval",
+          "label": "Management approval workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Management approval workflow completed (request #3433220)",
+          "startedAt": "2026-11-02T13:24:02.518515",
+          "finishedAt": "2026-11-02T13:24:11.018650",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Management Approval",
+                "requestId": 3433220,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433220",
+                "message": "Approved",
+                "response": {
+                  "message": "Approved",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "active_directory",
+          "label": "Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account workflow completed (request #3433221)",
+          "startedAt": "2026-11-02T13:24:11.037649",
+          "finishedAt": "2026-11-02T13:24:25.670996",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user creation and Assign role",
+                "requestId": 3433221,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433221",
+                "message": "User 'Rohit.Jindal' created successfully.",
+                "response": {
+                  "message": "User 'Rohit.Jindal' created successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "UserCreation_Status.xlsx",
+                      "value": "84dc0a87-c2ef-453c-a757-5fb139164ae5",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserCreation_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    },
+                    {
+                      "name": "log_20261102.log",
+                      "value": "3d17df8f-545a-4eb8-934b-aeae65c46eb7",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "log_20261102.log",
+                      "extension": "log",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "office365",
+          "label": "Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "Microsoft 365 account ready: rohit.jindal@automationedge.ai",
+          "startedAt": "2026-11-02T13:24:25.682244",
+          "finishedAt": "2026-11-02T13:24:33.481448",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Creation",
+                "requestId": 3433223,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433223",
+                "message": "O365 User Created",
+                "response": {
+                  "message": "O365 User Created",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userPrincipalName": "rohit.jindal@automationedge.ai"
+          }
+        },
+        {
+          "key": "orangehrm",
+          "label": "OrangeHRM employee profile",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "OrangeHRM profile #3 created with work e-mail rohit.jindal@automationedge.ai",
+          "startedAt": "2026-11-02T13:24:33.491690",
+          "finishedAt": "2026-11-02T13:24:55.266667",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Add emp OrangeHRM",
+                "requestId": 3433225,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433225",
+                "message": "Employee Details Added in the Orange HRM",
+                "response": {
+                  "message": "Employee Details Added in the Orange HRM",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "warnings": [],
+            "notes": []
+          }
+        },
+        {
+          "key": "laptop",
+          "label": "Laptop request & hardware incident",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Laptop requested; incident INC0040693",
+          "startedAt": "2026-11-02T13:24:55.273004",
+          "finishedAt": "2026-11-02T13:25:06.316719",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Create Laptop Request",
+                "requestId": 3433226,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433226",
+                "message": "Laptop request submitted.",
+                "response": {
+                  "message": "Laptop request submitted.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "office365": {
+        "userId": "d724640e-49d3-41db-8e0e-c227f42b07e7",
+        "userPrincipalName": "rohit.jindal@automationedge.ai",
+        "displayName": "Rohit Jindal",
+        "initialPassword": "",
+        "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/d724640e-49d3-41db-8e0e-c227f42b07e7",
+        "alreadyExisted": false
+      },
+      "orangeHrm": {
+        "empNumber": 3,
+        "employeeId": "299597",
+        "workEmail": "rohit.jindal@automationedge.ai",
+        "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/3",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ]
+      },
+      "laptop": {
+        "ticketNumber": "INC0040693",
+        "ticketUrl": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=9d689079eb10d310b02df1b4cad0cd22",
+        "hardware": "Apple MacBook Pro M3 Max"
+      }
+    },
+    {
+      "id": "EMP-139860",
+      "fullName": "Rahul Kamath",
+      "email": "rahul.kamath@example.com",
+      "phone": "+91 9785 62422",
+      "dob": "1995-11-04",
+      "aadhaar": "510945451174",
+      "uan": "",
+      "emergencyName": "Vikram Kamath (Mother)",
+      "emergencyPhone": "+91 9832 47369",
+      "address": "Plot 45, Jubilee Hills, Road No. 36, Hyderabad, Telangana 500033",
+      "department": "Product Management",
+      "jobTitle": "Senior Technical Product Manager",
+      "manager": "Pooja Deshmukh (VP of Product)",
+      "startDate": "2026-11-16",
+      "annualCtc": 3100000,
+      "hardware": "Apple MacBook Pro M3 Max",
+      "workLocation": "Remote",
+      "documents": {
+        "idDoc": {
+          "key": "idDoc",
+          "label": "Aadhaar Card",
+          "filename": "aadhaar_sample.pdf",
+          "storedName": "idDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 971
+        },
+        "panDoc": {
+          "key": "panDoc",
+          "label": "PAN Card",
+          "filename": "pan_sample.pdf",
+          "storedName": "panDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 903
+        },
+        "salaryDoc": {
+          "key": "salaryDoc",
+          "label": "Latest Salary Slip",
+          "filename": "salary_slip_sample.pdf",
+          "storedName": "salaryDoc.pdf",
+          "contentType": "application/pdf",
+          "size": 911
+        }
+      },
+      "signatureFile": null,
+      "status": "Approved",
+      "provisioningStatus": "completed",
+      "submittedAt": "2026-11-02T12:57:09.221216",
+      "approvedAt": "2026-11-02T12:59:09.104712",
+      "rejectedAt": null,
+      "approvalSource": "HR Portal",
+      "serviceNow": {
+        "reqNumber": "REQ0012144",
+        "ritmNumber": "RITM0012073",
+        "reqSysId": "5c02d4f9ebdc9310b02df1b4cad0cd6e",
+        "ritmSysId": "9802d4f9ebdc9310b02df1b4cad0cd6f",
+        "reqUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_request.do?sys_id=5c02d4f9ebdc9310b02df1b4cad0cd6e",
+        "ritmUrl": "https://ven04528.service-now.com/nav_to.do?uri=sc_req_item.do?sys_id=9802d4f9ebdc9310b02df1b4cad0cd6f",
+        "approvalStatus": "Approved",
+        "stage": "Approved - Provisioning",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ],
+        "syncError": null
+      },
+      "workflowRuns": [
+        {
+          "workflowName": "HR Demo Get Employee Details",
+          "automationRequestId": 3433110,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Fetched Succcessfully",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433110",
+          "response": {
+            "message": "Employee Details Fetched Succcessfully",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T12:57:26.188043"
+        },
+        {
+          "workflowName": "HR Demo Management Approval",
+          "automationRequestId": 3433115,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Approved",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433115",
+          "response": {
+            "message": "Approved",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T12:58:08.381906"
+        },
+        {
+          "workflowName": "HR Demo AD user creation and Assign role",
+          "automationRequestId": 3433116,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "User 'Rahul.Kamath' created successfully.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433116",
+          "response": {
+            "message": "User 'Rahul.Kamath' created successfully.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": [
+              {
+                "name": "log_20261102.log",
+                "value": "13d6320c-a7cc-480b-b384-4fd62786f92b",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "log_20261102.log",
+                "extension": "log",
+                "poolCredential": false
+              },
+              {
+                "name": "UserCreation_Status.xlsx",
+                "value": "71204491-a999-45f0-bf7b-0b07d081dff2",
+                "type": "File",
+                "order": 1,
+                "secret": false,
+                "optional": false,
+                "displayName": "UserCreation_Status.xlsx",
+                "extension": "xlsx",
+                "poolCredential": false
+              }
+            ]
+          },
+          "executedAt": "2026-11-02T12:58:22.883082"
+        },
+        {
+          "workflowName": "HR Demo O365 User Creation",
+          "automationRequestId": 3433117,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "O365 User Created",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433117",
+          "response": {
+            "message": "O365 User Created",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T12:58:29.101060"
+        },
+        {
+          "workflowName": "HR Demo Add emp OrangeHRM",
+          "automationRequestId": 3433118,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Employee Details Added in the Orange HRM",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433118",
+          "response": {
+            "message": "Employee Details Added in the Orange HRM",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T12:58:38.776592"
+        },
+        {
+          "workflowName": "HR Demo Create Laptop Request",
+          "automationRequestId": 3433120,
+          "executionStatus": "Complete",
+          "agentName": "mahesh@mspevent-win-1",
+          "message": "Laptop request submitted.",
+          "instanceUrl": "https://t4.automationedge.com/#/workflowinstances/3433120",
+          "response": {
+            "message": "Laptop request submitted.",
+            "error": null,
+            "currentStatus": null,
+            "outputParameters": null
+          },
+          "executedAt": "2026-11-02T12:59:07.569065"
+        }
+      ],
+      "intake": [
+        {
+          "key": "servicenow_request",
+          "label": "ServiceNow request",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012144 created with 3 document(s) attached",
+          "startedAt": "2026-11-02T12:57:09.243236",
+          "finishedAt": "2026-11-02T12:57:17.918474",
+          "details": {
+            "warnings": []
+          }
+        },
+        {
+          "key": "candidate_details",
+          "label": "Candidate details workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Candidate-details workflow completed (request #3433110): Employee Details Fetched Succcessfully",
+          "startedAt": "2026-11-02T12:57:17.929493",
+          "finishedAt": "2026-11-02T12:57:26.189410",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Get Employee Details",
+                "requestId": 3433110,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433110",
+                "message": "Employee Details Fetched Succcessfully",
+                "response": {
+                  "message": "Employee Details Fetched Succcessfully",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "intakeStatus": "completed",
+      "pipeline": [
+        {
+          "key": "servicenow_approval",
+          "label": "ServiceNow request approval",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Request REQ0012144 approved",
+          "startedAt": "2026-11-02T12:57:57.565017",
+          "finishedAt": "2026-11-02T12:58:00.051501",
+          "details": {}
+        },
+        {
+          "key": "management_approval",
+          "label": "Management approval workflow",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Management approval workflow completed (request #3433115)",
+          "startedAt": "2026-11-02T12:58:00.062029",
+          "finishedAt": "2026-11-02T12:58:08.381906",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Management Approval",
+                "requestId": 3433115,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433115",
+                "message": "Approved",
+                "response": {
+                  "message": "Approved",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "active_directory",
+          "label": "Active Directory account",
+          "system": "AutomationEdge",
+          "status": "success",
+          "message": "Active Directory account workflow completed (request #3433116)",
+          "startedAt": "2026-11-02T12:58:08.392901",
+          "finishedAt": "2026-11-02T12:58:22.884019",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo AD user creation and Assign role",
+                "requestId": 3433116,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433116",
+                "message": "User 'Rahul.Kamath' created successfully.",
+                "response": {
+                  "message": "User 'Rahul.Kamath' created successfully.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": [
+                    {
+                      "name": "log_20261102.log",
+                      "value": "13d6320c-a7cc-480b-b384-4fd62786f92b",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "log_20261102.log",
+                      "extension": "log",
+                      "poolCredential": false
+                    },
+                    {
+                      "name": "UserCreation_Status.xlsx",
+                      "value": "71204491-a999-45f0-bf7b-0b07d081dff2",
+                      "type": "File",
+                      "order": 1,
+                      "secret": false,
+                      "optional": false,
+                      "displayName": "UserCreation_Status.xlsx",
+                      "extension": "xlsx",
+                      "poolCredential": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "office365",
+          "label": "Microsoft 365 account",
+          "system": "Microsoft 365",
+          "status": "success",
+          "message": "Microsoft 365 account ready: rahul.kamath@automationedge.ai",
+          "startedAt": "2026-11-02T12:58:22.897019",
+          "finishedAt": "2026-11-02T12:58:30.487509",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo O365 User Creation",
+                "requestId": 3433117,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433117",
+                "message": "O365 User Created",
+                "response": {
+                  "message": "O365 User Created",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "userPrincipalName": "rahul.kamath@automationedge.ai"
+          }
+        },
+        {
+          "key": "orangehrm",
+          "label": "OrangeHRM employee profile",
+          "system": "OrangeHRM",
+          "status": "success",
+          "message": "OrangeHRM profile #2 created with work e-mail rahul.kamath@automationedge.ai",
+          "startedAt": "2026-11-02T12:58:30.497512",
+          "finishedAt": "2026-11-02T12:59:01.336274",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Add emp OrangeHRM",
+                "requestId": 3433118,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433118",
+                "message": "Employee Details Added in the Orange HRM",
+                "response": {
+                  "message": "Employee Details Added in the Orange HRM",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ],
+            "warnings": [],
+            "notes": []
+          }
+        },
+        {
+          "key": "laptop",
+          "label": "Laptop request & hardware incident",
+          "system": "ServiceNow",
+          "status": "success",
+          "message": "Laptop requested; incident INC0040685",
+          "startedAt": "2026-11-02T12:59:01.348338",
+          "finishedAt": "2026-11-02T12:59:09.091118",
+          "details": {
+            "workflows": [
+              {
+                "workflowName": "HR Demo Create Laptop Request",
+                "requestId": 3433120,
+                "status": "Complete",
+                "agent": "mahesh@mspevent-win-1",
+                "url": "https://t4.automationedge.com/#/workflowinstances/3433120",
+                "message": "Laptop request submitted.",
+                "response": {
+                  "message": "Laptop request submitted.",
+                  "error": null,
+                  "currentStatus": null,
+                  "outputParameters": null
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "office365": {
+        "userId": "5488d3c5-901a-4386-80bf-d7020c99ade3",
+        "userPrincipalName": "rahul.kamath@automationedge.ai",
+        "displayName": "Rahul Kamath",
+        "initialPassword": "",
+        "adminUrl": "https://portal.azure.com/#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/5488d3c5-901a-4386-80bf-d7020c99ade3",
+        "alreadyExisted": false
+      },
+      "orangeHrm": {
+        "empNumber": 2,
+        "employeeId": "139860",
+        "workEmail": "rahul.kamath@automationedge.ai",
+        "profileUrl": "http://10.41.5.39:8099/orangehrm/web/index.php/pim/viewPersonalDetails/empNumber/2",
+        "attachedDocuments": [
+          "aadhaar_sample.pdf",
+          "pan_sample.pdf",
+          "salary_slip_sample.pdf"
+        ]
+      },
+      "laptop": {
+        "ticketNumber": "INC0040685",
+        "ticketUrl": "https://ven04528.service-now.com/nav_to.do?uri=incident.do?sys_id=7472903debdc9310b02df1b4cad0cdf9",
+        "hardware": "Apple MacBook Pro M3 Max"
+      }
+    }
+  ]
+}

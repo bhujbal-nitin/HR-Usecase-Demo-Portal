@@ -14,7 +14,6 @@ node_modules/
 frontend/dist/
 
 # Runtime data (candidate PII, uploaded documents, generated letters)
-backend/data/
 backend/data_backup_*/
 ~$*
 backend/generated_offers/
