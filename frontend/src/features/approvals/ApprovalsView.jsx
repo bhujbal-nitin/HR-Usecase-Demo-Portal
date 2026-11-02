@@ -116,7 +116,7 @@ export default function ApprovalsView({ embedded = false }) {
     <Shell className={embedded ? undefined : 'view-section active'}>
       <div className="dashboard-header">
         <div>
-          <h2>HR Approvals &amp; Provisioning</h2>
+          <h2>Approvals &amp; Provisioning</h2>
           <p style={{ color: 'var(--text-muted)' }}>
             Review candidate documents, then approve to provision ServiceNow, Active Directory, Microsoft 365, OrangeHRM and IT hardware.
           </p>
@@ -255,7 +255,6 @@ export default function ApprovalsView({ embedded = false }) {
             <li>Microsoft 365 account</li>
             <li>OrangeHRM employee profile</li>
             <li>Laptop request and ServiceNow hardware incident</li>
-            <li>Offer letter (PDF, e-mailed)</li>
           </ol>
           <p>These actions create real records in the connected systems and cannot be undone from here.</p>
         </ConfirmDialog>

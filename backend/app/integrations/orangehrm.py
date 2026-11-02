@@ -10,7 +10,9 @@ import requests
 from app.core.config import Settings
 from app.core.exceptions import IntegrationError, IntegrationNotConfiguredError
 from app.integrations.http import build_session, error_text
+from app.integrations.orangehrm_claim import ClaimMixin
 from app.integrations.orangehrm_leave import LeaveAttendanceMixin
+from app.integrations.orangehrm_payroll import PayrollMixin
 from app.schemas.employee import Employee, OrangeHrmInfo
 from app.utils.formatting import split_name
 
@@ -37,7 +39,7 @@ class ProfileResult:
     notes: list[str] = field(default_factory=list)  # things left out on purpose (not failures)
 
 
-class OrangeHRMClient(LeaveAttendanceMixin):
+class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
     def __init__(self, settings: Settings):
         self._s = settings
 
@@ -60,6 +62,10 @@ class OrangeHRMClient(LeaveAttendanceMixin):
         login_url = f"{self.base_url}/web/index.php/auth/login"
         try:
             page = session.get(login_url, timeout=(connect_timeout, 15))
+            if page.status_code == 403:  # the web server itself refuses this computer: nothing to do with the user name or password
+                raise IntegrationError(SYSTEM, (
+                    "the server refused this computer (HTTP 403 Forbidden), so the portal cannot log in. It is not the user name or password: "
+                    "ask whoever runs the OrangeHRM server to allow this computer's IP address, or check that you are on the right network / VPN."))
             token_match = re.search(r':token="&quot;([^&]+)&quot;"', page.text) or re.search(
                 r'name="_token"\s+value="([^"]+)"', page.text
             )
@@ -74,6 +80,8 @@ class OrangeHRMClient(LeaveAttendanceMixin):
             probe = session.get(f"{self.base_url}/web/index.php/api/v2/pim/employees?limit=1", timeout=15)
         except requests.RequestException as exc:
             raise IntegrationError(SYSTEM, f"login failed: {exc}") from exc
+        if probe.status_code == 403:
+            raise IntegrationError(SYSTEM, "the server refused the portal's request (HTTP 403 Forbidden) after the login. Check the user's permissions in OrangeHRM.")
         if not probe.ok:  # the login page sets a cookie even for bad credentials, so probe the API
             raise IntegrationError(SYSTEM, "login failed - check ORANGEHRM_USERNAME / ORANGEHRM_PASSWORD")
         return session
@@ -114,7 +122,7 @@ class OrangeHRMClient(LeaveAttendanceMixin):
         """Create the PIM profile and fill in details. Only the base create is fatal."""
         session = self._login()
         first, middle, last = split_name(emp.full_name)
-        employee_id = re.sub(r"[^0-9A-Za-z]", "", emp.id.replace("EMP", ""))[:10]
+        employee_id = re.sub(r"[^0-9A-Za-z]", "", re.sub(r"^(AE|EMP)", "", emp.id))[:10]
 
         person = {"firstName": first, "middleName": middle, "lastName": last or first}
         try:

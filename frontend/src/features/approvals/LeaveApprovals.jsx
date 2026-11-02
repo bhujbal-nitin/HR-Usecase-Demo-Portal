@@ -19,11 +19,11 @@ const isLeave = (record) => record.kind === 'leave';
 const days = (count) => `${count} day${count === 1 ? '' : 's'}`;
 const kindOf = (record) => (isLeave(record)
   ? { label: 'Leave', icon: 'fa-umbrella-beach', title: 'A leave application' }
-  : { label: 'Attendance', icon: 'fa-fingerprint', title: 'A missed punch to correct' });
+  : { label: 'Attendance', icon: 'fa-fingerprint', title: 'An attendance request' });
 /** One line saying what is being asked for. */
 const summaryOf = (record) => (isLeave(record)
   ? `${record.leaveType}: ${formatDate(record.startDate)} to ${formatDate(record.endDate)} (${days(record.days)})`
-  : `Out-punch ${record.outPunch} on ${formatDate(record.attendanceDate)}`);
+  : `In ${record.inPunch}, out ${record.outPunch} on ${formatDate(record.attendanceDate)}`);
 
 function Rows({ rows }) {
   return (
@@ -65,10 +65,10 @@ function DetailModal({ record, onClose, onApprove, onReject, onRecord }) {
         <Rows rows={[['Employee ID', record.employeeId], ['Work e-mail', record.workEmail], ['Role', `${record.jobTitle} · ${record.department}`], ['Reporting manager', record.manager]]} />
       </section>
       <section className="detail-section">
-        <h4><i className={`fa-solid ${kindOf(record).icon} text-accent`}></i> {isLeave(record) ? 'Leave' : 'Attendance correction'}</h4>
+        <h4><i className={`fa-solid ${kindOf(record).icon} text-accent`}></i> {isLeave(record) ? 'Leave' : 'Attendance request'}</h4>
         <Rows rows={isLeave(record)
           ? [['Leave type', record.leaveType], ['From', formatDate(record.startDate)], ['To', formatDate(record.endDate)], ['Working days', record.days], ['Balance after', record.balanceAfter === null ? '—' : days(record.balanceAfter)], ['Reason', record.reason]]
-          : [['Day', formatDate(record.attendanceDate)], ['In-punch', record.inPunch], ['Out-punch (requested)', record.outPunch], ['Hours worked', record.hoursWorked], ['Reason', record.reason]]}
+          : [['Day', formatDate(record.attendanceDate)], ['In time (requested)', record.inPunch], ['Out time (requested)', record.outPunch], ['Hours worked', record.hoursWorked], ['Reason', record.reason]]}
         />
       </section>
       {record.status === 'Approved' && (
@@ -158,7 +158,7 @@ export default function LeaveApprovals() {
       <div className="dashboard-header">
         <div>
           <h2>Leave &amp; Attendance</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Review leave applications and attendance corrections. Approving books the leave, or corrects the punch, in OrangeHRM.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Review leave applications and attendance requests. Approving books the leave, or records the day’s punch-in and punch-out, in OrangeHRM.</p>
         </div>
         <div className="header-actions">
           <button type="button" className="btn btn-secondary" onClick={refresh}><i className="fa-solid fa-rotate"></i> Refresh</button>
@@ -236,7 +236,7 @@ export default function LeaveApprovals() {
       {confirm?.kind === 'approve' && (
         <ConfirmDialog title={`Approve ${confirm.record.id}?`} icon="fa-check" confirmLabel="Approve" confirmClass="btn-emerald" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
           <p>{confirm.record.fullName}: {summaryOf(confirm.record)}.</p>
-          <p>{isLeave(confirm.record) ? 'The leave is booked in OrangeHRM and deducted from their balance there.' : 'The employee is punched out in OrangeHRM at the requested time.'}</p>
+          <p>{isLeave(confirm.record) ? 'The leave is booked in OrangeHRM and deducted from their balance there.' : 'The day is recorded in OrangeHRM with the requested punch-in and punch-out, replacing any punch record it already has for that day.'}</p>
         </ConfirmDialog>
       )}
       {confirm?.kind === 'reject' && (
@@ -247,7 +247,7 @@ export default function LeaveApprovals() {
       )}
       {confirm?.kind === 'clear' && (
         <ConfirmDialog title="Clear decided requests?" icon="fa-broom" confirmLabel="Clear history" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
-          <p>Removes approved and rejected requests from this list. What was recorded in OrangeHRM stays there (leave already booked, punches already corrected). Pending requests are kept.</p>
+          <p>Removes approved and rejected requests from this list. What was recorded in OrangeHRM stays there (leave already booked, attendance already recorded). Pending requests are kept.</p>
         </ConfirmDialog>
       )}
     </>

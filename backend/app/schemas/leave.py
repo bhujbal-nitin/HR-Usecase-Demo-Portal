@@ -46,12 +46,15 @@ class LeaveApplication(LeaveCheckRequest):
 
 
 class RegularizationApplication(CamelModel):
+    """An attendance request: the day, when the employee came in and when they left."""
+
     employee_ref: str = Field(min_length=3, max_length=120)
     attendance_date: date
+    in_punch: str = Field(description="The time you came in, HH:MM (24 hour)")
     out_punch: str = Field(description="The time you left, HH:MM (24 hour)")
     reason: str = Field(min_length=2, max_length=300)
 
-    @field_validator("out_punch")
+    @field_validator("in_punch", "out_punch")
     @classmethod
     def _time(cls, value: str) -> str:
         value = value.strip()
@@ -100,23 +103,16 @@ class LeaveCheck(CamelModel):
     ok: bool
 
 
-class DemoPunch(CamelModel):
-    """The outcome of preparing the sample attendance exception in OrangeHRM."""
-
-    created: bool
-    day: date | None = None  # the day that was set up
-    message: str
-
-class AttendanceDay(CamelModel):
-    date: date
+class PunchRecord(CamelModel):
     in_punch: str
-    out_punch: str | None  # None: the out-punch is missing
-    state: str  # ok | missing | pending (a correction is waiting for approval)
+    out_punch: str | None  # None: no out-punch was recorded
 
 
-class AttendanceLog(CamelModel):
-    days: list[AttendanceDay]
-    missing: list[AttendanceDay]  # the days that still need an out-punch
+class AttendanceDayRecords(CamelModel):
+    """What OrangeHRM already holds for one day; an approved attendance request replaces it."""
+
+    date: date
+    records: list[PunchRecord]
 
 
 # ----------------------------------------------------------------------- the stored request

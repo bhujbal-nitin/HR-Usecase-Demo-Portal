@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Stage from '../panel/Stage';
 import SystemMap from '../panel/SystemMap';
-import { hopsFor, mapFor } from '../panel/stageSpec';
+import { aeWorkflowOf, hopsFor, mapFor } from '../panel/stageSpec';
 import { plain } from '../../../utils/wording';
 import StepCard from './StepCard';
 
@@ -47,7 +47,7 @@ export default function AgentTimeline({ state, onGate, agentId: agent = 'onboard
     steps.forEach((step, index) => {
       if (step.status === 'queued') return;
       const stepHops = hopsFor(step, agentId, index, config.systemCount ?? 0);
-      const touched = [step.agent, ...stepHops.flat()];
+      const touched = [config.alias?.[step.agent] ?? step.agent, ...stepHops.flat()];
       touched.forEach((id) => config.nodes[id] && used.add(id));
       if (step.id === stageId) {
         touched.forEach((id) => config.nodes[id] && active.add(id));
@@ -73,7 +73,7 @@ export default function AgentTimeline({ state, onGate, agentId: agent = 'onboard
   return (
     <div className="ad-panel" ref={panel}>
       <Stats stats={state.stats} />
-      <SystemMap config={config} activeNodes={activeNodes} usedNodes={usedNodes} hops={hops} animateKey={`${stageId ?? 'idle'}:${attempt.current.count}`} flowing={stageStep?.status === 'running' && !stageStep.gate} />
+      <SystemMap config={config} activeNodes={activeNodes} usedNodes={usedNodes} hops={hops} ae={aeWorkflowOf(stageStep, config)} animateKey={`${stageId ?? 'idle'}:${attempt.current.count}`} flowing={stageStep?.status === 'running' && !stageStep.gate} />
       <Stage step={stageStep} onGate={onGate} />
 
       <button type="button" className={`ad-logbar${logOpen ? ' open' : ''}`} aria-expanded={logOpen} onClick={() => setLogOpen(!logOpen)}>
@@ -91,7 +91,7 @@ export default function AgentTimeline({ state, onGate, agentId: agent = 'onboard
               <div><h3>{phase.title}</h3><p>{phase.sub}</p></div>
             </div>
             <div className="ad-steps">
-              {phase.steps.map((step, i) => <StepCard key={step.id} step={step} index={i + 1} />)}
+              {phase.steps.map((step, i) => <StepCard key={step.id} step={step} index={i + 1} map={config} />)}
             </div>
           </section>
         ))}
@@ -107,10 +107,25 @@ export default function AgentTimeline({ state, onGate, agentId: agent = 'onboard
                 <h3>{state.mode === 'live' ? 'Offboarding complete' : 'Offboarding complete (simulated)'}</h3>
                 <p>Every offboarding step finished: the connected systems were updated, the settlement was calculated and the relieving letter was prepared{state.stats.human ? ', with one human approval.' : '.'}</p>
               </>
+            ) : agentId === 'hr_policy' ? (
+              <>
+                <h3>{state.mode === 'live' ? 'Policy question and letters handled' : 'Policy question and letters handled (simulated)'}</h3>
+                <p>A policy was chosen and downloaded, the employee's policy question and follow-up were answered from the policy documents, and both letters were made for the employee as Word files. {state.mode === 'live' ? 'Nothing was changed in any system.' : 'Nothing was contacted or saved anywhere.'}</p>
+              </>
+            ) : agentId === 'reimbursement_benefits' ? (
+              <>
+                <h3>{state.mode === 'live' ? 'Expense claim handled' : 'Expense claim handled (simulated)'}</h3>
+                <p>The employee's bills were read, checked against the policy and sent to the manager, who decided each bill{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'The approved bills were recorded in OrangeHRM.' : 'Nothing was saved anywhere.'}</p>
+              </>
+            ) : agentId === 'payroll_salary' ? (
+              <>
+                <h3>{state.mode === 'live' ? 'Payroll & salary handled' : 'Payroll & salary handled (simulated)'}</h3>
+                <p>The employee's payslip, CTC statement and Form 16 were made for download in one chat. {state.mode === 'live' ? 'The salary was read from OrangeHRM and nothing was changed there.' : 'Nothing was contacted or saved anywhere.'}</p>
+              </>
             ) : agentId === 'leave_attendance' ? (
               <>
                 <h3>{state.mode === 'live' ? 'Leave & attendance handled' : 'Leave & attendance handled (simulated)'}</h3>
-                <p>The employee's balance, leave request and attendance correction were handled in one chat{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'Approved requests were recorded in OrangeHRM.' : 'Nothing was saved anywhere.'}</p>
+                <p>The employee's balance, leave request and attendance request were handled in one chat{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'Approved requests were recorded in OrangeHRM.' : 'Nothing was saved anywhere.'}</p>
               </>
             ) : agentName === 'Onboarding' ? (
               <>

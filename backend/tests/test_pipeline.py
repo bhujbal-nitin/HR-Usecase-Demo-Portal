@@ -79,9 +79,6 @@ class FakeAutomationEdge:
     def create_laptop_request(self, emp):
         return self._run("laptop", "HR Demo Create Laptop Request", 6)
 
-    def send_mail(self, subject):
-        return self._run("mail", "HR Demo Send mail", 7)
-
 
 class FakeOffice365:
     def create_user(self, emp):
@@ -101,17 +98,6 @@ class FakeOrangeHrm:
                                            profile_url="http://ohrm/17", attached_documents=self.document_names))
 
 
-class FakeMailer:
-    def __init__(self):
-        self.sent: list[tuple[str, str]] = []
-
-    def is_configured(self):
-        return True
-
-    def send(self, to, subject, html, attachment=None):
-        self.sent.append((to, subject))
-
-
 @pytest.fixture
 def wired(settings):
     container = build_container(settings)
@@ -119,7 +105,6 @@ def wired(settings):
     gw = container.onboarding._gw  # noqa: SLF001 - test wiring
     gw.servicenow, gw.automationedge = FakeServiceNow(), FakeAutomationEdge()
     gw.office365, gw.orangehrm = FakeOffice365(), FakeOrangeHrm()
-    gw.offer_letters._mailer = FakeMailer()  # noqa: SLF001
     yield container
     container.task_queue.stop()
 
@@ -152,7 +137,7 @@ def test_full_approval_pipeline_succeeds(wired, candidate_form):
     done = _finished(wired, employee.id)
 
     gw = wired.onboarding._gw  # noqa: SLF001
-    assert [s.status for s in done.pipeline] == [StepStatus.SUCCESS] * 7, [s.message for s in done.pipeline]
+    assert [s.status for s in done.pipeline] == [StepStatus.SUCCESS] * 6, [s.message for s in done.pipeline]
     assert done.provisioning_status.value == "completed"
     assert done.approval_source == PORTAL_SOURCE
     assert gw.servicenow.approved == ["req-sys"]
@@ -161,16 +146,13 @@ def test_full_approval_pipeline_succeeds(wired, candidate_form):
     # The Microsoft 365 address produced in step 4 must be the OrangeHRM work e-mail in step 5.
     assert gw.orangehrm.work_email == "aarav.sharma@corp.example"
     assert done.office365.user_principal_name == "aarav.sharma@corp.example"
-    assert "idDoc.pdf" in gw.orangehrm.document_names and any(n.startswith("Offer_Letter") for n in gw.orangehrm.document_names)
+    assert "idDoc.pdf" in gw.orangehrm.document_names
 
     assert done.orange_hrm.emp_number == 17
     assert done.laptop.ticket_number == "INC0012345"
     assert "OrangeHRM profile: #17" in gw.servicenow.incident_descriptions[0]
 
-    assert done.offer_letter.emailed is True
-    assert done.offer_letter.recipient == done.email  # HR_NOTIFICATION_RECIPIENT unset -> candidate
-    assert gw.servicenow.attachments[-1].startswith("sc_request:Offer_Letter")
-    assert gw.automationedge.calls == ["details", "mgmt", "ad", "o365", "ohrm", "laptop", "mail"]
+    assert gw.automationedge.calls == ["details", "mgmt", "ad", "o365", "ohrm", "laptop"]
 
     # Each step exposes the AutomationEdge run it triggered (shown in the chat's process panel).
     ad_step = next(s for s in done.pipeline if s.key == "active_directory")
@@ -192,7 +174,7 @@ def test_failed_workflow_stops_the_chain(wired, candidate_form):
     assert steps["active_directory"].status == StepStatus.FAILED
     assert "ended with status Failed" in steps["active_directory"].message
     # Nothing after the failed workflow ran, and each later step says why.
-    for key in ("office365", "orangehrm", "laptop", "offer_letter"):
+    for key in ("office365", "orangehrm", "laptop"):
         assert steps[key].status == StepStatus.SKIPPED and "Active Directory" in steps[key].message
     assert fake_ae.calls == ["details", "mgmt", "ad"]
     assert done.provisioning_status.value == "failed" and done.approved_at is None
@@ -261,16 +243,16 @@ def test_reject_propagates_to_servicenow(wired, candidate_form):
 
 
 def test_failure_in_the_last_step_does_not_undo_the_onboarding(wired, candidate_form):
-    def smtp_down(to, subject, html, attachment=None):
-        raise IntegrationError("SMTP", "connection closed")
+    def servicenow_down(emp, description, emp_number):
+        raise IntegrationError("ServiceNow", "connection closed")
 
-    wired.onboarding._gw.offer_letters._mailer.send = smtp_down  # noqa: SLF001
+    wired.onboarding._gw.servicenow.create_hardware_incident = servicenow_down  # noqa: SLF001
     employee = _submit(wired, candidate_form)
     wired.onboarding.start_approval(employee.id)
     done = _finished(wired, employee.id)
 
     assert done.pipeline[-1].status == StepStatus.FAILED
-    assert [s.status for s in done.pipeline[:-1]] == [StepStatus.SUCCESS] * 6
+    assert [s.status for s in done.pipeline[:-1]] == [StepStatus.SUCCESS] * 5
     assert done.provisioning_status.value == "completed_with_errors"  # everything else worked
 
 
@@ -319,10 +301,10 @@ def test_rerun_resumes_from_the_failed_step_without_repeating_earlier_ones(wired
     wired.onboarding.retry_provisioning(employee.id)
     done = _finished(wired, employee.id)
 
-    assert [s.status for s in done.pipeline] == [StepStatus.SUCCESS] * 7
+    assert [s.status for s in done.pipeline] == [StepStatus.SUCCESS] * 6
     assert done.provisioning_status.value == "completed"
     # Mgmt approval, AD and Microsoft 365 were NOT run again; the chain restarted at OrangeHRM.
-    assert gw.automationedge.calls == ["ohrm", "laptop", "mail"]
+    assert gw.automationedge.calls == ["ohrm", "laptop"]
     assert gw.servicenow.approved == ["req-sys"]  # approved once only
     assert gw.orangehrm.work_email == "aarav.sharma@corp.example"  # M365 address carried over from the first run
     assert "OrangeHRM profile: #17" in gw.servicenow.incident_descriptions[0]
@@ -349,7 +331,7 @@ def test_a_failed_step_can_be_skipped_and_provisioning_carries_on(wired, candida
     steps = {s.key: s for s in done.pipeline}
     assert steps["orangehrm"].status == StepStatus.SKIPPED and steps["orangehrm"].details["skippedByUser"] is True
     assert all(s.status == StepStatus.SUCCESS for k, s in steps.items() if k != "orangehrm")
-    assert gw.automationedge.calls == ["laptop", "mail"]  # the skipped step was not run; earlier ones were not repeated
+    assert gw.automationedge.calls == ["laptop"]  # the skipped step was not run; earlier ones were not repeated
     assert done.provisioning_status.value == "completed"
 
 

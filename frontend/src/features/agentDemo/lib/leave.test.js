@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { detectIntent, sampleLeaveDates, upcomingHolidays, validateLeave, validateRegularize, workingDays } from './leave';
+import { attendanceDateRange, detectIntent, sampleLeaveDates, upcomingHolidays, validateAttendance, validateLeave, workingDays } from './leave';
 
 describe('detectIntent', () => {
   it('tells the three requests and goodbye apart', () => {
     expect(detectIntent('How many leaves do I have left?')).toBe('balance');
     expect(detectIntent('Is there a holiday next week')).toBe('balance');
     expect(detectIntent('I want to apply for 2 days casual leave')).toBe('apply');
-    expect(detectIntent('I forgot to punch out yesterday')).toBe('regularize');
-    expect(detectIntent('Regularize my attendance')).toBe('regularize');
+    expect(detectIntent('I forgot to punch out yesterday')).toBe('attendance');
+    expect(detectIntent('Attendance request')).toBe('attendance');
+    expect(detectIntent('Regularize my attendance')).toBe('attendance');
     expect(detectIntent('thanks, that is all')).toBe('done');
     expect(detectIntent('what is the weather')).toBeNull();
   });
@@ -38,9 +39,18 @@ describe('forms', () => {
     expect(Object.keys(errors).sort()).toEqual(['endDate', 'leaveType', 'reason', 'startDate']);
   });
 
-  it('validates a punch correction', () => {
-    expect(validateRegularize({ attendanceDate: '2026-10-20', outPunch: '18:30', reason: 'Scanner offline' })).toEqual({});
-    expect(Object.keys(validateRegularize({ attendanceDate: '', outPunch: '6:30pm', reason: '' })).sort()).toEqual(['attendanceDate', 'outPunch', 'reason']);
-    expect(validateRegularize({ attendanceDate: '2026-10-20', outPunch: '08:00', reason: 'Scanner offline' }).outPunch).toMatch(/after your in-punch/);
+  it('works out the days an attendance request can be for', () => {
+    expect(attendanceDateRange(new Date(2026, 9, 29))).toEqual({ min: '2026-09-29', max: '2026-10-28' });
+    expect(attendanceDateRange(new Date(2026, 0, 5))).toEqual({ min: '2025-12-06', max: '2026-01-04' });
+  });
+
+  it('validates an attendance request: day, both times and the reason', () => {
+    const { max } = attendanceDateRange();
+    const good = { attendanceDate: max, inPunch: '09:10', outPunch: '18:30', reason: 'Scanner offline' };
+    expect(validateAttendance(good)).toEqual({});
+    expect(Object.keys(validateAttendance({ attendanceDate: '', inPunch: '9am', outPunch: '6:30pm', reason: '' })).sort()).toEqual(['attendanceDate', 'inPunch', 'outPunch', 'reason']);
+    expect(validateAttendance({ ...good, outPunch: '08:00' }).outPunch).toMatch(/after the time you came in/);
+    expect(validateAttendance({ ...good, attendanceDate: '2999-01-01' }).attendanceDate).toMatch(/already passed/);
+    expect(validateAttendance({ ...good, attendanceDate: '2000-01-01' }).attendanceDate).toMatch(/last 30 days/);
   });
 });

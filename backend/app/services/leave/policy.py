@@ -7,10 +7,9 @@ from app.schemas.leave import Holiday
 # The only leave types the demo works with, and the yearly quota given to an employee who has none (days).
 STANDARD_LEAVE_TYPES = {"Casual Leave": 12.0, "Sick Leave": 12.0, "Privilege Leave": 15.0}
 
-# Attendance: the sample punch-in the demo adds, and the time proposed as the out-punch.
-IN_PUNCH = "09:12"
+# Attendance: the time proposed as the out-punch, and how far back an attendance request may go.
 SHIFT_END = "18:30"
-ATTENDANCE_DAYS = 7  # how many past working days the punch log looks at
+ATTENDANCE_WINDOW_DAYS = 30
 
 _DAY_NAMES = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 DEFAULT_WORK_WEEK = {"monday": 0, "tuesday": 0, "wednesday": 0, "thursday": 0, "friday": 0, "saturday": 8, "sunday": 8}  # 8 = non-working
@@ -43,15 +42,13 @@ def holidays_skipped(start: date, end: date, work_week: dict[str, int], holidays
     ]
 
 
-def previous_working_days(today: date, count: int, work_week: dict[str, int], holidays: dict[date, str]) -> list[date]:
-    """The ``count`` working days before ``today``, most recent first (holidays must cover about two weeks back)."""
-    days: list[date] = []
-    day = today
-    while len(days) < count:
-        day -= timedelta(days=1)
-        if _is_working(day, work_week, set(holidays)):
-            days.append(day)
-    return days
+def attendance_date_problem(day: date, today: date) -> str | None:
+    """Why an attendance request cannot be raised for ``day`` (None when it can): any day in the last 30 days, before today."""
+    if day >= today:
+        return "An attendance request is for a day that has already passed."
+    if day < today - timedelta(days=ATTENDANCE_WINDOW_DAYS):
+        return f"An attendance request can only go back {ATTENDANCE_WINDOW_DAYS} days."
+    return None
 
 
 def upcoming_holidays(holidays: list[dict], today: date, count: int = 4) -> list[Holiday]:

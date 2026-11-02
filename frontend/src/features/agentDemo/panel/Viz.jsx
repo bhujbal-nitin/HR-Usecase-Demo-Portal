@@ -63,7 +63,7 @@ export function Inbound({ step }) {
     return (
       <div className="ad-vz">
         <div className="ad-v-file rv"><Icon name={p.document ? 'file' : 'image'} size={28} /><div><b>{name}</b><small>{p.size_kb ? `${p.size_kb} KB` : ''} · {p.document?.mime_type ?? p.image?.mime_type}</small></div></div><Arrow />
-        <Kvs rows={[['from', 'Candidate'], ['routed to', 'Document Agent'], ['status', 'queued for scan']]} />
+        <Kvs rows={[['from', 'Candidate'], ['routed to', 'Onboarding Agent'], ['status', 'queued for scan']]} />
       </div>
     );
   }
@@ -270,7 +270,7 @@ export function Compare({ step }) {
   );
 }
 
-const PROVIDER = { 'kyc.offline_verify()': ['Identity provider', 'idcard'], 'pan.verify()': ['Tax database', 'bank'], 'epfo.lookup()': ['EPFO', 'bank'], 'POST /api/employees': ['HR system', 'db'], 'servicenow.create_request()': ['ServiceNow', 'ticket'],
+const PROVIDER = { 'epfo.lookup()': ['EPFO', 'bank'], 'POST /api/employees': ['HR system', 'db'], 'servicenow.create_request()': ['ServiceNow', 'ticket'],
   'orangehrm.assign_leave()': ['OrangeHRM', 'db'], 'orangehrm.punch_out()': ['OrangeHRM', 'db'] };
 export function External({ step }) {
   const [label, icon] = PROVIDER[step.name] ?? [step.title, 'cloud'];

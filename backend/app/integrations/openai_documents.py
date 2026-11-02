@@ -53,15 +53,17 @@ class OpenAIDocumentReader:
     def is_configured(self) -> bool:
         return bool(self._s.openai_api_key.get_secret_value().strip())
 
-    def read(self, filename: str, content: bytes, content_type: str | None) -> dict:
-        """Returns the model's JSON answer (see the prompt). Raises IntegrationError if OpenAI cannot be reached."""
+    def read(self, filename: str, content: bytes, content_type: str | None, prompt: str = _PROMPT) -> dict:
+        """Returns the model's JSON answer to ``prompt`` about the file (default: the identity-document prompt).
+
+        Raises IntegrationError if OpenAI cannot be reached."""
         if not self.is_configured():
             raise IntegrationNotConfiguredError(SYSTEM)
 
         mime = (content_type or "").split(";")[0].strip().lower()
         if not mime or mime == "application/octet-stream":
             mime = mimetypes.guess_type(filename)[0] or ""
-        parts: list[dict] = [{"type": "text", "text": _PROMPT}]
+        parts: list[dict] = [{"type": "text", "text": prompt}]
         encoded = base64.b64encode(content).decode("ascii")
         if mime in _IMAGE_TYPES:
             parts.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{encoded}", "detail": "high"}})

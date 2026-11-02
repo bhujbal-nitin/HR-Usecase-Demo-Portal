@@ -3,7 +3,7 @@
 // flows cannot drift apart. Nothing here contacts any system (the live flow works in OrangeHRM).
 
 import {
-  IN_PUNCH, LEAVE_POLICY, SHIFT_END, fromIso, holidayOn, hoursWorked, isAfter, previousWorkingDays, toIso, upcomingHolidays, workingDays,
+  IN_PUNCH, LEAVE_POLICY, SHIFT_END, attendanceDateRange, fromIso, holidayOn, hoursWorked, isAfter, previousWorkingDays, toIso, upcomingHolidays, workingDays,
 } from '../lib/leave';
 import { todayIso } from '../lib/resignation';
 import { SIM_EMPLOYEE } from './simulatedOffboardingApi';
@@ -46,14 +46,13 @@ export function createSimulatedLeaveApi(scale = 1) {
     return { leaveType, startDate, endDate, days, balanceBefore: left, balanceAfter: left - days, holidaysSkipped: skipped(startDate, endDate), problems, ok: problems.length === 0 };
   };
 
-  // One day with a missing out-punch, the most recent working day, until it is corrected.
-  const punchDay = previousWorkingDays(1)[0];
-  const attendance = () => {
-    const fix = requests.find((r) => r.kind === 'regularization' && r.status !== 'Rejected');
-    const day = fix?.applied
-      ? { date: punchDay, inPunch: IN_PUNCH, outPunch: fix.outPunch, state: 'ok' }
-      : { date: punchDay, inPunch: IN_PUNCH, outPunch: null, state: fix ? 'pending' : 'missing' };
-    return { days: [day], missing: day.state === 'missing' ? [day] : [] };
+  // The simulated OrangeHRM holds one sample punch-in without an out-punch on the latest working day, until an attendance request
+  // for a day is recorded (an approved request replaces whatever the day held).
+  const sampleDay = previousWorkingDays(1)[0];
+  const punchesOn = (day) => {
+    const fix = requests.find((r) => r.kind === 'regularization' && r.applied && r.attendanceDate === day);
+    if (fix) return [{ inPunch: fix.inPunch, outPunch: fix.outPunch }];
+    return day === sampleDay ? [{ inPunch: IN_PUNCH, outPunch: null }] : [];
   };
 
   const base = (kind, prefix, reason) => ({
@@ -74,8 +73,7 @@ export function createSimulatedLeaveApi(scale = 1) {
     getBalances: async () => { await pause(700); return balances(); },
     getHolidays: async () => { await pause(600); return upcomingHolidays(); },
     checkLeave: async (request) => { await pause(900); return check(request); },
-    getAttendance: async () => { await pause(800); return attendance(); },
-    prepareDemoPunch: async () => ({ created: false, day: null, message: 'The simulated punch log already has a missing out-punch.' }),
+    getAttendance: async (_ref, day) => { await pause(800); return { date: day, records: punchesOn(day) }; },
     submitLeave: async (application) => {
       await pause(900);
       const result = check(application);
@@ -84,11 +82,14 @@ export function createSimulatedLeaveApi(scale = 1) {
       requests.unshift(record);
       return { ...record };
     },
-    submitRegularization: async ({ attendanceDate, outPunch, reason }) => {
+    submitRegularization: async ({ attendanceDate, inPunch, outPunch, reason }) => {
       await pause(900);
-      if (!attendance().missing.some((d) => d.date === attendanceDate)) throw new Error('There is no missing out-punch on that date.');
-      if (!isAfter(outPunch, IN_PUNCH)) throw new Error(`The out-punch must be after the in-punch (${IN_PUNCH}).`);
-      const record = { ...base('regularization', 'AT', reason), attendanceDate, inPunch: IN_PUNCH, outPunch, hoursWorked: hoursWorked(IN_PUNCH, outPunch) };
+      const { min, max } = attendanceDateRange();
+      if (attendanceDate > max) throw new Error('An attendance request is for a day that has already passed.');
+      if (attendanceDate < min) throw new Error('An attendance request can only go back 30 days.');
+      if (!isAfter(outPunch, inPunch)) throw new Error(`The out time must be after the in time (${inPunch}).`);
+      if (requests.some((r) => r.kind === 'regularization' && r.attendanceDate === attendanceDate && holds(r))) throw new Error('An attendance request for that day is already waiting for approval.');
+      const record = { ...base('regularization', 'AT', reason), attendanceDate, inPunch, outPunch, hoursWorked: hoursWorked(inPunch, outPunch) };
       requests.unshift(record);
       return { ...record };
     },

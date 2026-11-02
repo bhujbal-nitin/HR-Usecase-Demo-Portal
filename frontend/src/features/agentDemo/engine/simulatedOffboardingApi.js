@@ -3,7 +3,7 @@
 // the two flows cannot drift apart. Nothing here contacts any system. Every step is tagged `simulated`.
 
 export const SIM_EMPLOYEE = {
-  employeeId: 'EMP-482915', fullName: 'Aditi Rao', jobTitle: 'Senior Product Designer', department: 'Design', manager: 'Karan Mehta (Head of Design)',
+  employeeId: 'AE-482915', fullName: 'Aditi Rao', jobTitle: 'Senior Product Designer', department: 'Design', manager: 'Karan Mehta (Head of Design)',
   workEmail: 'aditi.rao@acme.example', hardware: 'Apple MacBook Pro M3 Max', annualCtc: 2400000,
 };
 

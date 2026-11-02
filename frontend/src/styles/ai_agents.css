@@ -505,6 +505,7 @@
 .agent-catalog-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr; /* every card is as tall as the tallest one */
   gap: 1.75rem;
   margin-bottom: 3rem;
 }
@@ -575,13 +576,85 @@
   white-space: nowrap;
 }
 
-/* Card Capability Description */
+/* Card Capability Description: at most four lines; a longer text gets a "More" link that opens it in full */
+.agent-card-desc-wrap {
+  flex: 1;
+  margin-bottom: 1.25rem;
+}
+
 .agent-card-desc {
   font-size: 0.92rem;
   color: var(--text-muted);
   line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agent-card-more {
+  margin-top: 0.3rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.agent-card-more:hover {
+  text-decoration: underline;
+}
+
+.agent-details-dialog {
+  width: min(520px, calc(100vw - 2rem));
+  margin: auto; /* the global reset removes the browser's centring */
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  box-shadow: var(--shadow-lg);
+}
+
+.agent-details-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.agent-details-body {
+  padding: 1.75rem;
+}
+
+.agent-details-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.agent-details-head .agent-card-badge {
+  display: inline-block;
+  margin-top: 0.3rem;
+}
+
+.agent-details-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.7;
   margin-bottom: 1.25rem;
-  flex: 1;
+}
+
+.agent-details-close {
+  margin-top: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Capability Tags Pills */

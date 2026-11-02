@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     data_dir: Path = BACKEND_DIR / "data"
     offers_dir: Path = BACKEND_DIR / "generated_offers"
     max_upload_bytes: int = 10 * 1024 * 1024
+    hr_documents_dir: Path = BACKEND_DIR / "hr_documents"  # the ready-made letters (address proof, bank account opening) you place there
 
     # --- ServiceNow -----------------------------------------------------
     sn_instance_url: str = ""
@@ -51,7 +52,6 @@ class Settings(BaseSettings):
     ae_workflow_o365_user_creation: str = "HR Demo O365 User Creation"
     ae_workflow_add_emp_orangehrm: str = "HR Demo Add emp OrangeHRM"
     ae_workflow_create_laptop_request: str = "HR Demo Create Laptop Request"
-    ae_workflow_send_mail: str = "HR Demo Send mail"
     ae_workflow_document_verification: str = "HR Demo Document Verification"
     # Offboarding workflows (each must reach 'Complete' before the next step starts)
     ae_workflow_get_exit_details: str = "HR Demo Get Exit Details"
@@ -69,6 +69,22 @@ class Settings(BaseSettings):
     ae_workflow_attendance_records: str = "HR Demo Get Attendance Records"
     ae_workflow_punch_in: str = "HR Demo Add Punch In OrangeHRM"
     ae_workflow_punch_out: str = "HR Demo Punch Out OrangeHRM"
+    # Reimbursement & benefits workflows (showcase runs, each after its own step; the chat goes on once it is Complete)
+    ae_workflow_read_bill: str = "HR Demo Read Bill"
+    ae_workflow_check_reimbursement_policy: str = "HR Demo Check Reimbursement Policy"
+    ae_workflow_submit_expense_claim: str = "HR Demo Submit Expense Claim"
+    ae_workflow_create_claim: str = "HR Demo Create Claim OrangeHRM"
+    # HR policy & documents workflows (showcase runs, each after its own step; the chat goes on once it is Complete)
+    ae_workflow_search_policy: str = "HR Demo Search Policy"
+    ae_workflow_get_policy: str = "HR Demo Get Policy Document"
+    ae_workflow_ask_policy: str = "HR Demo Ask Policy Question"
+    ae_workflow_address_proof_letter: str = "HR Demo Generate Address Proof Letter"
+    ae_workflow_bank_account_letter: str = "HR Demo Generate Bank Account Opening Letter"
+    # Payroll & salary workflows (showcase runs, each BEFORE the document it stands for; the chat goes on once it is Complete)
+    ae_workflow_fetch_salary: str = "HR Demo Fetch Salary Details"
+    ae_workflow_generate_payslip: str = "HR Demo Generate Payslip"
+    ae_workflow_generate_ctc: str = "HR Demo Generate CTC Statement"
+    ae_workflow_generate_form16: str = "HR Demo Generate Form 16"
     # How long to wait for ONE workflow to reach 'Complete' before treating it as failed.
     ae_workflow_timeout_seconds: int = 180
 
@@ -92,11 +108,17 @@ class Settings(BaseSettings):
     smtp_sender_name: str = "HR Onboarding"
     hr_notification_recipient: str = ""
 
-    # --- Offer letter branding ------------------------------------------
+    # --- Letter branding (the relieving letter) -------------------------
     company_name: str = "AutomationEdge HR suite"
     company_address: str = "100 Innovation Way, Suite 500, San Francisco, CA 94105"
     offer_signatory_name: str = "Elena Vance"
     offer_signatory_title: str = "Global Head of Talent Acquisition"
+
+    # --- Knowledge base (HR policy questions) -----------------------------
+    km_base_url: str = "https://ac2.automationedge.com/km/api"
+    km_project_id: str = ""
+    km_project_secret: SecretStr = SecretStr("")
+    km_timeout_seconds: int = 60
 
     # --- OpenAI (document verification in the agent demo's manual live mode) -----
     # Leave the key empty to switch the check off; uploaded documents are then only attached, not read.
@@ -145,6 +167,10 @@ class Settings(BaseSettings):
     @property
     def leave_requests_file(self) -> Path:
         return self.data_dir / "leave_requests.json"
+
+    @property
+    def reimbursement_claims_file(self) -> Path:
+        return self.data_dir / "reimbursement_claims.json"
 
     @property
     def employees_file(self) -> Path:

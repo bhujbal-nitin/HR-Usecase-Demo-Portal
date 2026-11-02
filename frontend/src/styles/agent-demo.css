@@ -96,19 +96,6 @@
 [data-theme='dark'] .agent-demo .ad-go { background: #00a884; }
 .agent-demo .ad-go.done { opacity: 0.75; }
 
-/* sample documents */
-.agent-demo .doc { width: 14.5rem; max-width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #cfd6e4; background: #fff; color: #1b2438; font-size: 0.62rem; }
-.agent-demo .doc .dh { padding: 5px 8px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.56rem; color: #fff; display: flex; justify-content: space-between; gap: 6px; }
-.agent-demo .doc.aad .dh { background: #c2410c; } .agent-demo .doc.pan .dh { background: #1e4fa8; }
-.agent-demo .doc.uan .dh { background: #0f766e; } .agent-demo .doc.pay .dh { background: #6d28d9; }
-.agent-demo .doc .db { display: flex; gap: 8px; padding: 8px; }
-.agent-demo .doc .ph { width: 2.7rem; height: 3.3rem; border-radius: 4px; background: linear-gradient(#d7deec, #b9c5dd); position: relative; flex: none; overflow: hidden; }
-.agent-demo .doc .ph::after { content: ''; position: absolute; left: 12px; top: 10px; width: 20px; height: 20px; border-radius: 50%; background: #8d9bb8; box-shadow: 0 22px 0 4px #8d9bb8; }
-.agent-demo .doc dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 1px 6px; min-width: 0; }
-.agent-demo .doc dt { color: #6b7790; } .agent-demo .doc dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-.agent-demo .doc .num { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; font-size: 0.74rem; padding: 0 8px 6px; font-weight: 500; }
-.agent-demo .doc .smp { padding: 3px 8px; background: #f3f5fa; color: #6b7790; font-size: 0.52rem; }
-
 /* input bar */
 .agent-demo .ad-bar { background: var(--wa-bar); padding: 0.5rem 0.65rem 0.65rem; display: flex; flex-direction: column; gap: 6px; }
 .agent-demo .ad-hint { font-size: 0.75rem; color: var(--wa-muted); padding: 0 4px; min-height: 1.1rem; }
@@ -184,6 +171,8 @@
   border-radius: 999px; padding: 4px 12px; font: 600 0.78rem inherit; font-family: inherit; cursor: pointer;
 }
 .agent-demo .ad-suggest button:hover { filter: brightness(0.95); }
+.agent-demo .ad-suggest button:disabled { cursor: default; opacity: 0.75; filter: none; }
+.agent-demo .ad-suggest button.picked { opacity: 1; background: var(--wa-accent); color: #fff; border-color: var(--wa-accent); }
 
 .agent-demo .ad-edit {
   width: 100%; min-height: 2.1rem; margin-top: 3px; padding: 0.35rem 0.6rem; border-radius: 8px; font: 0.82rem inherit; font-family: inherit;
@@ -209,6 +198,20 @@
   color: var(--wa-accent); border-radius: 999px; padding: 5px 12px; font: 700 0.76rem inherit; font-family: inherit; cursor: pointer;
 }
 .agent-demo .ad-widget-btn:hover { filter: brightness(0.95); }
+
+/* a file to download, shown as an attachment (payslip, letter, policy) */
+.agent-demo .ad-download {
+  display: flex; align-items: center; gap: 0.65rem; width: 100%; max-width: 17rem; padding: 0.55rem 0.7rem; text-decoration: none;
+  background: color-mix(in srgb, var(--wa-ink) 4%, var(--wa-in)); border: 1px solid color-mix(in srgb, var(--wa-muted) 35%, transparent); border-radius: 0.7rem; color: var(--wa-ink);
+}
+.agent-demo .ad-download:hover { background: color-mix(in srgb, var(--wa-ink) 8%, var(--wa-in)); text-decoration: none; }
+.agent-demo .ad-download-icon {
+  flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 0.55rem; font-size: 1rem;
+  background: color-mix(in srgb, var(--wa-head) 14%, transparent); color: var(--wa-head);
+}
+.agent-demo .ad-download-text { display: flex; flex-direction: column; min-width: 0; }
+.agent-demo .ad-download-text b { font-size: 0.8rem; color: var(--wa-head); }
+.agent-demo .ad-download-text small { font-size: 0.72rem; color: var(--wa-muted); overflow-wrap: anywhere; }
 
 /* upload card */
 .agent-demo .ad-upload h5 i { margin-right: 0.35rem; color: var(--wa-accent); }

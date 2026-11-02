@@ -17,7 +17,7 @@ export const MANUAL_FIELDS = [...PERSONAL_FIELDS.filter((f) => f.id !== 'uan'), 
 const DOCS = [
   { key: 'idDoc', label: 'Aadhaar card', title: 'Aadhaar card', ask: <>Next, please attach your <b>Aadhaar card</b> (PDF or Word) with the paperclip.</> },
   { key: 'panDoc', label: 'PAN card', title: 'PAN card', ask: <>Now please attach your <b>PAN card</b> (PDF or Word).</> },
-  { key: 'salaryDoc', label: 'latest salary slip', title: 'latest salary slip', ask: <>Now please attach your <b>latest salary slip</b> (PDF or Word).</> },
+  { key: 'salaryDoc', label: 'latest salary slip', title: 'latest salary slip', ask: <>Now please attach your <b>latest month’s salary slip</b> (PDF or Word).</> },
 ];
 
 /** Phase: the user's first message, intent and the joining form. */
@@ -59,6 +59,9 @@ async function intake({ r, values }) {
 }
 
 const TYPE_NAME = { aadhaar: 'Aadhaar card', pan: 'PAN card', salary_slip: 'salary slip', other: 'different kind of document' };
+/** What was actually matched, in plain words: "your name matches your form and your date of birth matches your Aadhaar card". */
+const MATCH_WORDS = { name: 'your name matches your form', dob: 'your date of birth matches your Aadhaar card' };
+const matchSummary = (result) => result.checks.filter((c) => c.passed && MATCH_WORDS[c.id]).map((c) => MATCH_WORDS[c.id]).join(' and ');
 const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : undefined);
 
 /** What the check step shows: the checks first (so the stage can tick them off), the details of what was read below. */
@@ -128,7 +131,7 @@ async function collectDocument({ r, S, doc, values }) {
       },
     ]);
 
-    let verified = false;
+    let matched = '';
     if (S.verify.enabled) {
       const { result, unavailable } = await checkDocument({ r, S, doc, file, values });
       if (result && !result.passed) {
@@ -138,7 +141,7 @@ async function collectDocument({ r, S, doc, values }) {
         continue;
       }
       if (unavailable) await r.bot(<>I couldn’t check this {doc.label} automatically just now, so I’ll pass it to HR to review.</>, { wait: 400 });
-      verified = Boolean(result);
+      matched = result ? matchSummary(result) : '';
       if (doc.key === 'idDoc' && result?.dateOfBirth) S.aadhaarDob = result.dateOfBirth;
     }
 
@@ -150,7 +153,7 @@ async function collectDocument({ r, S, doc, values }) {
     }]);
     r.patchMsg(cardId, { upload: { docKey: doc.key, label: doc.title, file: { name: file.name, size: file.size } } });
     S.files[doc.key] = file;
-    return { verified };
+    return { matched };
   }
 }
 
@@ -176,8 +179,8 @@ export async function runManualOnboarding({ r, set }) {
 
   for (const [index, doc] of DOCS.entries()) {
     if (index > 0) await r.bot(doc.ask, { wait: 500 });
-    const { verified } = await collectDocument({ r, S, doc, values });
-    await r.bot(<>Got your <b>{doc.label}</b>{verified ? ' and it checks out.' : '.'}</>, { wait: 400 });
+    const { matched } = await collectDocument({ r, S, doc, values });
+    await r.bot(<>Got your <b>{doc.label}</b>{matched ? `: ${matched}.` : '.'}</>, { wait: 400 });
   }
   await r.bot('Thanks, I have all three documents.', { wait: 500 });
   await r.bot(<>That’s everything I need. I’m <b>saving your file for HR</b> now.</>, { wait: 500 });

@@ -1,0 +1,48 @@
+ONBOARDING FORM DATA - copy these values into the portal
+==========================================================
+Candidate: Ananya Bhatt   (all values below are fictional)
+
+Use the three PDFs in this folder as the documents:
+  1_Aadhaar_Card.pdf   -> Aadhaar card
+  2_PAN_Card.pdf       -> PAN card
+  3_Salary_Slip.pdf    -> Latest salary slip
+
+PERSONAL DETAILS
+----------------
+Full Legal Name ............ Ananya Bhatt
+Personal Email Address ..... ananya.bhatt.test@example.com
+Phone Number ............... +91 99221 78305
+Date of Birth .............. 1998-01-09   (9 January 1998)
+Aadhaar Number ............. 3715 4902 8166
+EPFO UAN Number ............ 100718254093   (only if the form asks; the Agent Demo does not)
+Emergency Contact Name ..... Kavita Bhatt (Mother)
+Emergency Contact Phone .... +91 99221 40956
+Residential Address ........ Flat 8, Shreeji Heights, Viman Nagar, Pune, Maharashtra 411014
+
+EMPLOYMENT DETAILS
+------------------
+Department ................. Cybersecurity
+Job Title .................. Security Analyst
+Reporting Manager .......... Farhan Sheikh (Head of Cybersecurity)
+Joining Date ............... 2027-02-15
+Annual CTC (INR) ........... 960000
+Preferred Workstation ...... Dell XPS 15 9530 (i9 64GB RTX)
+Work Location .............. Hybrid
+
+WHAT THE DOCUMENTS SHOW (they agree with the form, so the checks should pass)
+------------------------------------------------------------------------------
+Aadhaar : Ananya Bhatt, DOB 09/01/1998, number 3715 4902 8166  (valid Verhoeff check digit)
+PAN     : ANANYA BHATT, DOB 09/01/1998, number DWHPB5603R
+Payslip : Ananya Bhatt, October 2026, gross INR 80,000  (about the monthly CTC of INR 80,000)
+
+TRY THESE FAILURE CASES TOO
+---------------------------
+- Upload the PAN PDF where the Aadhaar is asked      -> rejected: wrong document type
+- Upload the salary slip where the PAN is asked      -> rejected: wrong document type
+- Type a different Full Legal Name in the form       -> every document is rejected: name mismatch
+- Change the form's name only slightly (e.g. "Ananya X. Bhatt") -> still accepted
+
+NOTE
+----
+The PDFs are plain, generated test documents. A real OpenAI check reads them as printed text, which normally works; if the model
+judges one "not genuine" because it is obviously a plain template, test with a photo/PDF of your own sample card instead.

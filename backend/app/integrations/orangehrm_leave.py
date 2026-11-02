@@ -167,5 +167,10 @@ class LeaveAttendanceMixin:
         """Punch the employee out. OrangeHRM closes the employee's latest open record."""
         return self._leave_call("PUT", f"attendance/employees/{emp_number}/records", json=self._punch_body(day, clock, note)).get("data") or {}
 
+    def delete_attendance_records(self, emp_number: int, record_ids: list[int]) -> None:
+        """Delete the employee's attendance records with these ids (Time -> Attendance -> Employee Records -> Delete)."""
+        if record_ids:
+            self._leave_call("DELETE", f"attendance/employees/{emp_number}/records", json={"ids": record_ids})
+
     def attendance_url(self) -> str:
         return f"{self.base_url}/web/index.php/attendance/viewAttendanceRecord"

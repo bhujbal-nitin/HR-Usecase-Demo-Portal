@@ -33,7 +33,7 @@ function hintFor(state) {
   if (waiting === 'form') return 'Fill in the form above and tap Submit.';
   if (waiting === 'attach') return `Use “Choose file” above (or the paperclip) to attach your ${state.awaiting.label}.`;
   if (state.error) return state.busy ? 'A step failed. Choose Rerun or Stop on the right screen.' : 'The run stopped. See the message on the right.';
-  if (state.busy) return state.stage === 'review' ? 'Waiting for HR to approve the request on the HR Approvals page.' : 'The agents are working. Watch the right screen.';
+  if (state.busy) return state.stage === 'review' ? 'Waiting for approval on the Approvals page.' : 'The agents are working. Watch the right screen.';
   if (state.stage === 'idle') return 'Press “Auto-fill demo” to start.';
   return 'Journey complete. Restart to run it again.';
 }
@@ -119,12 +119,17 @@ export default function PhoneChat({ state, title = 'HR Assistant', initial = 'H'
             {awaiting.suggestions.map((text) => <button key={text} type="button" onClick={() => send(text)}>{text}</button>)}
           </div>
         )}
+        {!state.manual && state.chips && (
+          <div className="ad-suggest" aria-label="Suggestions">
+            {state.chips.list.map((text) => <button key={text} type="button" className={text === state.chips.picked ? 'picked' : undefined} disabled>{text}</button>)}
+          </div>
+        )}
         <div className="ad-hint">{hintFor(state)}</div>
         <form className="ad-compose" onSubmit={(event) => { event.preventDefault(); send(draft); }}>
           <button type="button" className={`ad-round${canAttach ? ' pulse' : ''}`} disabled={!canAttach} onClick={() => fileInput.current?.click()} aria-label="Attach a document">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11l-8.5 8.5a5 5 0 01-7-7L14 4a3.3 3.3 0 014.7 4.7l-8.5 8.5a1.7 1.7 0 01-2.4-2.4L15 7.5" /></svg>
           </button>
-          <input ref={fileInput} type="file" hidden accept=".pdf,.doc,.docx" onChange={(event) => { const file = event.target.files[0]; event.target.value = ''; if (file) onRespond({ file }); }} />
+          <input ref={fileInput} type="file" hidden accept={awaiting?.accept ?? '.pdf,.doc,.docx'} onChange={(event) => { const file = event.target.files[0]; event.target.value = ''; if (file) onRespond({ file }); }} />
           {state.manual ? (
             <input className="ad-compose-input ad-compose-real" type="text" value={draft} disabled={!canType} placeholder={canType ? 'Type a message' : 'Waiting…'} onChange={(event) => setDraft(event.target.value)} aria-label="Message" />
           ) : (

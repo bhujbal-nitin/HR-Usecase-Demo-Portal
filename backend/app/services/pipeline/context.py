@@ -1,11 +1,9 @@
 """Shared state passed through the provisioning steps."""
 
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from app.core.config import Settings
 from app.integrations.automationedge import AutomationEdgeClient, WorkflowResult
-from app.integrations.mailer import Mailer
 from app.integrations.office365 import Office365Client
 from app.integrations.orangehrm import OrangeHRMClient
 from app.integrations.servicenow import CatalogRequest, ServiceNowClient
@@ -13,12 +11,10 @@ from app.schemas.employee import (
     Employee,
     LaptopInfo,
     Office365Info,
-    OfferLetterInfo,
     OrangeHrmInfo,
     WorkflowRun,
 )
 from app.services.document_store import DocumentStore
-from app.services.offer_letter_service import OfferLetterService
 
 SERVICENOW_SOURCE = "ServiceNow Direct"
 PORTAL_SOURCE = "HR Portal"
@@ -33,9 +29,7 @@ class Gateways:
     automationedge: AutomationEdgeClient
     office365: Office365Client
     orangehrm: OrangeHRMClient
-    mailer: Mailer
     documents: DocumentStore
-    offer_letters: OfferLetterService
 
 
 @dataclass
@@ -49,14 +43,12 @@ class PipelineContext:
     office365: Office365Info | None = None
     orange_hrm: OrangeHrmInfo | None = None
     laptop: LaptopInfo | None = None
-    offer_letter: OfferLetterInfo | None = None
     workflow_runs: list[WorkflowRun] = field(default_factory=list)
     sn_approval_status: str | None = None
     # Intake results: the ServiceNow request created at submit, or why it could not be.
     sn_request: CatalogRequest | None = None
     sn_state: str | None = None  # 'Not Synced' | 'Sync Failed'
     sn_error: str | None = None
-    _offer_pdf: Path | None = None
     _persisted_runs: int = 0
 
     def __post_init__(self) -> None:
@@ -66,7 +58,7 @@ class PipelineContext:
         """Seed the context with what earlier (successful) steps already produced, for a retry from the failed step."""
         done = {s.key for s in employee.pipeline if s.status.value == "success"}
         self.office365, self.orange_hrm = employee.office365, employee.orange_hrm
-        self.laptop, self.offer_letter = employee.laptop, employee.offer_letter
+        self.laptop = employee.laptop
         if employee.office365 and employee.office365.user_principal_name:
             self.effective_email = employee.office365.user_principal_name
         if "servicenow_approval" in done:
@@ -86,12 +78,6 @@ class PipelineContext:
     def record_workflow(self, result: WorkflowResult) -> WorkflowResult:
         self.workflow_runs.append(result.to_run())
         return result
-
-    def offer_pdf(self) -> Path:
-        """Generate the offer letter once and reuse it across steps."""
-        if self._offer_pdf is None:
-            self._offer_pdf = self.gateways.offer_letters.generate_pdf(self.employee)
-        return self._offer_pdf
 
     def apply_to(self, employee: Employee) -> None:
         """Copy accumulated results onto the persisted record."""
@@ -114,4 +100,3 @@ class PipelineContext:
         employee.office365 = self.office365 or employee.office365
         employee.orange_hrm = self.orange_hrm or employee.orange_hrm
         employee.laptop = self.laptop or employee.laptop
-        employee.offer_letter = self.offer_letter or employee.offer_letter

@@ -6,7 +6,7 @@ import { mirrorWithRerun } from './mirror';
 const PROVISION_TIMEOUT_MS = 15 * 60 * 1000;
 const APPROVAL_POLL_MS = 2000;
 
-/** Live runs: HR decides on the HR Approvals page; this waits (as long as it takes) until that decision is made. */
+/** Live runs: HR decides on the Approvals page; this waits (as long as it takes) until that decision is made. */
 async function waitForHrDecision(r, employeeId) {
   for (;;) {
     const employee = await getEmployee(employeeId);
@@ -19,8 +19,8 @@ async function waitForHrDecision(r, employeeId) {
 /** Scripted provisioning for simulated mode. */
 const simulatedProvisioning = (D) => [
   {
-    kind: 'tool', agent: 'orch', title: 'Mark KYC as verified', note: 'Simulated: updates the HR record so payroll and IT can proceed.', name: 'hrms.update_status()', lat: 380,
-    payload: { request: 'PATCH /api/v2/pim/employees/EMP-DEMO', body: { kycStatus: 'VERIFIED', status: 'READY_TO_JOIN' }, response: { status: 200 } },
+    kind: 'tool', agent: 'orch', title: 'Record the document checks', note: 'Simulated: updates the HR record so payroll and IT can proceed.', name: 'hrms.update_status()', lat: 380,
+    payload: { request: 'PATCH /api/v2/pim/employees/AE-DEMO', body: { documentChecks: 'PASSED', status: 'READY_TO_JOIN' }, response: { status: 200 } },
   },
   {
     kind: 'tool', agent: 'prov', title: 'Create the work account', note: 'Simulated: account created now, enabled on the joining date.', name: 'directory.create_user()', lat: 720,
@@ -36,7 +36,7 @@ const simulatedProvisioning = (D) => [
 export async function setup({ r, D, S, set, live }) {
   const phase = r.phase(
     'Approval and Day-1 set-up',
-    live ? 'Live: after HR approves, AutomationEdge workflows create the real accounts and tickets.' : 'Simulated: with both documents verified, the agent decides and sets everything up.',
+    live ? 'Live: after HR approves, AutomationEdge workflows create the real accounts and tickets.' : 'Simulated: with the documents checked, the agent decides and sets everything up.',
   );
 
   await r.runSteps(phase, [
@@ -55,17 +55,17 @@ export async function setup({ r, D, S, set, live }) {
       },
     },
     live ? {
-      kind: 'human', agent: 'orch', title: 'HR approval', note: 'Creating accounts is not reversible from this screen, so the agent waits for HR. HR approves the request on the HR Approvals page; the run continues as soon as it is approved.', name: 'hr.approve()', live: true,
+      kind: 'human', agent: 'orch', title: 'HR approval', note: 'Creating accounts is not reversible from this screen, so the agent waits for HR. HR approves the request on the Approvals page; the run continues as soon as it is approved.', name: 'hr.approve()', live: true,
       run: async ({ patch }) => {
         set({ stage: 'review' });
-        patch({ awaitHr: true, payload: { waiting_for: 'HR, on the HR Approvals page', candidate: S.employeeId, on_approve: 'ServiceNow → AutomationEdge → Active Directory → Microsoft 365 → OrangeHRM → laptop → offer letter' } });
+        patch({ awaitHr: true, payload: { waiting_for: 'HR, on the Approvals page', candidate: S.employeeId, on_approve: 'ServiceNow → AutomationEdge → Active Directory → Microsoft 365 → OrangeHRM → laptop' } });
         const decision = await waitForHrDecision(r, S.employeeId);
         patch({ awaitHr: false });
         if (decision === 'rejected') {
           S.stopped = true;
           return { payload: { decision: 'REJECTED_BY_HR', note: 'HR rejected the request. No accounts were created.' }, warn: true, lat: 0 };
         }
-        return { payload: { decision: 'APPROVED', approver: 'HR (HR Approvals page)', candidate: S.employeeId }, lat: 0 };
+        return { payload: { decision: 'APPROVED', approver: 'HR (Approvals page)', candidate: S.employeeId }, lat: 0 };
       },
     } : {
       kind: 'human', agent: 'orch', title: 'HR approval', name: 'hr.approve()',
@@ -103,7 +103,7 @@ export async function setup({ r, D, S, set, live }) {
     const outcome = await mirrorWithRerun({
       r, set, label: 'Provisioning', phaseId: phase, employeeId: S.employeeId, agent: 'prov', pick: (e) => e.pipeline,
       isDone: (e) => e.status === 'Approved' || e.status === 'Provisioning Failed', failed: (e) => e.pipeline.find((step) => step.status === 'failed'),
-      retry: retryProvisioning, skip: skipProvisioningStep, timeoutMs: PROVISION_TIMEOUT_MS, timeoutMessage: 'Provisioning did not finish in time. Check HR Approvals.',
+      retry: retryProvisioning, skip: skipProvisioningStep, timeoutMs: PROVISION_TIMEOUT_MS, timeoutMessage: 'Provisioning did not finish in time. Check Approvals.',
     });
     employee = outcome.employee;
     if (outcome.stopped) {

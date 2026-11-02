@@ -36,18 +36,18 @@ function describe(step) {
 
 /** Phase: the employee's first message, then the question "who are you?". */
 async function greeting({ r, text }) {
-  const phase = r.phase('Greeting and intent', 'A new thread opens. The agent works out that this is a resignation.');
+  const phase = r.phase('Greeting and intent', 'A new thread opens. The agent greets the employee and opens the offboarding workflow.');
   await r.runSteps(phase, [
     trigger('Inbound message received', 'WhatsApp would deliver your message.', {
       object: 'whatsapp_business_account', type: 'text', text: { body: text }, timestamp: Math.floor(Date.now() / 1000),
     }),
     {
-      kind: 'agent', agent: 'orch', title: 'Understand intent', note: 'The LLM reads the message and picks the offboarding workflow.', name: 'llm.classify_intent()', lat: 540,
-      payload: { thread_state: 'NEW_THREAD', intent: 'resign', confidence: 0.96, workflow: 'offboarding.v1' },
+      kind: 'agent', agent: 'orch', title: 'Understand intent', note: 'The LLM reads the message and picks this agent’s offboarding workflow.', name: 'llm.classify_intent()', lat: 540,
+      payload: { thread_state: 'NEW_THREAD', intent: 'greeting', confidence: 0.98, workflow: 'offboarding.v1' },
     },
   ]);
-  await r.bot('Hi, I’m your offboarding assistant. I’m sorry to hear you’re leaving; I’ll take care of the formalities.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like EMP-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  await r.bot('Hi, I’m your offboarding assistant. If you are leaving, I’ll take care of the resignation and the formalities.');
+  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
 }
 
 /** Ask until the backend recognises an onboarded employee. Returns the employee summary. */
@@ -141,10 +141,10 @@ async function submit({ r, S, set, employee, options, ask, auto }) {
   }
 }
 
-/** Wait for HR's decision on the HR Approvals page, then follow the chain (mirrored step by step, with Rerun/Stop on failure). */
+/** Wait for HR's decision on the Approvals page, then follow the chain (mirrored step by step, with Rerun/Stop on failure). */
 const DECISION_POLL_MS = 2000;
 
-/** HR decides on the HR Approvals page; wait (as long as it takes) until that decision is made. */
+/** HR decides on the Approvals page; wait (as long as it takes) until that decision is made. */
 async function waitForHrDecision(r, offboardingId, api) {
   for (;;) {
     const record = await api.getOffboarding(offboardingId);
@@ -164,7 +164,7 @@ async function approveAndRun({ r, S, set }) {
     kind: 'human', agent: 'orch', title: 'HR approval', name: 'hr.approve()', live: !S.api.simulated,
     note: S.api.simulated
       ? 'Simulated: the resignation waits for HR for a moment, then approves itself. Click Approve now to go sooner.'
-      : 'Offboarding changes real accounts, so the agent waits for HR. HR approves the resignation on the HR Approvals page (Offboarding tab); the run continues as soon as it is approved.',
+      : 'Offboarding changes real accounts, so the agent waits for HR. HR approves the resignation on the Approvals page (Offboarding tab); the run continues as soon as it is approved.',
     run: async ({ patch, waitForGate }) => {
       if (S.api.simulated) {
         const waitMs = r.timing.approvalWaitMs;
@@ -185,7 +185,7 @@ async function approveAndRun({ r, S, set }) {
       }
       patch({
         awaitHr: true,
-        payload: { waiting_for: 'HR, on the HR Approvals page', employee: S.record.fullName, openTo: '/approvals?tab=offboarding' },
+        payload: { waiting_for: 'HR, on the Approvals page', employee: S.record.fullName, openTo: '/approvals?tab=offboarding' },
       });
       const decision = await waitForHrDecision(r, S.record.id, S.api);
       patch({ awaitHr: false });
@@ -193,7 +193,7 @@ async function approveAndRun({ r, S, set }) {
         S.stopped = true;
         return { payload: { decision: 'REJECTED_BY_HR', note: 'HR did not accept the resignation. Nothing was changed.' }, warn: true, lat: 0 };
       }
-      return { payload: { decision: 'APPROVED', approver: 'HR (HR Approvals page)', employee: S.record.fullName }, lat: 0 };
+      return { payload: { decision: 'APPROVED', approver: 'HR (Approvals page)', employee: S.record.fullName }, lat: 0 };
     },
   }]);
 
@@ -203,7 +203,7 @@ async function approveAndRun({ r, S, set }) {
     return;
   }
 
-  if (S.api.simulated) await S.api.approveOffboarding(S.record.id); // live: HR already approved on the HR Approvals page
+  if (S.api.simulated) await S.api.approveOffboarding(S.record.id); // live: HR already approved on the Approvals page
   const outcome = await mirrorWithRerun({
     r, set, label: 'Offboarding', phaseId: phase, employeeId: S.record.id, agent: 'prov', pick: (o) => o.pipeline,
     isDone: (o) => o.status === 'Completed' || o.status === 'Offboarding Failed', failed: (o) => o.pipeline.find((step) => step.status === 'failed'),
@@ -260,7 +260,7 @@ export async function runLiveOffboarding({ r, set, auto = null, simulated = fals
   set({ stage: 'idle' });
   const options = await S.api.getOffboardingOptions().catch(() => FALLBACK_OPTIONS);
 
-  const first = await ask({ kind: 'text', suggestions: ['I want to resign'] }, { text: 'I want to resign' });
+  const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });
   r.msg('out', first.text);
   await greeting({ r, text: first.text });
 

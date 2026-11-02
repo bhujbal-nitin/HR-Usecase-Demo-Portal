@@ -32,23 +32,50 @@ async function request(path, { method = 'GET', body, signal } = {}) {
     throw new ApiError('Could not reach the HR service. Please check that it is running.');
   }
 
-  if (!response.ok) {
-    let detail = 'The HR service could not complete the request. Please try again.';
-    let fields = {};
-    try {
-      const data = await response.json();
-      if (typeof data.detail === 'string') detail = data.detail;
-      if (data.fields) fields = data.fields;
-    } catch {
-      /* non-JSON error body: keep the generic message */
-    }
-    throw new ApiError(detail, { status: response.status, fields });
-  }
+  if (!response.ok) throw await failure(response);
   return response.status === 204 ? null : response.json();
+}
+
+/** The ApiError for a failed response: the server's own message when it gave one. */
+async function failure(response) {
+  let detail = 'The HR service could not complete the request. Please try again.';
+  let fields = {};
+  try {
+    const data = await response.json();
+    if (typeof data.detail === 'string') detail = data.detail;
+    if (data.fields) fields = data.fields;
+  } catch {
+    /* non-JSON error body: keep the generic message */
+  }
+  return new ApiError(detail, { status: response.status, fields });
+}
+
+/** The file name the server gave a download (Content-Disposition), or `fallback`. */
+function downloadName(response, fallback) {
+  const header = response.headers.get('Content-Disposition') ?? '';
+  const encoded = /filename\*=utf-8''([^;]+)/i.exec(header);
+  if (encoded) return decodeURIComponent(encoded[1]);
+  return /filename="?([^";]+)"?/i.exec(header)?.[1] ?? fallback;
+}
+
+/**
+ * GET a file: { href, filename }, where href is a link the browser can save (the file is fetched now, so a problem shows up now and the
+ * link works without asking the server again).
+ */
+async function download(path, fallbackName = 'download') {
+  let response;
+  try {
+    response = await fetch(apiUrl(path));
+  } catch {
+    throw new ApiError('Could not reach the HR service. Please check that it is running.');
+  }
+  if (!response.ok) throw await failure(response);
+  return { href: URL.createObjectURL(await response.blob()), filename: downloadName(response, fallbackName) };
 }
 
 export const api = {
   get: (path, options) => request(path, options),
   post: (path, body, options) => request(path, { ...options, method: 'POST', body }),
   delete: (path, options) => request(path, { ...options, method: 'DELETE' }),
+  download,
 };

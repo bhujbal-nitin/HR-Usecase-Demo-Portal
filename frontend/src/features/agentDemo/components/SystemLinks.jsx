@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getEmployee } from '../../../api/employees';
 import { getLeaveRequest } from '../../../api/leave';
 import { getOffboarding } from '../../../api/offboardings';
+import { getClaim } from '../../../api/reimbursement';
 import { systemLinks } from '../lib/systemLinks';
 
 const SYSTEMS = [
@@ -11,8 +12,8 @@ const SYSTEMS = [
 ];
 const POLL_MS = 4000;
 // A run only shows the systems it can create something in (leave & attendance only creates records in OrangeHRM).
-const SYSTEMS_BY_KIND = { leave: ['orangehrm'] };
-const LOAD = { onboarding: getEmployee, offboarding: getOffboarding, leave: getLeaveRequest };
+const SYSTEMS_BY_KIND = { leave: ['orangehrm'], reimbursement: ['orangehrm'] };
+const LOAD = { onboarding: getEmployee, offboarding: getOffboarding, leave: getLeaveRequest, reimbursement: getClaim };
 
 /** Live runs only: one button per system; each opens, in a new tab, what this run created there. */
 export default function SystemLinks({ run, busy }) {

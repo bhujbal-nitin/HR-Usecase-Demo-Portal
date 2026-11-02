@@ -1,29 +1,35 @@
-import DocCard from '../../components/DocCard';
 import { checkPan, nameSimilarity } from '../../lib/identity';
 import { verhoeffValid } from '../../lib/verhoeff';
 import { maskPhone, trigger } from './common';
 import { documentWorkflowStep } from './workflowStep';
 
-const media = (hash, kb) => ({
-  object: 'whatsapp_business_account', type: 'image', image: { mime_type: 'image/jpeg', sha256: hash, id: 'wamid.HBgM…' }, size_kb: kb,
+/** The inbound WhatsApp event for the file the candidate sent. */
+const documentEvent = (file) => ({
+  object: 'whatsapp_business_account', type: 'document', document: { mime_type: file.type || 'application/pdf', filename: file.name }, size_kb: Math.max(1, Math.round(file.size / 1024)),
 });
+
+/** The candidate sends the file: it shows in the chat as an attachment, and the request card above it turns to "uploaded". */
+function sendFile(r, file, uploadId, upload) {
+  r.msg('out', null, { kind: 'file', file: { name: file.name, size: file.size } });
+  r.patchMsg(uploadId, { upload: { ...upload, file: { name: file.name, size: file.size } } });
+}
 
 /** Aadhaar: vision + OCR are simulated; the checksum and the name comparison run for real. */
 export async function aadhaar({ r, D, set, live }) {
-  r.msg('out', <DocCard kind="aadhaar" D={D} />, { wide: true });
-  const phase = r.phase('Aadhaar verification', 'The photo is read, checked against the form, then confirmed with an identity provider.');
+  sendFile(r, D.files.idDoc, D.idUploadId, { docKey: 'idDoc', label: 'Aadhaar card' });
+  const phase = r.phase('Aadhaar check', 'The file is read, then its number and its details are checked against the form.');
   await r.runSteps(phase, [
-    trigger('Document received', 'An image arrives. The agent does not yet know what is in it.', media('b7d0…a93c', 1184)),
+    trigger('Document received', 'A file arrives. The agent does not yet know what is in it.', documentEvent(D.files.idDoc)),
     {
       kind: 'tool', agent: 'doc', title: 'Download, scan and encrypt', note: 'The file would be virus-scanned and stored encrypted with a 90-day retention rule.', name: 'media.fetch_and_store()', lat: 440,
-      payload: { antivirus: 'clean', content_type: 'image/jpeg', storage: `s3://hr-kyc/${D.last.toUpperCase()}/doc-01.enc`, encryption: 'SSE-KMS', retention_days: 90 },
+      payload: { antivirus: 'clean', content_type: D.files.idDoc.type || 'application/pdf', storage: `s3://hr-kyc/${D.last.toUpperCase()}/doc-01.enc`, encryption: 'SSE-KMS', retention_days: 90 },
     },
     {
-      kind: 'agent', agent: 'doc', title: 'Identify the document (vision)', note: 'A vision model decides what the document is and whether the photo is readable.', name: 'llm.vision_classify()', lat: 890,
+      kind: 'agent', agent: 'doc', title: 'Identify the document (vision)', note: 'A vision model decides what the document is and whether it is readable.', name: 'llm.vision_classify()', lat: 890,
       payload: { label: 'aadhaar_card', confidence: 0.98, expected: 'aadhaar_card', quality: { blur: 'low', glare: 'none', all_corners_visible: true } },
     },
     {
-      kind: 'tool', agent: 'doc', title: 'Extract the fields (OCR)', note: 'Text is read from the image into named fields.', name: 'ocr.extract()', lat: 760,
+      kind: 'tool', agent: 'doc', title: 'Extract the fields (OCR)', note: 'Text is read from the document into named fields.', name: 'ocr.extract()', lat: 760,
       payload: { name: D.fullName, dob: D.dob, uid: `XXXX XXXX ${D.aadhaar.slice(-4)}`, address: D.address, field_confidence: { name: 0.99, dob: 0.99, uid: 0.97 } },
     },
     {
@@ -42,20 +48,17 @@ export async function aadhaar({ r, D, set, live }) {
       },
     },
     {
-      kind: 'api', agent: 'ver', title: 'Confirm with the identity provider', note: 'An e-KYC provider would confirm the card is genuine. Simulated here: no provider is connected.', name: 'kyc.offline_verify()', lat: 980,
-      payload: { request: { uid_token: 'tok_••••a21f', consent_id: 'CNS-5521' }, response: { status: 'VERIFIED', matched: ['NAME', 'DOB'], txn: 'KYC-77310' } },
-    },
-    {
       kind: 'tool', agent: 'ver', title: 'Mask personal data', note: 'Only the last 4 digits would be kept in the conversation record.', name: 'pii_guard.apply()', lat: 140,
-      payload: { stored: { uid_last4: D.aadhaar.slice(-4), verified: true }, discarded: ['full_uid', 'raw_ocr_text'], consent_id: 'CNS-5521' },
+      payload: { stored: { uid_last4: D.aadhaar.slice(-4) }, discarded: ['full_uid', 'raw_ocr_text'] },
     },
     ...(live ? [documentWorkflowStep('Aadhaar card')] : []),
     {
       kind: 'notify', agent: 'orch', title: 'Confirm and ask for the PAN card', note: 'Tells the candidate the result and asks for the next document.', name: 'whatsapp.send_text()', lat: 170,
       payload: { state_change: 'AWAITING_AADHAAR → AWAITING_PAN' },
       after: async () => {
-        await r.bot(<>Your <b>Aadhaar is verified</b>. Name and date of birth match your form. I kept only the last 4 digits.</>);
-        await r.bot(<>Now please send your <b>PAN card</b>.</>, { wait: 500 });
+        await r.bot(<>Thanks, I have your <b>Aadhaar card</b>: your name and date of birth match your form. I kept only the last 4 digits of the number.</>);
+        await r.bot(<>Now please attach your <b>PAN card</b> (PDF or Word).</>, { wait: 500 });
+        D.panUploadId = r.msg('in', null, { kind: 'upload', wide: true, upload: { docKey: 'panDoc', label: 'PAN card' } });
       },
     },
   ]);
@@ -64,10 +67,10 @@ export async function aadhaar({ r, D, set, live }) {
 
 /** PAN: structure check and name match run for real; the tax-database lookup is simulated. */
 export async function pan({ r, D, live }) {
-  r.msg('out', <DocCard kind="pan" D={D} />, { wide: true });
-  const phase = r.phase('PAN verification', 'Same pattern as Aadhaar: read, validate the format, verify, then match names.');
+  sendFile(r, D.files.panDoc, D.panUploadId, { docKey: 'panDoc', label: 'PAN card' });
+  const phase = r.phase('PAN check', 'Same pattern as Aadhaar: read, validate the format, then match the name and date of birth.');
   await r.runSteps(phase, [
-    trigger('Document received', 'A second image arrives on the same thread.', media('9f2c…e41a', 968)),
+    trigger('Document received', 'A second file arrives on the same thread.', documentEvent(D.files.panDoc)),
     {
       kind: 'agent', agent: 'doc', title: 'Identify and read the PAN card', note: 'One vision call classifies the document and reads its fields.', name: 'llm.vision_extract()', lat: 1020,
       payload: { label: 'pan_card', confidence: 0.99, fields: { pan: D.pan, name: D.panName, father_name: D.fatherName, dob: D.dob }, quality: { blur: 'low', glare: 'none' } },
@@ -81,14 +84,10 @@ export async function pan({ r, D, live }) {
       },
     },
     {
-      kind: 'api', agent: 'ver', title: 'Verify with the tax database', note: 'A provider would confirm the PAN exists and is linked to Aadhaar. Simulated here: no provider is connected.', name: 'pan.verify()', lat: 870,
-      payload: { request: { pan: `${D.pan.slice(0, 5)}•••••` }, response: { valid: true, status: 'ACTIVE', name_on_record: D.panName, aadhaar_link: 'OPERATIVE' } },
-    },
-    {
-      kind: 'agent', agent: 'ver', title: 'Match the PAN name with Aadhaar', note: 'Names are compared after removing case and punctuation. Similarity is computed for real.', name: 'compare_identity()', lat: 410, live: true,
+      kind: 'agent', agent: 'ver', title: 'Match the PAN name and date of birth', note: 'Names are compared after removing case and punctuation, and the date of birth must be the same as on the Aadhaar card. Similarity is computed for real.', name: 'compare_identity()', lat: 410, live: true,
       payload: () => {
         D.checks.panName = nameSimilarity(D.fullName, D.panName);
-        return { aadhaar_name: D.fullName, pan_name: D.panName, similarity: D.checks.panName, threshold: 0.9, result: D.checks.panName >= 0.9 ? 'MATCH' : 'NEEDS_REVIEW' };
+        return { aadhaar_name: D.fullName, pan_name: D.panName, similarity: D.checks.panName, dob: { aadhaar: D.dob, pan: D.dob, match: true }, threshold: 0.9, result: D.checks.panName >= 0.9 ? 'MATCH' : 'NEEDS_REVIEW' };
       },
     },
     ...(live ? [documentWorkflowStep('PAN card')] : []),
@@ -96,8 +95,8 @@ export async function pan({ r, D, live }) {
       kind: 'notify', agent: 'orch', title: 'Confirm PAN and ask for the salary slip', note: 'Short confirmation, then the next request.', name: 'whatsapp.send_text()', lat: 160,
       payload: { state_change: 'AWAITING_PAN → AWAITING_SALARY_SLIP' },
       after: async () => {
-        await r.bot(<>Your <b>PAN is verified</b>. Thanks!</>, { wait: 500 });
-        await r.bot(<>One last document, please: your <b>latest salary slip</b>.</>, { wait: 600 });
+        await r.bot(<>Thanks, I have your <b>PAN card</b>: your name matches your form and your date of birth matches your Aadhaar card.</>, { wait: 500 });
+        await r.bot(<>One last document, please: your <b>latest month’s salary slip</b> (PDF or Word).</>, { wait: 600 });
         D.salaryUploadId = r.msg('in', null, { kind: 'upload', wide: true, upload: { docKey: 'salaryDoc', label: 'latest salary slip' } });
       },
     },
@@ -106,13 +105,12 @@ export async function pan({ r, D, live }) {
 
 /** Latest salary slip. */
 export async function payslips({ r, D, live }) {
-  r.patchMsg(D.salaryUploadId, { upload: { docKey: 'salaryDoc', label: 'latest salary slip', file: { name: 'salary_slip_sample.pdf' } } });
-  r.msg('out', <DocCard kind="payslips" D={D} />, { wide: true });
-  const phase = r.phase('Salary slip check', 'The salary slip is read and sanity-checked against the offer.');
+  sendFile(r, D.files.salaryDoc, D.salaryUploadId, { docKey: 'salaryDoc', label: 'latest salary slip' });
+  const phase = r.phase('Salary slip check', 'The latest month’s salary slip is read and sanity-checked against the offer.');
   await r.runSteps(phase, [
-    trigger('Document received', 'A PDF arrives.', { type: 'document', document: { mime_type: 'application/pdf', filename: 'salary_slip.pdf' }, size_kb: 212 }),
+    trigger('Document received', 'A PDF arrives.', documentEvent(D.files.salaryDoc)),
     {
-      kind: 'agent', agent: 'doc', title: 'Read the salary slip', note: 'The model extracts the pay period and gross pay from the slip.', name: 'llm.document_extract()', lat: 1180,
+      kind: 'agent', agent: 'doc', title: 'Read the salary slip', note: 'The model extracts the pay month and gross pay from the latest slip.', name: 'llm.document_extract()', lat: 1180,
       payload: { months: 1, currency: 'INR', gross_per_month: D.previousMonthlyGross, employer: 'Previous employer (sample)' },
     },
     {

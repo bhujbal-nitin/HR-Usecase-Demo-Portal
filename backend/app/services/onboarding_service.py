@@ -20,7 +20,6 @@ from app.schemas.employee import (
     Employee,
     EmployeeStatus,
     IntakeStatus,
-    OfferLetterInfo,
     ProvisioningStatus,
     StepStatus,
     StoredDocument,
@@ -62,15 +61,6 @@ class OnboardingService:
         if document is None:
             raise NotFoundError("That document was not uploaded for this candidate.")
         return self._gw.documents.path_of(employee_id, document), document
-
-    def get_offer_letter_path(self, employee_id: str) -> Path:
-        employee = self._repo.require(employee_id)
-        if not employee.offer_letter or not employee.offer_letter.filename:
-            raise NotFoundError("No offer letter has been generated for this candidate yet.")
-        path = self._gw.settings.offers_dir / employee.offer_letter.filename
-        if not path.is_file():
-            raise NotFoundError("The offer letter file is no longer available on the server.")
-        return path
 
     # ---------------------------------------------------------------- submit
     def submit(self, data: CandidateCreate, files: dict[str, UploadedFile], signature_data_url: str) -> Employee:
@@ -292,23 +282,6 @@ class OnboardingService:
                 continue  # approved from the portal in the meantime
         return started
 
-    # ---------------------------------------------------------- offer letter
-    def send_offer_letter(self, employee_id: str) -> Employee:
-        """(Re)generate the offer letter and e-mail it. Raises IntegrationError if e-mail fails."""
-        employee = self._repo.require(employee_id)
-        offers = self._gw.offer_letters
-        pdf = offers.generate_pdf(employee)
-        info = OfferLetterInfo(filename=pdf.name, generated_at=datetime.now())
-        error: IntegrationError | None = None
-        try:
-            info.recipient, info.emailed = offers.send_email(employee, pdf), True
-        except IntegrationError as exc:
-            error = exc
-        self._repo.update(employee_id, lambda e: setattr(e, "offer_letter", info))
-        if error:
-            raise error
-        return self._repo.require(employee_id)
-
     # ----------------------------------------------------------------- admin
     def clear(self, scope: ClearScope) -> int:
         busy = {EmployeeStatus.PROCESSING}
@@ -322,6 +295,6 @@ class OnboardingService:
     def _new_id(self) -> str:
         existing = {e.id for e in self._repo.list_all()}
         while True:
-            candidate = f"EMP-{secrets.randbelow(900_000) + 100_000}"
+            candidate = f"AE-{secrets.randbelow(900_000) + 100_000}"
             if candidate not in existing:
                 return candidate

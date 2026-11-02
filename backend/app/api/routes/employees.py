@@ -125,14 +125,3 @@ def download_document(employee_id: str, key: str, service: OnboardingDep):
     path, document = service.get_document(employee_id, key)
     return FileResponse(path, media_type=document.content_type, filename=document.filename)
 
-
-@router.get("/{employee_id}/offer-letter")
-def download_offer_letter(employee_id: str, service: OnboardingDep):
-    path = service.get_offer_letter_path(employee_id)
-    return FileResponse(path, media_type="application/pdf", filename=path.name)
-
-
-@router.post("/{employee_id}/offer-letter", response_model=Employee)
-def send_offer_letter(employee_id: str, service: OnboardingDep):
-    """Regenerate the offer letter PDF and e-mail it."""
-    return service.send_offer_letter(employee_id)

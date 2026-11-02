@@ -19,16 +19,30 @@ function pathFor(nodes, from, to) {
   return `M${sx},${a.y} C${mx},${a.y} ${mx},${b.y} ${ex},${b.y}`;
 }
 
+/** Where the AutomationEdge tag sits: on the first link of the step, or above the agent when the workflow touches no system. */
+function aeTag(nodes, hops, ae) {
+  const width = Math.round(ae.label.length * 4.9 + 30);
+  const [from, to] = hops[0] ?? [];
+  const a = nodes[from];
+  const b = nodes[to];
+  const anchor = a && b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 17 } : (nodes[ae.agent] && { x: nodes[ae.agent].x, y: nodes[ae.agent].y - 32 });
+  if (!anchor) return null;
+  return { width, x: Math.min(Math.max(anchor.x, width / 2 + 4), 756 - width / 2), y: Math.max(anchor.y, 12) };
+}
+
 const edgeKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
 /**
  * Who talks to whom. The nodes of the current step glow, and a dot travels along each hop of the step.
- * `hops` is the list of [from, to] edges of the step on stage; `animateKey` changes whenever a new step starts.
+ * `hops` is the list of [from, to] edges of the step on stage; `animateKey` changes whenever a new step starts. `ae` ({ label, agent }) is set when that step is an
+ * AutomationEdge workflow: its links are drawn in AutomationEdge orange and tagged with the workflow's name.
  */
-export default function SystemMap({ config, activeNodes, usedNodes, hops, animateKey, flowing }) {
+export default function SystemMap({ config, activeNodes, usedNodes, hops, ae = null, animateKey, flowing }) {
   const svg = useRef(null);
   const { nodes, edges } = config;
   const hopsRef = useRef(hops);
+  const aeRef = useRef(ae);
+  aeRef.current = ae;
   const flowingRef = useRef(flowing);
   flowingRef.current = flowing; // while a step is still running its flow keeps repeating; it stops after the current pass
   hopsRef.current = hops; // read when a new step starts; a new array each render must not restart the animation
@@ -54,11 +68,12 @@ export default function SystemMap({ config, activeNodes, usedNodes, hops, animat
           path.setAttribute('fill', 'none');
           const dot = document.createElementNS(SVG_NS, 'circle');
           dot.setAttribute('r', '5.5');
-          dot.setAttribute('class', 'ad-dotpulse');
+          dot.setAttribute('class', aeRef.current ? 'ad-dotpulse ae' : 'ad-dotpulse');
           svg.current.append(path, dot);
           created.push(path, dot);
           const edge = edgeEls.current[edgeKey(from, to)];
           edge?.classList.add('live');
+          if (aeRef.current) edge?.classList.add('ae');
           const length = path.getTotalLength();
           const start = performance.now();
           const tick = (now) => {
@@ -68,7 +83,7 @@ export default function SystemMap({ config, activeNodes, usedNodes, hops, animat
             dot.setAttribute('cx', point.x);
             dot.setAttribute('cy', point.y);
             if (k < 1 && !cancelled) frame = requestAnimationFrame(tick);
-            else { path.remove(); dot.remove(); edge?.classList.remove('live'); resolve(); }
+            else { path.remove(); dot.remove(); edge?.classList.remove('live', 'ae'); resolve(); }
           };
           frame = requestAnimationFrame(tick);
         });
@@ -86,9 +101,11 @@ export default function SystemMap({ config, activeNodes, usedNodes, hops, animat
       cancelled = true;
       cancelAnimationFrame(frame);
       created.forEach((el) => el.remove());
-      Object.values(edgeEls.current).forEach((el) => el?.classList.remove('live'));
+      Object.values(edgeEls.current).forEach((el) => el?.classList.remove('live', 'ae'));
     };
   }, [animateKey, nodes]);
+
+  const tag = ae ? aeTag(nodes, hops, ae) : null;
 
   return (
     <div className="ad-mapwrap">
@@ -119,6 +136,13 @@ export default function SystemMap({ config, activeNodes, usedNodes, hops, animat
             </g>
           );
         })}
+        {tag && (
+          <g className="ad-aetag" transform={`translate(${tag.x},${tag.y})`}>
+            <rect x={-tag.width / 2} y="-9" width={tag.width} height="18" rx="9" />
+            <g transform={`translate(${-tag.width / 2 + 5},-7) scale(.58)`}><Icon name="bolt" size={24} /></g>
+            <text x={6} y="3.5" textAnchor="middle">{ae.label}</text>
+          </g>
+        )}
       </svg>
     </div>
   );

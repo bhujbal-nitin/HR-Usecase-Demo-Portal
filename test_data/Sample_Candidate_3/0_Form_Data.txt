@@ -1,0 +1,48 @@
+ONBOARDING FORM DATA - copy these values into the portal
+==========================================================
+Candidate: Rohan Kulkarni   (all values below are fictional)
+
+Use the three PDFs in this folder as the documents:
+  1_Aadhaar_Card.pdf   -> Aadhaar card
+  2_PAN_Card.pdf       -> PAN card
+  3_Salary_Slip.pdf    -> Latest salary slip
+
+PERSONAL DETAILS
+----------------
+Full Legal Name ............ Rohan Kulkarni
+Personal Email Address ..... rohan.kulkarni.test@example.com
+Phone Number ............... +91 98905 33741
+Date of Birth .............. 1992-06-30   (30 June 1992)
+Aadhaar Number ............. 6082 1473 9504
+EPFO UAN Number ............ 100562039147   (only if the form asks; the Agent Demo does not)
+Emergency Contact Name ..... Meena Kulkarni (Mother)
+Emergency Contact Phone .... +91 98905 66218
+Residential Address ........ Plot 17, Gaikwad Nagar, Aundh, Pune, Maharashtra 411007
+
+EMPLOYMENT DETAILS
+------------------
+Department ................. Quality Assurance
+Job Title .................. QA Lead
+Reporting Manager .......... Sunita Rao (Director of Quality)
+Joining Date ............... 2027-02-01
+Annual CTC (INR) ........... 1200000
+Preferred Workstation ...... Lenovo ThinkPad P1 Gen 6
+Work Location .............. On-Site (Pune Tech Park)
+
+WHAT THE DOCUMENTS SHOW (they agree with the form, so the checks should pass)
+------------------------------------------------------------------------------
+Aadhaar : Rohan Kulkarni, DOB 30/06/1992, number 6082 1473 9504  (valid Verhoeff check digit)
+PAN     : ROHAN KULKARNI, DOB 30/06/1992, number AKLPK7219D
+Payslip : Rohan Kulkarni, October 2026, gross INR 1,00,000  (about the monthly CTC of INR 1,00,000)
+
+TRY THESE FAILURE CASES TOO
+---------------------------
+- Upload the PAN PDF where the Aadhaar is asked      -> rejected: wrong document type
+- Upload the salary slip where the PAN is asked      -> rejected: wrong document type
+- Type a different Full Legal Name in the form       -> every document is rejected: name mismatch
+- Change the form's name only slightly (e.g. "Rohan X. Kulkarni") -> still accepted
+
+NOTE
+----
+The PDFs are plain, generated test documents. A real OpenAI check reads them as printed text, which normally works; if the model
+judges one "not genuine" because it is obviously a plain template, test with a photo/PDF of your own sample card instead.

@@ -3,7 +3,7 @@
 OrangeHRM is the source of the balances, holidays, work week and punch records, and is where approved leave and punch corrections are
 recorded. The demo works with three standard leave types (policy.STANDARD_LEAVE_TYPES): any that OrangeHRM lacks is created, and an
 employee with no quota for one is given the default. Nothing else is involved. The portal keeps only the approval record
-(pending, approved or rejected) so a manager can decide on the HR Approvals page.
+(pending, approved or rejected) so a manager can decide on the Approvals page.
 """
 
 import logging
@@ -17,11 +17,10 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedEr
 from app.integrations.orangehrm import OrangeHRMClient
 from app.repositories.employee_repository import EmployeeRepository
 from app.repositories.leave_repository import LeaveRepository
+from app.repositories.offboarding_repository import OffboardingRepository
 from app.schemas.employee import Employee, EmployeeStatus
 from app.schemas.leave import (
-    AttendanceDay,
-    AttendanceLog,
-    DemoPunch,
+    AttendanceDayRecords,
     Holiday,
     LeaveApplication,
     LeaveAttendanceRequest,
@@ -29,11 +28,13 @@ from app.schemas.leave import (
     LeaveCheck,
     LeaveCheckRequest,
     LeaveOptions,
+    PunchRecord,
     RegularizationApplication,
     RequestKind,
     RequestStatus,
 )
 from app.schemas.offboarding import EmployeeSummary
+from app.services.employee_directory import require_still_employed
 from app.services.leave import policy
 
 logger = logging.getLogger(__name__)
@@ -59,10 +60,11 @@ def _holds_days(r: LeaveAttendanceRequest) -> bool:
 
 
 class LeaveService:
-    def __init__(self, repository: LeaveRepository, employees: EmployeeRepository, gateways: LeaveGateways):
+    def __init__(self, repository: LeaveRepository, employees: EmployeeRepository, gateways: LeaveGateways, offboardings: OffboardingRepository | None = None):
         self._repo = repository
         self._employees = employees
         self._gw = gateways
+        self._offboardings = offboardings
         self._apply_lock = threading.Lock()  # recording a request in OrangeHRM must never happen twice
 
     # ------------------------------------------------------------------ employee
@@ -75,6 +77,7 @@ class LeaveService:
             if wanted in {e.id.lower(), e.email.lower(), _work_email(e).lower()}:
                 if e.status != EmployeeStatus.APPROVED:
                     raise ConflictError(f"{e.full_name} has not completed onboarding yet, so there are no leave or attendance records.")
+                require_still_employed(self._offboardings, e, "leave or attendance records")
                 return e
         raise NotFoundError("No employee onboarded through this portal matches that ID or e-mail address.")
 
@@ -215,72 +218,35 @@ class LeaveService:
         return self._repo.add_if(record, guard)
 
     # ---------------------------------------------------------------- attendance
-    def _punch_window(self, emp_number: int, today: date) -> tuple[list[date], list[dict]]:
-        """The recent working days and OrangeHRM's punch records for them."""
-        work_week, holidays = self._calendar(today - timedelta(days=21), today)
-        window = policy.previous_working_days(today, policy.ATTENDANCE_DAYS, work_week, holidays)
-        return window, self._gw.orangehrm.attendance_records(emp_number, min(window), today - timedelta(days=1))
-
-    @staticmethod
-    def _log(window: list[date], raw: list[dict], waiting: set[date]) -> AttendanceLog:
-        days: list[AttendanceDay] = []
-        for day in window:
-            records = [r for r in raw if r["inDate"] == day.isoformat()]
-            if not records:
-                continue  # no punch at all that day: not an exception this agent can fix
-            open_record = next((r for r in records if not r["outTime"]), None)
-            if open_record:
-                days.append(AttendanceDay(date=day, in_punch=open_record["inTime"] or policy.IN_PUNCH, out_punch=None, state="pending" if day in waiting else "missing"))
-            else:
-                days.append(AttendanceDay(date=day, in_punch=records[0]["inTime"] or policy.IN_PUNCH, out_punch=records[-1]["outTime"], state="ok"))
-        return AttendanceLog(days=days, missing=[d for d in days if d.state == "missing"])
-
     def _waiting(self, records: list[LeaveAttendanceRequest], employee_id: str) -> set[date]:
         return {
             r.attendance_date for r in records
             if r.employee_id == employee_id and r.kind == RequestKind.REGULARIZATION and r.attendance_date and _holds_days(r)
         }
 
-    def attendance(self, ref: str) -> AttendanceLog:
+    def attendance(self, ref: str, day: date) -> AttendanceDayRecords:
+        """The punch records OrangeHRM holds for ``day`` (an approved attendance request for the day replaces them)."""
         employee = self._find_employee(ref)
-        window, raw = self._punch_window(self._emp_number(employee), date.today())
-        return self._log(window, raw, self._waiting(self._repo.list_all(), employee.id))
-
-    def prepare_demo_punch(self, ref: str) -> DemoPunch:
-        """For the demo: if the employee has no day with a missing out-punch, add a punch-in (and no out-punch) on the latest free day."""
-        employee = self._find_employee(ref)
-        emp_number = self._emp_number(employee)
-        window, raw = self._punch_window(emp_number, date.today())
-        log = self._log(window, raw, self._waiting(self._repo.list_all(), employee.id))
-        if any(d.state in ("missing", "pending") for d in log.days):
-            return DemoPunch(created=False, message="There is already a day with a missing out-punch.")
-        free = next((d for d in window if not any(r["inDate"] == d.isoformat() for r in raw)), None)
-        if free is None:
-            return DemoPunch(created=False, message="Every recent working day already has a punch record, so there is nothing to set up.")
-        self._gw.orangehrm.punch_in(emp_number, free, policy.IN_PUNCH, f"{_DEMO_NOTE}: sample attendance exception")
-        logger.info("Added a sample punch-in for %s on %s in OrangeHRM", employee.id, free)
-        return DemoPunch(created=True, day=free, message=f"A punch-in without an out-punch was added in OrangeHRM for {free:%d %b}.")
+        records = self._gw.orangehrm.attendance_records(self._emp_number(employee), day, day)
+        return AttendanceDayRecords(
+            date=day, records=[PunchRecord(in_punch=r["inTime"] or "", out_punch=r["outTime"]) for r in records if r["inDate"] == day.isoformat()]
+        )
 
     def submit_regularization(self, data: RegularizationApplication) -> LeaveAttendanceRequest:
+        """An attendance request: the day and the in and out times the employee gives, recorded in OrangeHRM once approved."""
         employee = self._find_employee(data.employee_ref)
-        emp_number = self._emp_number(employee)
-        window, raw = self._punch_window(emp_number, date.today())
-        log = self._log(window, raw, self._waiting(self._repo.list_all(), employee.id))
-        day = next((d for d in log.missing if d.date == data.attendance_date), None)
-        if day is None:
-            raise ValidationFailedError("There is no missing out-punch on that date.")
-        if data.attendance_date != max(d.date for d in log.missing):
-            raise ValidationFailedError(f"OrangeHRM closes the most recent open punch first. Correct {max(d.date for d in log.missing):%d %b} before this day.")
-        if policy.minutes(data.out_punch) <= policy.minutes(day.in_punch):
-            raise ValidationFailedError(f"The out-punch must be after the in-punch ({day.in_punch}).")
+        if problem := policy.attendance_date_problem(data.attendance_date, date.today()):
+            raise ValidationFailedError(problem)
+        if policy.minutes(data.out_punch) <= policy.minutes(data.in_punch):
+            raise ValidationFailedError(f"The out time must be after the in time ({data.in_punch}).")
 
         record = self._new_request(employee, RequestKind.REGULARIZATION, data.reason)
-        record.attendance_date, record.in_punch, record.out_punch = data.attendance_date, day.in_punch, data.out_punch
-        record.hours_worked = policy.hours_worked(day.in_punch, data.out_punch)
+        record.attendance_date, record.in_punch, record.out_punch = data.attendance_date, data.in_punch, data.out_punch
+        record.hours_worked = policy.hours_worked(data.in_punch, data.out_punch)
 
         def guard(records: list[LeaveAttendanceRequest]) -> None:
             if data.attendance_date in self._waiting(records, employee.id):
-                raise ValidationFailedError("A correction for that day is already waiting for approval.")
+                raise ValidationFailedError("An attendance request for that day is already waiting for approval.")
 
         return self._repo.add_if(record, guard)
 
@@ -313,13 +279,23 @@ class LeaveService:
             if record.kind == RequestKind.LEAVE:
                 result = oh.assign_leave(emp_number, record.leave_type_id, record.start_date, record.end_date, f"{_DEMO_NOTE}: {record.reason}")
             else:
-                oh.punch_out(emp_number, record.attendance_date, record.out_punch, f"{_DEMO_NOTE}: {record.reason}")
+                self._record_attendance(emp_number, record)
                 result = {"id": None, "url": oh.attendance_url()}
 
             def mutate(r: LeaveAttendanceRequest) -> None:
                 r.applied, r.applied_at, r.orange_hrm_id, r.orange_hrm_url = True, datetime.now(), result["id"], result["url"]
 
             return self._repo.update(request_id, mutate)
+
+    def _record_attendance(self, emp_number: int, record: LeaveAttendanceRequest) -> None:
+        """Write the approved day to OrangeHRM: whatever it holds for the day is replaced by the punch-in and punch-out the employee gave.
+
+        Replacing first also makes a retry safe: a half-written day (punched in, not out) is cleared before it is written again.
+        """
+        oh, day, note = self._gw.orangehrm, record.attendance_date, f"{_DEMO_NOTE}: {record.reason}"
+        oh.delete_attendance_records(emp_number, [r["id"] for r in oh.attendance_records(emp_number, day, day) if r["inDate"] == day.isoformat()])
+        oh.punch_in(emp_number, day, record.in_punch, note)
+        oh.punch_out(emp_number, day, record.out_punch, note)
 
     def clear(self) -> int:
         """Delete decided requests from the portal. What was recorded in OrangeHRM stays there."""

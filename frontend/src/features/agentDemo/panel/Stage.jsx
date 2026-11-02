@@ -26,15 +26,17 @@ function useCountdown(until) {
 /** The step is waiting for HR: the approval gate lives here so it cannot be missed. */
 function Approval({ step, onGate }) {
   const secondsLeft = useCountdown(step.gate ? step.payload?.autoApproveAt : null);
+  const who = /manager/i.test(step.title ?? '') ? 'the manager' : 'HR'; // the step says whose decision it is
+  const Who = who === 'HR' ? 'HR' : 'Manager';
   if (step.awaitHr) {
     return (
       <div className="ad-vz ad-v-wait">
-        <div className="ad-gate ad-await" role="status" aria-label="Waiting for HR approval">
-          <div className="ad-v-waiting"><span><Icon name="user" size={18} />Waiting for HR to approve the request<span className="ad-dots"><i></i><i></i><i></i></span></span>
-            <small>HR approves on the <b>HR Approvals</b> page. This run continues by itself as soon as the request is approved there.</small>
+        <div className="ad-gate ad-await" role="status" aria-label={`Waiting for ${who} approval`}>
+          <div className="ad-v-waiting"><span><Icon name="user" size={18} />Waiting for {who} to approve the request<span className="ad-dots"><i></i><i></i><i></i></span></span>
+            <small>{Who === 'HR' ? 'HR' : 'The manager'} approves on the <b>Approvals</b> page. This run continues by itself as soon as the request is approved there.</small>
           </div>
           <div className="ad-gate-actions">
-            <Link className="ad-btn primary" to={step.payload?.openTo ?? '/approvals'}><i className="fa-solid fa-clipboard-check"></i> Open HR Approvals</Link>
+            <Link className="ad-btn primary" to={step.payload?.openTo ?? '/approvals'}><i className="fa-solid fa-clipboard-check"></i> Open Approvals</Link>
           </div>
         </div>
       </div>
@@ -43,8 +45,8 @@ function Approval({ step, onGate }) {
   if (step.gate) {
     return (
       <div className="ad-vz ad-v-wait">
-        <div className="ad-gate" role="group" aria-label="HR approval">
-          <div className="ad-v-waiting"><span><Icon name="user" size={18} />Waiting for HR approval<span className="ad-dots"><i></i><i></i><i></i></span></span>
+        <div className="ad-gate" role="group" aria-label={`${Who} approval`}>
+          <div className="ad-v-waiting"><span><Icon name="user" size={18} />Waiting for {Who === 'HR' ? 'HR' : 'manager'} approval<span className="ad-dots"><i></i><i></i><i></i></span></span>
             <small>{step.payload?.warning ?? 'Approving creates real accounts and tickets in the connected systems.'}{secondsLeft !== null && <b> Approving itself in {secondsLeft}s.</b>}</small>
           </div>
           <div className="ad-gate-actions">

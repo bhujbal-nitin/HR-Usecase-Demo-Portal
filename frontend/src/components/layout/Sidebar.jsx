@@ -57,7 +57,7 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
         <Tab
           to="/approvals"
           icon="fa-clipboard-check"
-          title="HR Approvals"
+          title="Approvals"
           subtitle="Review & provision"
           badge={pending > 0 ? pending : null}
           onNavigate={onNavigate}

@@ -3,22 +3,17 @@
 Order (as in the original orchestrator):
   1. ServiceNow approval            5. OrangeHRM profile
   2. AutomationEdge mgmt approval   6. Laptop request + ServiceNow incident
-  3. Active Directory account       7. Offer letter (PDF, e-mail, ServiceNow attachment)
+  3. Active Directory account
   4. Microsoft 365 account
 """
 
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 from app.core.exceptions import IntegrationError
-from app.integrations.servicenow import Attachment
-from app.schemas.employee import LaptopInfo, OfferLetterInfo, StepStatus
+from app.schemas.employee import LaptopInfo, StepStatus
 from app.services.pipeline.attempts import Attempts, StepOutcome
 from app.services.pipeline.context import SERVICENOW_SOURCE, PipelineContext
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -131,37 +126,11 @@ def laptop(ctx: PipelineContext) -> StepOutcome:
     return attempts.outcome(f"Laptop requested; incident {incident.number if incident else ''}".strip())
 
 
-def offer_letter(ctx: PipelineContext) -> StepOutcome:
-    attempts = Attempts()
-    gw, emp = ctx.gateways, ctx.employee
-    pdf = attempts.run("Generate offer letter PDF", ctx.offer_pdf)
-    if pdf:
-        info = OfferLetterInfo(filename=pdf.name, generated_at=datetime.now())
-        recipient = attempts.run("E-mail offer letter", lambda: gw.offer_letters.send_email(emp, pdf))
-        if recipient:
-            info.emailed, info.recipient = True, recipient
-        if emp.service_now.req_sys_id:
-            attachment = Attachment(pdf.name, pdf.read_bytes(), "application/pdf")
-            attempts.run("Attach to ServiceNow request",
-                         lambda: gw.servicenow.attach_file("sc_request", emp.service_now.req_sys_id, attachment))
-        if gw.settings.ae_workflow_send_mail:
-            _workflow(ctx, attempts, "T4 'HR Demo Send mail' workflow",
-                      lambda: gw.automationedge.send_mail(f"Offer of Employment - {emp.full_name}"))
-        ctx.offer_letter = info
-    return attempts.outcome(f"Offer letter {pdf.name if pdf else ''} generated".strip())
-
-
 # --------------------------------------------------------------------- helpers
 def _document_payloads(ctx: PipelineContext) -> list[tuple[str, bytes, str]]:
-    """Candidate documents (+ offer letter when available) as (filename, bytes, content-type)."""
+    """The candidate's uploaded documents as (filename, bytes, content-type)."""
     emp, store = ctx.employee, ctx.gateways.documents
-    payloads = [(doc.filename, store.read(emp.id, doc), doc.content_type) for doc in emp.documents.values()]
-    try:
-        pdf = ctx.offer_pdf()
-        payloads.append((pdf.name, pdf.read_bytes(), "application/pdf"))
-    except Exception:  # noqa: BLE001 - the offer letter is a nice-to-have attachment here
-        logger.exception("Offer letter could not be attached to OrangeHRM")
-    return payloads
+    return [(doc.filename, store.read(emp.id, doc), doc.content_type) for doc in emp.documents.values()]
 
 
 def _incident_description(ctx: PipelineContext) -> str:
@@ -196,5 +165,4 @@ PROVISIONING_STEPS: list[Step] = [
     Step("office365", "Microsoft 365 account", "Microsoft 365", office365),
     Step("orangehrm", "OrangeHRM employee profile", "OrangeHRM", orangehrm),
     Step("laptop", "Laptop request & hardware incident", "ServiceNow", laptop),
-    Step("offer_letter", "Offer letter", "E-mail", offer_letter),
 ]

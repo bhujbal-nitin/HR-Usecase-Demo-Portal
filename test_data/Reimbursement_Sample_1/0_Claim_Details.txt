@@ -1,0 +1,24 @@
+REIMBURSEMENT TEST DATA - Reimbursement Sample 1
+==========================================================
+Travel and food, all within the company policy. All bills are fictional.
+
+HOW TO TEST (Reimbursement & Benefits demo, Manual · Live)
+  1. Type your employee ID or work e-mail when the chat asks (any onboarded employee works; the claim is saved for that person).
+  2. Upload the 3 PDFs in this folder as the bills, one at a time (use "Add another bill" after each).
+  3. Check that each bill is read as shown below, then submit the claim.
+  4. On the Approvals page (Reimbursement tab) approve or reject each bill as the manager.
+  5. The approved bills are then recorded in OrangeHRM (Claim).
+
+WHAT EACH BILL SHOULD BE READ AS
+  file                         category policy          date        amount
+  1_Ola_Cab_Receipt.pdf        Travel   within policy   14/10/2026  INR     397.95   Ola Cabs (ANI Technologies Pvt. Ltd.)
+  2_Restaurant_Bill.pdf        Food     within policy   16/10/2026  INR   1,312.50   The Urban Tadka Restaurant
+  3_Petrol_Receipt.pdf         Travel   within policy   18/10/2026  INR   1,567.50   Sai Fuel Station (Bharat Petroleum)
+
+  Claim total: INR 3,277.95
+
+NOTES
+  - "Within policy" means the category the company reimburses (Travel and Food). The manager can still approve any bill.
+  - The category is decided by the reader (OpenAI) from the bill itself; if it reads a bill differently from the table, tell me which one.
+  - Amounts are the final amount on each bill, with tax. Dates are printed as DD/MM/YYYY.
+  - Suggested checks: approve every bill once; reject one bill and approve the others; try uploading a file that is not a bill (for example 0_Claim_Details.txt) to see it refused.

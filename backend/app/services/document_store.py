@@ -85,5 +85,5 @@ class DocumentStore:
         shutil.rmtree(self._folder(employee_id), ignore_errors=True)
 
     def _folder(self, employee_id: str) -> Path:
-        # employee ids are server-generated ("EMP-123456"); sanitise anyway so a bad id can't escape the root.
+        # employee ids are server-generated ("AE-123456"); sanitise anyway so a bad id can't escape the root.
         return self._root / safe_filename(employee_id)

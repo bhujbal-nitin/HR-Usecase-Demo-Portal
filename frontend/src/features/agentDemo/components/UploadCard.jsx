@@ -35,7 +35,7 @@ export default function UploadCard({ upload, onPick }) {
           {interactive && (
             <>
               <button type="button" className="ad-go" onClick={() => input.current?.click()}>Choose file</button>
-              <input ref={input} type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => { const f = e.target.files[0]; e.target.value = ''; choose(f); }} />
+              <input ref={input} type="file" hidden accept={upload.accept ?? '.pdf,.doc,.docx'} onChange={(e) => { const f = e.target.files[0]; e.target.value = ''; choose(f); }} />
             </>
           )}
         </div>

@@ -17,6 +17,11 @@
 .agent-demo .ad-edge { fill: none; stroke: var(--ad-line); stroke-width: 1.6; stroke-dasharray: 4 4; transition: stroke 0.2s; }
 .agent-demo .ad-edge.live { stroke: var(--ad-accent); stroke-width: 2; animation: adDash 0.7s linear infinite; }
 .agent-demo .ad-dotpulse { fill: var(--ad-accent); filter: drop-shadow(0 0 5px var(--ad-accent)); }
+.agent-demo .ad-edge.live.ae { stroke: #f26b21; }
+.agent-demo .ad-dotpulse.ae { fill: #f26b21; filter: drop-shadow(0 0 5px #f26b21); }
+.agent-demo .ad-aetag rect { fill: #f26b21; }
+.agent-demo .ad-aetag text { fill: #fff; font-size: 8.5px; font-weight: 700; }
+.agent-demo .ad-aetag svg, .agent-demo .ad-aetag path { stroke: #fff; }
 .agent-demo .ad-node { color: var(--ad-muted); }
 .agent-demo .ad-node.agent { color: var(--ad-accent); }
 .agent-demo .ad-node.person { color: var(--ok); }
@@ -239,7 +244,7 @@
 .agent-demo .ad-v-pk.back.loop { animation: adBack 1.1s linear infinite; animation-delay: 0.55s; }
 .agent-demo .ad-v-pk.out.loop { animation: adGo 1.1s linear infinite; }
 
-/* Waiting for HR on the HR Approvals page: draw the eye to the box */
+/* Waiting for HR on the Approvals page: draw the eye to the box */
 .agent-demo .ad-await { animation: adAwait 1.8s ease-in-out infinite; border-color: var(--k-human, #ea580c); }
 .agent-demo a.ad-btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 @keyframes adAwait { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--k-human, #ea580c) 45%, transparent); } 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--k-human, #ea580c) 0%, transparent); } }

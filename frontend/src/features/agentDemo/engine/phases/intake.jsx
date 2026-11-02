@@ -69,11 +69,12 @@ export async function joiningForm({ r, D, S, set }) {
       },
     },
     {
-      kind: 'notify', agent: 'orch', title: 'Ask for the Aadhaar card', note: 'Sends the next request and waits for a photo.', name: 'whatsapp.send_text()', lat: 160,
+      kind: 'notify', agent: 'orch', title: 'Ask for the Aadhaar card', note: 'Sends the next request and waits for the file.', name: 'whatsapp.send_text()', lat: 160,
       payload: { to: maskPhone(D.mobile), expects: 'image/jpeg | image/png | application/pdf', state: 'AWAITING_AADHAAR' },
       after: async () => {
         await r.bot(<>Thanks, {D.first}. Your details are captured.</>);
-        await r.bot(<>Next, please send a clear photo of your <b>Aadhaar card</b> (front). Tap the paperclip to attach it.</>, { wait: 600 });
+        await r.bot(<>Next, please attach your <b>Aadhaar card</b> (PDF or Word) with the paperclip.</>, { wait: 600 });
+        D.idUploadId = r.msg('in', null, { kind: 'upload', wide: true, upload: { docKey: 'idDoc', label: 'Aadhaar card' } });
         set({ stage: 'docs' });
       },
     },

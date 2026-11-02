@@ -107,7 +107,7 @@ class FakeOrangeHRM:
 def world(client):
     container = client.app.state.container
     employee = Employee(
-        id="EMP-111111", full_name="Aarav Sharma", email="aarav.personal@example.com", phone="+91 98765 43210", dob=date(1995, 7, 20),
+        id="AE-111111", full_name="Aarav Sharma", email="aarav.personal@example.com", phone="+91 98765 43210", dob=date(1995, 7, 20),
         aadhaar="234567890123", emergency_name="S", emergency_phone="+91 98765 00000", address="Pune 411045", department="Engineering",
         job_title="Engineer", manager="Amit D", start_date=date(2026, 1, 5), annual_ctc=1_200_000, hardware="MacBook",
         status=EmployeeStatus.APPROVED,
@@ -122,13 +122,13 @@ def world(client):
 
 
 def resignation(**over):
-    body = {"employeeRef": "EMP-111111", "lastWorkingDay": (date.today() + timedelta(days=20)).isoformat(), "reason": "Better opportunity", "leaveBalanceDays": 5}
+    body = {"employeeRef": "AE-111111", "lastWorkingDay": (date.today() + timedelta(days=20)).isoformat(), "reason": "Better opportunity", "leaveBalanceDays": 5}
     return {**body, **over}
 
 
 def test_lookup_by_id_and_by_work_email(world):
     client, _, _ = world
-    for ref in ("emp-111111", "Aarav.Sharma@contoso.com", "aarav.personal@example.com"):
+    for ref in ("ae-111111", "Aarav.Sharma@contoso.com", "aarav.personal@example.com"):
         body = client.get("/api/offboardings/lookup", params={"ref": ref}).json()
         assert body["fullName"] == "Aarav Sharma" and body["workEmail"] == "aarav.sharma@contoso.com"
     assert client.get("/api/offboardings/lookup", params={"ref": "nobody@x.com"}).status_code == 404
@@ -136,8 +136,8 @@ def test_lookup_by_id_and_by_work_email(world):
 
 def test_only_approved_employees_can_resign(world):
     client, _, _ = world
-    client.app.state.container.repository.update("EMP-111111", lambda e: setattr(e, "status", EmployeeStatus.PENDING_REVIEW))
-    assert client.get("/api/offboardings/lookup", params={"ref": "EMP-111111"}).status_code == 409
+    client.app.state.container.repository.update("AE-111111", lambda e: setattr(e, "status", EmployeeStatus.PENDING_REVIEW))
+    assert client.get("/api/offboardings/lookup", params={"ref": "AE-111111"}).status_code == 409
 
 
 def test_past_last_day_is_rejected(world):
@@ -154,7 +154,7 @@ def test_full_offboarding_run(world):
     wait_for(lambda: client.get(f"/api/offboardings/{oid}").json()["intakeStatus"] == "completed")
     # a second resignation for the same person is refused
     assert client.post("/api/offboardings", json=resignation()).status_code == 409
-    assert client.get("/api/offboardings/lookup", params={"ref": "EMP-111111"}).status_code == 409
+    assert client.get("/api/offboardings/lookup", params={"ref": "AE-111111"}).status_code == 409
 
     assert client.post(f"/api/offboardings/{oid}/approve").status_code == 202
     done = wait_for(lambda: (r := client.get(f"/api/offboardings/{oid}").json())["status"] == "Completed" and r)
@@ -198,7 +198,7 @@ def test_reject_resolves_the_ticket_and_frees_the_employee(world):
     wait_for(lambda: client.get(f"/api/offboardings/{oid}").json()["intakeStatus"] == "completed")
     assert client.post(f"/api/offboardings/{oid}/reject").json()["status"] == "Rejected"
     assert gw.servicenow.resolved == ["sys1"]
-    assert client.get("/api/offboardings/lookup", params={"ref": "EMP-111111"}).status_code == 200
+    assert client.get("/api/offboardings/lookup", params={"ref": "AE-111111"}).status_code == 200
 
 
 def test_runs_without_any_credentials_skipping_the_systems(client, world):

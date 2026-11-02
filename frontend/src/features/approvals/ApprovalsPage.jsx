@@ -2,14 +2,16 @@ import { useSearchParams } from 'react-router-dom';
 import ApprovalsView from './ApprovalsView';
 import LeaveApprovals from './LeaveApprovals';
 import OffboardingApprovals from './OffboardingApprovals';
+import ReimbursementApprovals from './ReimbursementApprovals';
 
 const TABS = [
   { id: 'onboarding', label: 'Onboarding', icon: 'fa-user-plus' },
   { id: 'offboarding', label: 'Offboarding', icon: 'fa-door-open' },
   { id: 'leave', label: 'Leave & Attendance', icon: 'fa-umbrella-beach' },
+  { id: 'reimbursement', label: 'Reimbursement', icon: 'fa-file-invoice-dollar' },
 ];
 
-/** HR Approvals: one place for HR decisions. Candidates to onboard, employees who have resigned, and leave & attendance requests. */
+/** Approvals: one place for HR decisions. Candidates to onboard, employees who have resigned, leave & attendance requests and expense claims. */
 export default function ApprovalsPage() {
   const [params, setParams] = useSearchParams();
   const requested = params.get('tab');
@@ -28,7 +30,7 @@ export default function ApprovalsPage() {
           </button>
         ))}
       </div>
-      {tab === 'leave' ? <LeaveApprovals /> : tab === 'offboarding' ? <OffboardingApprovals /> : <ApprovalsView embedded />}
+      {tab === 'leave' ? <LeaveApprovals /> : tab === 'reimbursement' ? <ReimbursementApprovals /> : tab === 'offboarding' ? <OffboardingApprovals /> : <ApprovalsView embedded />}
     </section>
   );
 }

@@ -1,0 +1,4 @@
+# Generated PDFs are stored uncompressed, so Git can mistake them for text and rewrite their line endings, which breaks them. Keep them byte for byte.
+*.pdf binary
+*.docx binary
+*.png binary

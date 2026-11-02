@@ -49,7 +49,7 @@ def employee(candidate_form):
     fields = {k: v for k, v in candidate_form.items() if k != "signature"}
     from app.schemas.employee import CandidateCreate
 
-    return Employee(id="EMP-123456", **CandidateCreate.model_validate(fields).model_dump())
+    return Employee(id="AE-123456", **CandidateCreate.model_validate(fields).model_dump())
 
 
 def test_ae_encryption_matches_the_original_node_implementation():

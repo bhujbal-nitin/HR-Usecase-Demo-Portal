@@ -36,8 +36,8 @@ export async function record({ r, D, S, set, live }) {
       },
     } : {
       kind: 'api', agent: 'orch', title: 'Create the onboarding record', note: 'Simulated: a record would be created in the HR system.', name: 'hrms.create_employee()', lat: 520,
-      payload: { request: 'POST /api/v2/pim/employees', response: { status: 201, empNumber: 'EMP-DEMO' } },
-      after: async () => { S.employeeId = 'EMP-DEMO'; },
+      payload: { request: 'POST /api/v2/pim/employees', response: { status: 201, empNumber: 'AE-DEMO' } },
+      after: async () => { S.employeeId = 'AE-DEMO'; },
     },
     ...(live ? [] : [
       {

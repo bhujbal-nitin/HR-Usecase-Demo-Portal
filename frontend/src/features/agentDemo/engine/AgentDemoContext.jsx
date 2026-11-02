@@ -5,7 +5,10 @@ import { buildCandidate } from './candidate';
 import { demoReducer, initialState } from './demoReducer';
 import { runGenericJourney, runGenericManual } from './genericJourney.jsx';
 import { runManualOnboarding } from './manualJourney.jsx';
+import { runHrPolicy } from './hrPolicyJourney.jsx';
 import { runLeaveAttendance } from './leaveJourney.jsx';
+import { runPayrollSalary } from './payrollJourney.jsx';
+import { runReimbursement } from './reimbursementJourney.jsx';
 import { runLiveOffboarding } from './offboardingJourney.jsx';
 import { SIM_EMPLOYEE } from './simulatedOffboardingApi';
 import { runJourney } from './index';
@@ -35,9 +38,9 @@ export function AgentDemoProvider({ children }) {
   }, []);
 
   /**
-   * @param {'live'|'simulated'} mode  (only the onboarding, offboarding and leave & attendance agents have a live mode)
+   * @param {'live'|'simulated'} mode  (every agent except the scripted ones has a live mode)
    * @param {{ manual?: boolean, employeeRef?: string }} options  manual: the user drives the chat instead of the scripted auto-play;
-   *        employeeRef: the employee an offboarding or leave & attendance Auto-play · Live run is about
+   *        employeeRef: the employee an Auto-play · Live run (any agent but onboarding) is about
    */
   const start = useCallback(async (agentId, mode, { manual = false, employeeRef } = {}) => {
     const token = (tokens.current[agentId] ?? 0) + 1;
@@ -70,6 +73,15 @@ export function AgentDemoProvider({ children }) {
       } else if (agentId === 'leave_attendance') {
         // Manual · Live, Auto-play · Live and Auto-play · Simulated all run the same journey; only the calls behind it differ.
         await runLeaveAttendance({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
+      } else if (agentId === 'payroll_salary') {
+        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated run one journey; only the calls behind it differ.
+        await runPayrollSalary({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
+      } else if (agentId === 'hr_policy') {
+        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated run one journey; only the calls behind it differ.
+        await runHrPolicy({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
+      } else if (agentId === 'reimbursement_benefits') {
+        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated run one journey; only the calls behind it differ.
+        await runReimbursement({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
       } else if (manual) {
         await runGenericManual({ r, agent: AGENT_BY_ID[agentId], set });
       } else if (agentId === 'onboarding') {

@@ -4,8 +4,8 @@ import { VALIDATORS } from '../lib/leave';
 import { todayIso } from '../lib/resignation';
 
 // A small in-chat form for the leave & attendance agent. `form` describes it:
-//   { title, hint, fields: [{ id, label, type: 'select'|'date'|'time'|'text', options?: [{ value, label }], minToday? }],
-//     validator: 'leave' | 'regularize', defaults?, values, submitted, auto }
+//   { title, hint, fields: [{ id, label, type: 'select'|'date'|'time'|'text', options?: [{ value, label }], minToday?, min?, max? }],
+//     validator: 'leave' | 'attendance', defaults?, values, submitted, auto }
 // Manual: the employee fills it in. Auto-play: it fills itself in, one field at a time, then submits. Submitted: read-only.
 
 const shown = (field, value) => {
@@ -51,7 +51,7 @@ export default function ChatForm({ form, active, onSubmit }) {
 
   const submit = (event) => {
     event.preventDefault();
-    const found = VALIDATORS[form.validator](values);
+    const found = VALIDATORS[form.validator]?.(values) ?? {}; // a form with nothing to check (a month picker) has no validator
     setErrors(found);
     if (Object.keys(found).length === 0) onSubmit(values);
   };
@@ -70,7 +70,7 @@ export default function ChatForm({ form, active, onSubmit }) {
           ) : (
             <input
               id={`cf-${field.id}`} className="ad-edit" type={field.type} value={values[field.id]} disabled={!active}
-              min={field.type === 'date' && field.minToday ? (field.id === 'endDate' && values.startDate ? values.startDate : todayIso()) : undefined}
+              min={field.min ?? (field.type === 'date' && field.minToday ? (field.id === 'endDate' && values.startDate ? values.startDate : todayIso()) : undefined)} max={field.max}
               maxLength={field.type === 'text' ? 300 : undefined} onChange={(e) => change(field.id, e.target.value)} aria-invalid={Boolean(errors[field.id])}
             />
           )}

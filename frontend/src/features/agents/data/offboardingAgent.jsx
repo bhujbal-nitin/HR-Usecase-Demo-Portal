@@ -38,7 +38,7 @@ export function respond(action) {
           icon: 'fa-right-from-bracket',
           badge: { label: 'Draft Notice', tone: 'pending' },
           rows: [
-            ['Employee:', 'Samantha Chang (EMP-8821)'],
+            ['Employee:', 'Samantha Chang (AE-8821)'],
             ['Notice Period:', '30 Days (Standard Engineering Contract)'],
             ['Tentative Last Day:', 'November 20, 2026'],
             ['Reporting Manager:', 'Michael Torres (Engineering Director)'],

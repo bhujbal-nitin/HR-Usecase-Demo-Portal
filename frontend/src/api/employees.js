@@ -10,12 +10,10 @@ export const retryIntake = (id) => api.post(`/employees/${encodeURIComponent(id)
 export const skipIntakeStep = (id) => api.post(`/employees/${encodeURIComponent(id)}/skip-intake-step`);
 export const skipProvisioningStep = (id) => api.post(`/employees/${encodeURIComponent(id)}/skip-provisioning-step`);
 export const retryProvisioning = (id) => api.post(`/employees/${encodeURIComponent(id)}/retry-provisioning`);
-export const sendOfferLetter = (id) => api.post(`/employees/${encodeURIComponent(id)}/offer-letter`);
 export const syncServiceNowApprovals = () => api.post('/employees/sync-servicenow');
 export const clearEmployees = (scope = 'processed') => api.delete(`/employees?scope=${scope}`);
 
 export const documentUrl = (id, key) => apiUrl(`/employees/${encodeURIComponent(id)}/documents/${key}`);
-export const offerLetterUrl = (id) => apiUrl(`/employees/${encodeURIComponent(id)}/offer-letter`);
 
 /**
  * Submit the wizard. Text fields go as multipart form fields (camelCase, matching the API),

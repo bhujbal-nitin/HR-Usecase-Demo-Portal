@@ -1,14 +1,15 @@
 """Leave & attendance endpoints."""
 
+from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.deps import ContainerDep
+from app.api.workflow_runs import run_showcase_workflow
 from app.schemas.common import CamelModel
 from app.schemas.leave import (
-    AttendanceLog,
-    DemoPunch,
+    AttendanceDayRecords,
     Holiday,
     LeaveApplication,
     LeaveAttendanceRequest,
@@ -76,16 +77,10 @@ def check_leave(data: LeaveCheckRequest, service: LeaveDep):
     return service.check_leave(data)
 
 
-@router.post("/attendance/demo-punch", response_model=DemoPunch)
-def demo_punch(service: LeaveDep, ref: Ref):
-    """Demo set-up: make sure the employee has a day with a missing out-punch in OrangeHRM."""
-    return service.prepare_demo_punch(ref)
-
-
-@router.get("/attendance", response_model=AttendanceLog)
-def attendance(service: LeaveDep, ref: Ref):
-    """The recent punch log, including the days that have no out-punch."""
-    return service.attendance(ref)
+@router.get("/attendance", response_model=AttendanceDayRecords)
+def attendance(service: LeaveDep, ref: Ref, day: Annotated[date, Query(alias="date", description="The day, YYYY-MM-DD")]):
+    """The punch records OrangeHRM holds for one day (an approved attendance request for that day replaces them)."""
+    return service.attendance(ref, day)
 
 
 @router.get("/requests", response_model=list[LeaveAttendanceRequest])
@@ -132,16 +127,5 @@ def apply(request_id: str, service: LeaveDep):
 
 @router.post("/workflows/{key}", response_model=LeaveWorkflowRun)
 def run_workflow(key: str, container: ContainerDep):
-    """Run one of the AutomationEdge showcase workflows and wait until it finishes (the portal's own calls do the real work).
-
-    Without AutomationEdge credentials this answers 502 so the chat step fails and offers Rerun / Skip; a workflow that
-    does not end Complete comes back with ``ok: false``.
-    """
-    method = _WORKFLOWS.get(key)
-    if method is None:
-        raise HTTPException(status_code=404, detail=f"Unknown workflow '{key}'.")
-    result = getattr(container.automationedge, method)()
-    return LeaveWorkflowRun(
-        workflow_name=result.workflow_name, status=result.execution_status, ok=result.ok, automation_request_id=result.automation_request_id,
-        agent=result.agent_name or None, message=result.message, instance_url=result.instance_url,
-    )
+    """Run one of the AutomationEdge showcase workflows and wait until it finishes (the portal's own calls do the real work)."""
+    return run_showcase_workflow(container, _WORKFLOWS, key)

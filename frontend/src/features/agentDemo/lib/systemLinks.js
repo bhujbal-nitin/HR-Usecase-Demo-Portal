@@ -26,6 +26,11 @@ export function systemLinks(kind, record) {
     return { servicenow: [], orangehrm: [link(what, record.orangeHrmUrl)].filter(Boolean), office365: [] };
   }
 
+  if (kind === 'reimbursement') {
+    // The expense claim only creates a claim in OrangeHRM, once the manager has approved it.
+    return { servicenow: [], orangehrm: [link(record.orangeHrmId ? `Claim #${record.orangeHrmId}` : null, record.orangeHrmUrl)].filter(Boolean), office365: [] };
+  }
+
   const ticket = (key, name) => {
     const details = step(record, key)?.details;
     return link(details?.ticket ? `${name} ${details.ticket}` : null, details?.url);

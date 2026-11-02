@@ -22,6 +22,7 @@ def settings(tmp_path) -> Settings:
         _env_file=None,
         data_dir=tmp_path / "data",
         offers_dir=tmp_path / "offers",
+        hr_documents_dir=tmp_path / "hr_documents",
         approval_poller_enabled=False,
         cors_origins="http://localhost:3000",
     )

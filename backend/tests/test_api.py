@@ -33,7 +33,7 @@ def test_submit_candidate_creates_pending_record(client, candidate_form, candida
     response = _submit(client, candidate_form, candidate_files)
     assert response.status_code == 201, response.text
     body = response.json()
-    assert body["id"].startswith("EMP-")
+    assert body["id"].startswith("AE-")
     assert body["status"] == "Pending Review"
     assert body["aadhaar"] == "234567890123"  # digits only
     assert set(body["documents"]) == {"idDoc", "panDoc", "uanDoc", "salaryDoc"}
@@ -99,17 +99,10 @@ def test_approve_runs_pipeline_and_blocks_duplicates(client, candidate_form, can
     steps = {s["key"]: s for s in done["pipeline"]}
     assert list(steps) == [
         "servicenow_approval", "management_approval", "active_directory",
-        "office365", "orangehrm", "laptop", "offer_letter",
+        "office365", "orangehrm", "laptop",
     ]
     # No credentials in the test environment: external systems are skipped, never faked.
     assert steps["active_directory"]["status"] == "skipped"
-    # The offer letter PDF does not need external systems.
-    assert steps["offer_letter"]["status"] in ("success", "failed")  # e-mail skipped/failed, PDF generated
-    assert done["offerLetter"]["filename"].endswith(".pdf")
-
-    pdf = client.get(f"/api/employees/{employee_id}/offer-letter")
-    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
-
     assert client.post(f"/api/employees/{employee_id}/approve").status_code == 409
     assert client.post(f"/api/employees/{employee_id}/reject").status_code == 409
 
@@ -130,8 +123,8 @@ def test_download_uploaded_document(client, candidate_form, candidate_files):
 
 
 def test_unknown_employee_is_404(client):
-    assert client.get("/api/employees/EMP-000000").status_code == 404
-    assert client.post("/api/employees/EMP-000000/approve").status_code == 404
+    assert client.get("/api/employees/AE-000000").status_code == 404
+    assert client.post("/api/employees/AE-000000/approve").status_code == 404
 
 
 def test_clear_keeps_pending_records_by_default(client, candidate_form, candidate_files):

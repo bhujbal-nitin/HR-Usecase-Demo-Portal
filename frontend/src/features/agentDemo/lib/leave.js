@@ -3,22 +3,22 @@
 
 import { todayIso } from './resignation';
 
-/** What the assistant offers (and the suggestion chips in Manual mode). Auto-play runs them in this order. */
+/** What the assistant offers: the suggestion chips (shown in every mode; Auto-play taps them in this order, Manual waits for you). */
 export const SCENARIOS = [
-  { id: 'balance', label: 'Check my leave balance and holidays', prompt: 'How many leaves do I have left? And which holidays are coming up?', intent: 'leave.check_balance' },
-  { id: 'apply', label: 'Apply for leave', prompt: 'I’d like to apply for 2 days of casual leave.', intent: 'leave.apply' },
-  { id: 'regularize', label: 'Regularize a missed punch', prompt: 'I forgot to punch out recently. Can you fix my attendance?', intent: 'attendance.regularize' },
+  { id: 'balance', label: 'Check my leave balance and holidays', intent: 'leave.check_balance' },
+  { id: 'apply', label: 'Apply for leave', intent: 'leave.apply' },
+  { id: 'attendance', label: 'Attendance request', intent: 'attendance.request' },
 ];
 
 // Order matters: a sentence about "leave balance" is a balance question, not an application.
 const INTENTS = [
   ['done', /\b(bye|goodbye|thanks?|thank you|that'?s all|nothing else|no more)\b/i],
-  ['regularize', /punch|attendance|regulari[sz]|biometric|clock|check-?out|forgot to/i],
+  ['attendance', /punch|attendance|regulari[sz]|biometric|clock|check-?(in|out)|forgot to/i],
   ['balance', /balance|holiday|how many|remaining|left|entitle/i],
   ['apply', /leave|apply|vacation|time off|day off|\boff\b|pto|sick/i],
 ];
 
-/** 'balance' | 'apply' | 'regularize' | 'done' | null, from what the employee typed. */
+/** 'balance' | 'apply' | 'attendance' | 'done' | null, from what the employee typed. */
 export function detectIntent(text) {
   return INTENTS.find(([, pattern]) => pattern.test(text ?? ''))?.[0] ?? null;
 }
@@ -32,11 +32,21 @@ export const LEAVE_FIELDS = [
   { id: 'reason', label: 'Reason', type: 'text' },
 ];
 
-export const REGULARIZE_FIELDS = [
-  { id: 'attendanceDate', label: 'Day with the missing punch', type: 'select' },
+export const ATTENDANCE_FIELDS = [
+  { id: 'attendanceDate', label: 'Day', type: 'date' },
+  { id: 'inPunch', label: 'Time you came in', type: 'time' },
   { id: 'outPunch', label: 'Time you left', type: 'time' },
   { id: 'reason', label: 'Reason', type: 'text' },
 ];
+
+/** An attendance request can be raised for any day in the last 30 days, before today (the backend repeats this rule). */
+export const ATTENDANCE_WINDOW_DAYS = 30;
+
+/** { min, max } (ISO dates) of the days an attendance request can be for. */
+export function attendanceDateRange(from = new Date()) {
+  const day = (back) => toIso(new Date(from.getFullYear(), from.getMonth(), from.getDate() - back));
+  return { min: day(ATTENDANCE_WINDOW_DAYS), max: day(1) };
+}
 
 const reasonError = (reason) => {
   const text = (reason ?? '').trim();
@@ -57,17 +67,22 @@ export function validateLeave(values) {
   return errors;
 }
 
-export function validateRegularize(values) {
+export function validateAttendance(values) {
   const errors = {};
+  const { min, max } = attendanceDateRange();
   if (!values.attendanceDate) errors.attendanceDate = 'Choose the day.';
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(values.outPunch ?? '')) errors.outPunch = 'Enter the time you left, for example 18:30.';
-  else if (!isAfter(values.outPunch, IN_PUNCH)) errors.outPunch = `The time you left must be after your in-punch (${IN_PUNCH}).`;
+  else if (values.attendanceDate > max) errors.attendanceDate = 'Choose a day that has already passed.';
+  else if (values.attendanceDate < min) errors.attendanceDate = `Choose a day within the last ${ATTENDANCE_WINDOW_DAYS} days.`;
+  const clock = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (!clock.test(values.inPunch ?? '')) errors.inPunch = 'Enter the time you came in, for example 09:15.';
+  if (!clock.test(values.outPunch ?? '')) errors.outPunch = 'Enter the time you left, for example 18:30.';
+  else if (!errors.inPunch && !isAfter(values.outPunch, values.inPunch)) errors.outPunch = `The time you left must be after the time you came in (${values.inPunch}).`;
   const reason = reasonError(values.reason);
   if (reason) errors.reason = reason;
   return errors;
 }
 
-export const VALIDATORS = { leave: validateLeave, regularize: validateRegularize };
+export const VALIDATORS = { leave: validateLeave, attendance: validateAttendance };
 
 // ---- The sample company calendar and leave balances (simulated run only) -------------------------------------------------
 

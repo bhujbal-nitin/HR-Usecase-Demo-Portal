@@ -1,0 +1,48 @@
+ONBOARDING FORM DATA - copy these values into the portal
+==========================================================
+Candidate: Priya Nair   (all values below are fictional)
+
+Use the three PDFs in this folder as the documents:
+  1_Aadhaar_Card.pdf   -> Aadhaar card
+  2_PAN_Card.pdf       -> PAN card
+  3_Salary_Slip.pdf    -> Latest salary slip
+
+PERSONAL DETAILS
+----------------
+Full Legal Name ............ Priya Nair
+Personal Email Address ..... priya.nair.test@example.com
+Phone Number ............... +91 98230 11874
+Date of Birth .............. 1995-11-05   (5 November 1995)
+Aadhaar Number ............. 5129 3847 6013
+EPFO UAN Number ............ 100387416250   (only if the form asks; the Agent Demo does not)
+Emergency Contact Name ..... Suresh Nair (Father)
+Emergency Contact Phone .... +91 98230 55120
+Residential Address ........ B-204, Lake View Apartments, Baner, Pune, Maharashtra 411045
+
+EMPLOYMENT DETAILS
+------------------
+Department ................. Data & AI
+Job Title .................. Data Scientist
+Reporting Manager .......... Neha Kulkarni (Head of Data & AI)
+Joining Date ............... 2027-01-18
+Annual CTC (INR) ........... 1800000
+Preferred Workstation ...... Apple MacBook Pro M3 Max
+Work Location .............. Remote
+
+WHAT THE DOCUMENTS SHOW (they agree with the form, so the checks should pass)
+------------------------------------------------------------------------------
+Aadhaar : Priya Nair, DOB 05/11/1995, number 5129 3847 6013  (valid Verhoeff check digit)
+PAN     : PRIYA NAIR, DOB 05/11/1995, number CRQPN3846K
+Payslip : Priya Nair, October 2026, gross INR 1,50,000  (about the monthly CTC of INR 1,50,000)
+
+TRY THESE FAILURE CASES TOO
+---------------------------
+- Upload the PAN PDF where the Aadhaar is asked      -> rejected: wrong document type
+- Upload the salary slip where the PAN is asked      -> rejected: wrong document type
+- Type a different Full Legal Name in the form       -> every document is rejected: name mismatch
+- Change the form's name only slightly (e.g. "Priya X. Nair") -> still accepted
+
+NOTE
+----
+The PDFs are plain, generated test documents. A real OpenAI check reads them as printed text, which normally works; if the model
+judges one "not genuine" because it is obviously a plain template, test with a photo/PDF of your own sample card instead.

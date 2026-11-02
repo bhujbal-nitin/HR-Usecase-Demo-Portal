@@ -2,31 +2,45 @@ import * as realApi from '../../../api/leave';
 import { createSimulatedLeaveApi } from './simulatedLeaveApi';
 import { formatDate } from '../../../utils/format';
 import {
-  LEAVE_FIELDS, LEAVE_POLICY, REGULARIZE_FIELDS, SCENARIOS, SHIFT_END, addDays, detectIntent, hoursWorked, sampleLeaveDates,
+  ATTENDANCE_FIELDS, IN_PUNCH, LEAVE_FIELDS, LEAVE_POLICY, SCENARIOS, SHIFT_END, addDays, attendanceDateRange, detectIntent, hoursWorked, previousWorkingDays,
+  sampleLeaveDates,
 } from '../lib/leave';
 import { trigger } from './phases/common';
 import { leaveWorkflowStep } from './phases/leaveWorkflow';
 
 // Leave & attendance. Manual: YOU are the employee and the chat waits for you at every step. Auto-play: the same journey with the
 // chosen employee's answers filled in for you. Live: leave types, balances, holidays and punches are worked out in OrangeHRM (each step is
-// preceded by its AutomationEdge workflow), the manager decides on the HR Approvals page (Leave tab), and the approved leave or punch correction is then
+// preceded by its AutomationEdge workflow), the manager decides on the Approvals page (Leave tab), and the approved leave or attendance request is then
 // recorded in OrangeHRM. Auto-play · Simulated: the very same journey runs against simulatedLeaveApi, so the three flows cannot
 // drift apart; its steps are tagged Simulated. A failed or unconfigured system makes its step fail, with Rerun / Skip.
 
-/** Manual: wait for the person. Auto-play: wait a moment, then answer with the scripted value. */
-const makeAsk = (r, auto) => (awaiting, scripted) => (auto ? r.sleep(900).then(() => scripted) : r.ask(awaiting));
+/**
+ * Manual: wait for the person. Auto-play: wait a moment, then answer with the scripted value. When the question has suggestion chips,
+ * Auto-play shows them like Manual does and taps the one named by `awaiting.pick` before it answers.
+ */
+export const makeAsk = (r, auto) => async (awaiting, scripted) => {
+  if (!auto) return r.ask(awaiting);
+  const list = awaiting.suggestions;
+  if (!list?.length || !awaiting.pick) return r.sleep(900).then(() => scripted);
+  r.dispatch({ type: 'set', patch: { chips: { list, picked: null } } });
+  await r.sleep(900);
+  r.dispatch({ type: 'set', patch: { chips: { list, picked: awaiting.pick } } });
+  await r.sleep(600);
+  r.dispatch({ type: 'set', patch: { chips: null } });
+  return scripted;
+};
 
 const DECISION_POLL_MS = 2000;
 const FALLBACK_LEAVE_TYPES = Object.keys(LEAVE_POLICY); // only used if the step that reads them from OrangeHRM is skipped
-const firstName = (employee) => employee.fullName.split(/\s+/)[0];
-const days = (count) => `${count} day${count === 1 ? '' : 's'}`;
+export const firstName = (employee) => employee.fullName.split(/\s+/)[0];
+export const days = (count) => `${count} day${count === 1 ? '' : 's'}`;
 
 /** A simple answer card for the chat. */
-const card = (title, icon, badge, rows) => ({ title, icon, badge, rows });
-const showCard = (r, widget) => r.msg('in', null, { kind: 'widget', widget, wide: true });
+export const card = (title, icon, badge, rows) => ({ title, icon, badge, rows });
+export const showCard = (r, widget) => r.msg('in', null, { kind: 'widget', widget, wide: true });
 
 /** Phase: the agent reads the message and picks what to do. */
-async function understand({ r, text, intent, workflow }) {
+export async function understand({ r, text, intent, workflow }) {
   const phase = r.phase('Understand the request', 'The agent reads the message and works out what is being asked.');
   await r.runSteps(phase, [
     trigger('Inbound message received', 'WhatsApp would deliver your message.', {
@@ -40,7 +54,7 @@ async function understand({ r, text, intent, workflow }) {
 }
 
 /** Ask until the portal recognises an onboarded employee. Returns the employee summary. */
-async function identify({ r, set, ask, auto, api }) {
+export async function identify({ r, set, ask, auto, api }) {
   set({ stage: 'identify' });
   for (;;) {
     const { text } = await ask({ kind: 'text', suggestions: [] }, { text: auto?.employeeId });
@@ -68,7 +82,7 @@ async function identify({ r, set, ask, auto, api }) {
 }
 
 /** An in-chat form. Auto-play fills it in one field at a time, then submits; Manual waits for the person. Returns the values. */
-async function fillForm({ r, set, ask, auto, form, sample }) {
+export async function fillForm({ r, set, ask, auto, form, sample }) {
   const formId = r.msg('in', null, { kind: 'chatForm', wide: true, form: { ...form, values: auto ? {} : null, auto: Boolean(auto), submitted: false } });
   set({ stage: 'form' });
   let values;
@@ -87,18 +101,25 @@ async function fillForm({ r, set, ask, auto, form, sample }) {
   return values;
 }
 
+/** Where a request waits for the manager: the agent's map node, the Approvals tab, and how to read and (simulated) approve the record. */
+const LEAVE_DECISION = {
+  agent: 'leave', tab: 'leave', tabName: 'Leave tab', noun: 'request',
+  get: (api, id) => api.getLeaveRequest(id), approve: (api, id) => api.approveLeaveRequest(id),
+};
+
 /**
  * The manager's decision. Simulated: waits a moment, then approves itself (or click Approve now). Live: waits, as long as it takes,
- * for the manager to decide on the HR Approvals page. Returns 'approved', 'rejected' or 'stopped'.
+ * for the manager to decide on the Approvals page. Returns 'approved', 'rejected' or 'stopped'.
+ * @param channel  where the record waits (default: leave & attendance requests)
  */
-async function awaitDecision({ r, S, set, record }) {
-  const phase = r.phase('Manager approval', 'The request goes to the employee’s manager. Nothing is changed until it is decided.');
+export async function awaitDecision({ r, S, set, record, channel = LEAVE_DECISION }) {
+  const phase = r.phase('Manager approval', `The ${channel.noun} goes to the employee’s manager. Nothing is changed until it is decided.`);
   let outcome = 'approved';
   await r.runSteps(phase, [{
-    kind: 'human', agent: 'leave', title: 'Manager approval', name: 'hr.approve()', live: !S.api.simulated,
+    kind: 'human', agent: channel.agent, title: 'Manager approval', name: 'hr.approve()', live: !S.api.simulated,
     note: S.api.simulated
-      ? 'Simulated: the request waits for the manager for a moment, then approves itself. Click Approve now to go sooner.'
-      : 'The manager decides on the HR Approvals page (Leave tab); the run continues as soon as the request is approved or rejected.',
+      ? `Simulated: the ${channel.noun} waits for the manager for a moment, then approves itself. Click Approve now to go sooner.`
+      : `The manager decides on the Approvals page (${channel.tabName}); the run continues as soon as the ${channel.noun} is approved or rejected.`,
     run: async ({ patch, waitForGate }) => {
       if (S.api.simulated) {
         const waitMs = r.timing.approvalWaitMs;
@@ -114,9 +135,9 @@ async function awaitDecision({ r, S, set, record }) {
         }
         return { payload: { decision: choice === 'auto' ? 'AUTO_APPROVED' : 'APPROVED', approver: choice === 'auto' ? 'automatic after the wait (demo)' : 'the manager (this browser)', request: record.id }, lat: 0 };
       }
-      patch({ awaitHr: true, payload: { waiting_for: 'the manager, on the HR Approvals page', request: record.id, openTo: '/approvals?tab=leave' } });
+      patch({ awaitHr: true, payload: { waiting_for: 'the manager, on the Approvals page', request: record.id, openTo: `/approvals?tab=${channel.tab}` } });
       for (;;) {
-        const current = await S.api.getLeaveRequest(record.id);
+        const current = await channel.get(S.api, record.id);
         if (current.status !== 'Pending Approval') {
           patch({ awaitHr: false });
           outcome = current.status === 'Rejected' ? 'rejected' : 'approved';
@@ -124,7 +145,7 @@ async function awaitDecision({ r, S, set, record }) {
         }
         await r.wait(DECISION_POLL_MS);
       }
-      return { payload: { decision: outcome === 'rejected' ? 'REJECTED' : 'APPROVED', approver: 'the manager (HR Approvals page)', request: record.id }, warn: outcome === 'rejected', lat: 0 };
+      return { payload: { decision: outcome === 'rejected' ? 'REJECTED' : 'APPROVED', approver: 'the manager (Approvals page)', request: record.id }, warn: outcome === 'rejected', lat: 0 };
     },
   }]);
   if (outcome === 'stopped') {
@@ -132,7 +153,7 @@ async function awaitDecision({ r, S, set, record }) {
     return outcome;
   }
   set({ stage: 'apply' });
-  if (S.api.simulated && outcome === 'approved') await S.api.approveLeaveRequest(record.id); // live: already decided on the HR Approvals page
+  if (S.api.simulated && outcome === 'approved') await channel.approve(S.api, record.id); // live: already decided on the Approvals page
   return outcome;
 }
 
@@ -324,70 +345,68 @@ async function applyForLeave({ r, S, set, ask, auto, employee }) {
   ]);
 }
 
-/** 3. Regularizing a missed punch. */
-async function regularize({ r, S, set, ask, auto, employee }) {
-  let log = null;
-  const read = r.phase('Attendance check', 'The recent punch records are read from OrangeHRM to find a day with a missing out-punch.');
-  await r.runSteps(read, [
-    leaveWorkflowStep(S, 'attendance'),
-    // Only needed when the employee has no day with a missing out-punch yet: the sample punch-in is set up by this workflow.
-    leaveWorkflowStep(S, 'punch-in', async () => ((await S.api.getAttendance(employee.employeeId)).missing.length ? null : S.api.runLeaveWorkflow('punch-in'))),
-    {
-    kind: 'tool', agent: 'leave', title: 'Read the punch log in OrangeHRM', name: 'orangehrm.punch_log()', live: !S.api.simulated,
-    note: 'Reads the employee’s recent attendance records and looks for a day with a punch-in but no punch-out. For the demo, a sample punch-in without an out-punch is added first if there is none.',
-    run: async () => {
-      const prepared = await S.api.prepareDemoPunch(employee.employeeId);
-      log = await S.api.getAttendance(employee.employeeId);
-      return { payload: { daysWithPunches: log.days.length, missingOutPunch: log.missing.map((d) => formatDate(d.date)), ...(prepared.created ? { sampleAdded: prepared.message } : {}) } };
-    },
-  },
-  ]);
-
-  if (!log || log.missing.length === 0) {
-    await r.bot('I checked your recent attendance and every day has both punches, so there is nothing to regularize.', { wait: 500 });
-    return;
+/** Auto-play: the latest recent working day OrangeHRM holds no punch record for (an approved request replaces a day, so a free one is kinder). */
+async function pickSampleDay({ S, employee }) {
+  const days = previousWorkingDays(8);
+  for (const day of days) {
+    const found = await S.api.getAttendance(employee.employeeId, day).catch(() => null);
+    if (found && found.records.length === 0) return day;
   }
+  return days[0];
+}
 
-  const latest = log.missing[0]; // OrangeHRM closes the most recent open punch, so that is the one to correct
-  await r.bot(
-    <>I found a missing out-punch on <b>{formatDate(latest.date)}</b>: you punched in at {latest.inPunch}, but there is no punch-out.</>,
-  );
-  showCard(r, card('Attendance exception', 'fa-fingerprint', { label: 'Missing out-punch', tone: 'pending' }, [[`${formatDate(latest.date)}:`, `In ${latest.inPunch} · Out missing`]]));
-  await r.sleep(500);
-  await r.bot('Tell me when you left and why, and I’ll send the correction to your manager.', { wait: 500 });
-
+/** 3. An attendance request: the day and both times come from the employee; the day is written to OrangeHRM once the manager approves. */
+async function attendanceRequest({ r, S, set, ask, auto, employee }) {
+  await r.bot('Sure. Tell me the day, when you came in and when you left, and why, and I’ll send the request to your manager.', { wait: 500 });
+  const { min, max } = attendanceDateRange();
   const form = {
-    title: 'Attendance correction', hint: 'Confirm the day, then the time you actually left.', validator: 'regularize', defaults: { outPunch: SHIFT_END },
-    fields: REGULARIZE_FIELDS.map((field) => (field.id === 'attendanceDate'
-      ? { ...field, options: [{ value: latest.date, label: formatDate(latest.date) }] }
-      : field)),
+    title: 'Attendance request', hint: 'Choose a day within the last 30 days, the time you came in and the time you left.', validator: 'attendance',
+    defaults: { inPunch: IN_PUNCH, outPunch: SHIFT_END },
+    fields: ATTENDANCE_FIELDS.map((field) => (field.id === 'attendanceDate' ? { ...field, min, max } : field)),
   };
-  const sample = { attendanceDate: latest.date, outPunch: SHIFT_END, reason: 'The biometric scanner was offline' };
+  const sample = auto ? { attendanceDate: await pickSampleDay({ S, employee }), inPunch: IN_PUNCH, outPunch: SHIFT_END, reason: 'I forgot to punch in and out that day' } : null;
   const values = await fillForm({ r, set, ask, auto, form, sample });
-  r.msg('out', <><b>{formatDate(values.attendanceDate)}</b>: left at {values.outPunch}<br />{values.reason}</>);
+  r.msg('out', <><b>{formatDate(values.attendanceDate)}</b>: in {values.inPunch}, out {values.outPunch}<br />{values.reason}</>);
+  await r.phaseGap();
+
+  let day = null;
+  const read = r.phase('Attendance check', 'The day is looked up in OrangeHRM before the request is sent.');
+  await r.runSteps(read, [
+    trigger('Form submission received', 'The form arrives as a structured reply, not free text.', { type: 'interactive', nfm_reply: { name: 'attendance_request_v1', response_json: { employee: employee.employeeId, ...values } } }),
+    leaveWorkflowStep(S, 'attendance'),
+    {
+      kind: 'tool', agent: 'leave', title: 'Read the punch records in OrangeHRM', name: 'orangehrm.punch_log()', live: !S.api.simulated,
+      note: 'Reads what OrangeHRM already holds for that day. An approved request replaces it.',
+      run: async () => {
+        day = await S.api.getAttendance(employee.employeeId, values.attendanceDate);
+        return { payload: { day: formatDate(day.date), records: day.records.length ? day.records.map((p) => `In ${p.inPunch}, out ${p.outPunch ?? 'missing'}`) : 'none' } };
+      },
+    },
+    {
+      kind: 'tool', agent: 'orch', title: 'Validate the request', name: 'validators.run()', lat: 60, live: !S.api.simulated,
+      note: 'Checks the day and the two times before anything is saved.',
+      payload: () => ({ day: formatDate(values.attendanceDate), inTime: values.inPunch, outTime: values.outPunch, hoursWorked: hoursWorked(values.inPunch, values.outPunch) }),
+    },
+  ]);
+  if (day?.records.length) {
+    const held = day.records.map((p) => `in ${p.inPunch}, out ${p.outPunch ?? 'missing'}`).join('; ');
+    await r.bot(<>OrangeHRM already has a punch record for <b>{formatDate(values.attendanceDate)}</b> ({held}). If your manager approves, it is replaced with the times you gave.</>, { wait: 500 });
+  }
   await r.phaseGap();
 
   let record = null;
-  const submit = r.phase('Attendance correction', 'The correction is checked, saved and sent to the manager.');
-  await r.runSteps(submit, [
-    trigger('Form submission received', 'The form arrives as a structured reply, not free text.', { type: 'interactive', nfm_reply: { name: 'attendance_correction_v1', response_json: { employee: employee.employeeId, ...values } } }),
-    {
-      kind: 'tool', agent: 'orch', title: 'Validate the correction', name: 'validators.run()', lat: 60, live: !S.api.simulated,
-      note: 'Checks the day and the time before anything is saved.',
-      payload: () => ({ day: formatDate(values.attendanceDate), inPunch: latest.inPunch, outPunch: values.outPunch, hoursWorked: hoursWorked(latest.inPunch, values.outPunch) }),
+  const submit = r.phase('Send for approval', 'The request is saved and goes to the manager.');
+  await r.runSteps(submit, [{
+    kind: 'api', agent: 'leave', title: 'Submit the attendance request', name: 'POST /api/leave/requests', live: !S.api.simulated, noSkip: true,
+    note: 'Saves the request. It is written to OrangeHRM only once the manager approves it.',
+    run: async () => {
+      record = await S.api.submitRegularization({ employeeRef: employee.employeeId, attendanceDate: values.attendanceDate, inPunch: values.inPunch, outPunch: values.outPunch, reason: values.reason });
+      if (!S.api.simulated) set({ runRecord: { kind: 'leave', id: record.id } });
+      return { payload: { reference: record.id, status: record.status, day: formatDate(record.attendanceDate), inTime: record.inPunch, outTime: record.outPunch, hoursWorked: record.hoursWorked } };
     },
-    {
-      kind: 'api', agent: 'leave', title: 'Submit the correction', name: 'POST /api/leave/requests', live: !S.api.simulated, noSkip: true,
-      note: 'Saves the correction. It is written to OrangeHRM only once the manager approves it.',
-      run: async () => {
-        record = await S.api.submitRegularization({ employeeRef: employee.employeeId, attendanceDate: values.attendanceDate, outPunch: values.outPunch, reason: values.reason });
-        if (!S.api.simulated) set({ runRecord: { kind: 'leave', id: record.id } });
-        return { payload: { reference: record.id, status: record.status, day: formatDate(record.attendanceDate), outPunch: record.outPunch, hoursWorked: record.hoursWorked } };
-      },
-    },
-  ]);
+  }]);
   set({ stage: 'review' });
-  await r.bot(<>Your correction <b>{record.id}</b> is with <b>{record.manager}</b> for approval.</>);
+  await r.bot(<>Your attendance request <b>{record.id}</b> is with <b>{record.manager}</b> for approval.</>);
   await r.phaseGap();
 
   const decision = await awaitDecision({ r, S, set, record });
@@ -398,29 +417,30 @@ async function regularize({ r, S, set, ask, auto, employee }) {
   }
   await r.phaseGap();
 
-  let day = null;
-  const apply = r.phase('Apply the decision', 'The approved out-punch is written to OrangeHRM and read back.');
+  let saved = null;
+  const apply = r.phase('Apply the decision', 'The approved day is written to OrangeHRM (punch in, then punch out) and read back.');
   await r.runSteps(apply, [
+    leaveWorkflowStep(S, 'punch-in'),
     leaveWorkflowStep(S, 'punch-out'),
     {
-      kind: 'api', agent: 'leave', title: 'Record the out-punch in OrangeHRM', name: 'orangehrm.punch_out()', live: !S.api.simulated,
-      note: 'Punches the employee out in OrangeHRM at the approved time, then reads the day back to confirm.',
+      kind: 'api', agent: 'leave', title: 'Record the attendance in OrangeHRM', name: 'orangehrm.record_attendance()', live: !S.api.simulated,
+      note: 'Punches the employee in and out in OrangeHRM at the approved times, replacing any record the day already had, then reads the day back.',
       run: async () => {
         await S.api.applyLeaveRequest(record.id);
-        day = (await S.api.getAttendance(employee.employeeId)).days.find((d) => d.date === record.attendanceDate);
-        return { payload: { day: formatDate(record.attendanceDate), state: day?.state === 'ok' ? 'Corrected' : day?.state ?? 'unknown', inPunch: record.inPunch, outPunch: day?.outPunch ?? record.outPunch, hoursWorked: record.hoursWorked } };
+        saved = (await S.api.getAttendance(employee.employeeId, record.attendanceDate)).records.at(-1);
+        return { payload: { day: formatDate(record.attendanceDate), inTime: saved?.inPunch ?? record.inPunch, outTime: saved?.outPunch ?? record.outPunch, hoursWorked: record.hoursWorked } };
       },
     },
     {
       kind: 'notify', agent: 'leave', title: 'Confirm to the employee', name: 'whatsapp.send_text()', lat: 180,
-      note: 'One message with the decision and the corrected hours.',
+      note: 'One message with the decision and the recorded times.',
       payload: () => ({ reference: record.id, day: formatDate(record.attendanceDate), hoursWorked: record.hoursWorked }),
       after: async () => {
-        await r.bot(<>Done, {firstName(employee)}: your correction is <b>approved</b>.</>, { wait: 500 });
+        await r.bot(<>Done, {firstName(employee)}: your attendance request is <b>approved</b>.</>, { wait: 500 });
         showCard(r, card('Attendance updated', 'fa-circle-check', { label: 'Approved', tone: 'approved' }, [
           ['Day:', formatDate(record.attendanceDate)],
-          ['In-punch:', record.inPunch],
-          ['Out-punch:', day?.outPunch ?? record.outPunch],
+          ['In:', saved?.inPunch ?? record.inPunch],
+          ['Out:', saved?.outPunch ?? record.outPunch],
           ['Hours worked:', record.hoursWorked],
           ['Approved by:', record.manager],
         ]));
@@ -429,7 +449,7 @@ async function regularize({ r, S, set, ask, auto, employee }) {
   ]);
 }
 
-const SCENARIO_RUNNERS = { balance: balances, apply: applyForLeave, regularize };
+const SCENARIO_RUNNERS = { balance: balances, apply: applyForLeave, attendance: attendanceRequest };
 
 /** @param auto  null for Manual; { employeeId } for Auto-play (the employee's three requests play by themselves) */
 export async function runLeaveAttendance({ r, set, auto = null, simulated = false }) {
@@ -438,24 +458,24 @@ export async function runLeaveAttendance({ r, set, auto = null, simulated = fals
   r.msg('sys', simulated
     ? 'Auto-play · Simulated: this plays the three requests for a sample employee. Nothing is contacted or saved anywhere.'
     : auto
-    ? 'Auto-play · Live: this plays the three requests for the employee you chose. It is real: everything is read from and recorded in OrangeHRM, after the manager decides on the HR Approvals page.'
-    : 'Manual mode: you are the employee. Type a message to begin. It is real: everything is read from and recorded in OrangeHRM, after the manager decides on the HR Approvals page.');
+    ? 'Auto-play · Live: this plays the three requests for the employee you chose. It is real: everything is read from and recorded in OrangeHRM, after the manager decides on the Approvals page.'
+    : 'Manual mode: you are the employee. Type a message to begin. It is real: everything is read from and recorded in OrangeHRM, after the manager decides on the Approvals page.');
   set({ stage: 'idle' });
 
-  const first = await ask({ kind: 'text', suggestions: ['Hi, I need some help'] }, { text: 'Hi, I need some help with leave and attendance' });
+  const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });
   r.msg('out', first.text);
   await understand({ r, text: first.text, intent: 'greeting', workflow: 'leave_attendance.v1' });
   await r.bot('Hi, I’m your leave and attendance assistant.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like EMP-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
 
   const employee = await identify({ r, set, ask, auto, api: S.api });
   await r.bot(<>Thanks, <b>{firstName(employee)}</b>. I found you: <b>{employee.jobTitle}</b>, {employee.department}, reporting to {employee.manager}.</>);
-  await r.bot('I can check your leave balance and the holidays, apply for leave, or fix a missed attendance punch. What would you like to do?', { wait: 600 });
+  await r.bot('I can check your leave balance and the holidays, apply for leave, or raise an attendance request. What would you like to do?', { wait: 600 });
 
   const context = { r, S, set, ask, auto, employee };
   if (auto) {
     for (const scenario of SCENARIOS) {
-      const { text } = await ask({ kind: 'text' }, { text: scenario.prompt });
+      const { text } = await ask({ kind: 'text', suggestions: SCENARIOS.map((s) => s.label), pick: scenario.label }, { text: scenario.label });
       r.msg('out', text);
       await understand({ r, text, intent: scenario.intent, workflow: `${scenario.intent}.v1` });
       await SCENARIO_RUNNERS[scenario.id](context);
@@ -470,7 +490,7 @@ export async function runLeaveAttendance({ r, set, auto = null, simulated = fals
       if (intent === 'done') break;
       const scenario = SCENARIOS.find((s) => s.id === intent);
       if (!scenario) {
-        await r.bot('I can help with your leave balance and holidays, applying for leave, or a missed attendance punch. Try one of the suggestions below.', { wait: 600 });
+        await r.bot('I can help with your leave balance and holidays, applying for leave, or an attendance request. Try one of the suggestions below.', { wait: 600 });
         continue;
       }
       await understand({ r, text, intent: scenario.intent, workflow: `${scenario.intent}.v1` });

@@ -109,3 +109,60 @@ def test_leave_period_is_the_one_containing_the_day_else_the_calendar_year():
     periods = {"data": [{"startDate": "2025-04-01", "endDate": "2026-03-31"}, {"startDate": "2026-04-01", "endDate": "2027-03-31"}]}
     assert Stub(periods).leave_period(date(2026, 10, 28)) == (date(2026, 4, 1), date(2027, 3, 31))
     assert Stub(IntegrationError("OrangeHRM", "no such page")).leave_period(date(2026, 10, 28)) == (date(2026, 1, 1), date(2026, 12, 31))
+
+
+def test_delete_attendance_records_sends_the_ids_and_skips_an_empty_list():
+    stub = Stub({"data": []})
+    stub.delete_attendance_records(77, [4, 5])
+    assert stub.calls[0][:2] == ("DELETE", "attendance/employees/77/records") and stub.calls[0][2]["json"] == {"ids": [4, 5]}
+    empty = Stub()
+    empty.delete_attendance_records(77, [])
+    assert empty.calls == []
+
+
+# --------------------------------------------------------------------------------------------------------- the web login
+class _Answer:
+    def __init__(self, status, text=""):
+        self.status_code, self.text, self.ok = status, text, status < 400
+
+
+class _Session:
+    """A web session whose pages answer with the given status codes: login page, then the API probe."""
+
+    def __init__(self, login_status, probe_status):
+        self.headers, self.verify, self.statuses, self.posted = {}, True, [login_status, probe_status], 0
+
+    def get(self, url, **kwargs):
+        return _Answer(self.statuses.pop(0), '<input name="_token" value="abc">')
+
+    def post(self, url, **kwargs):
+        self.posted += 1
+        return _Answer(200)
+
+
+def _client(monkeypatch, login_status, probe_status):
+    from app.core.config import Settings
+    from app.integrations import orangehrm as module
+
+    session = _Session(login_status, probe_status)
+    monkeypatch.setattr(module, "build_session", lambda verify=True: session)
+    settings = Settings(_env_file=None, orangehrm_base_url="http://hrm.example/orangehrm", orangehrm_username="admin", orangehrm_password="pw")
+    return module.OrangeHRMClient(settings), session
+
+
+def test_a_server_that_refuses_the_computer_is_not_reported_as_a_bad_password(monkeypatch):
+    client, session = _client(monkeypatch, 403, 403)
+    with pytest.raises(IntegrationError, match=r"refused this computer \(HTTP 403 Forbidden\).*not the user name or password"):
+        client._login()
+    assert session.posted == 0  # no login attempt is sent to a server that has already said no
+
+
+def test_a_bad_password_is_still_reported_as_one(monkeypatch):
+    client, _ = _client(monkeypatch, 200, 401)
+    with pytest.raises(IntegrationError, match="check ORANGEHRM_USERNAME / ORANGEHRM_PASSWORD"):
+        client._login()
+
+
+def test_a_good_login_gives_the_session(monkeypatch):
+    client, session = _client(monkeypatch, 200, 200)
+    assert client._login() is session

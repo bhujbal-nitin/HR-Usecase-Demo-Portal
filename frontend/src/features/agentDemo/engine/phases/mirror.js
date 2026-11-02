@@ -2,8 +2,8 @@ import { getEmployee } from '../../../../api/employees';
 
 const POLL_MS = 1500;
 // Steps in which an AutomationEdge workflow does the work.
-const WORKFLOW_KEYS = new Set([
-  'candidate_details', 'management_approval', 'active_directory', 'office365', 'orangehrm', 'laptop', 'offer_letter',
+export const WORKFLOW_KEYS = new Set([
+  'candidate_details', 'management_approval', 'active_directory', 'office365', 'orangehrm', 'laptop',
   'exit_details', 'exit_approval', 'ad_disable', 'o365_block', 'hrm_terminate', 'asset_return', 'clearances', 'relieving_letter',
 ]);
 const STEP_STATUS = { pending: 'queued', running: 'running', success: 'done', failed: 'failed', skipped: 'skipped' };
@@ -17,7 +17,6 @@ export function stepPayload(step, e) {
     office365: e.office365 && { userPrincipalName: e.office365.userPrincipalName, displayName: e.office365.displayName },
     orangehrm: e.orangeHrm && { empNumber: e.orangeHrm.empNumber, profile: e.orangeHrm.profileUrl },
     laptop: e.laptop && { incident: e.laptop.ticketNumber, hardware: e.laptop.hardware },
-    offer_letter: e.offerLetter && { file: e.offerLetter.filename, emailed: e.offerLetter.emailed, recipient: e.offerLetter.recipient },
   }[step.key];
   return { status: step.status, message: step.message, ...(step.details?.workflows ? { automationEdge: step.details.workflows } : {}), ...extra };
 }

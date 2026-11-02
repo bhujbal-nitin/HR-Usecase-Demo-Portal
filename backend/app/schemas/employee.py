@@ -5,7 +5,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import EmailStr, Field, computed_field, field_validator
+from pydantic import EmailStr, Field, field_validator
 
 from app.schemas.common import CamelModel
 
@@ -181,18 +181,6 @@ class LaptopInfo(CamelModel):
     hardware: str | None = None
 
 
-class OfferLetterInfo(CamelModel):
-    filename: str | None = None
-    emailed: bool = False
-    recipient: str | None = None
-    generated_at: datetime | None = None
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def download_url(self) -> str | None:
-        return f"/generated_offers/{self.filename}" if self.filename else None
-
-
 class Employee(CamelModel):
     """A candidate going through onboarding. Persisted as JSON."""
 
@@ -232,7 +220,6 @@ class Employee(CamelModel):
     office365: Office365Info | None = None
     orange_hrm: OrangeHrmInfo | None = None
     laptop: LaptopInfo | None = None
-    offer_letter: OfferLetterInfo | None = None
 
     @property
     def first_name(self) -> str:

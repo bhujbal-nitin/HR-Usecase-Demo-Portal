@@ -81,12 +81,17 @@ class FakeOrangeHRM:
         return [r for r in self.records if r["emp"] == emp_number and start.isoformat() <= r["inDate"] <= end.isoformat()]
 
     def punch_in(self, emp_number, day, clock, note):
-        self.records.append({"emp": emp_number, "id": len(self.records) + 1, "inDate": day.isoformat(), "inTime": clock, "outDate": None, "outTime": None})
+        self._maybe_fail("punch_in")
+        self.records.append({"emp": emp_number, "id": max((r["id"] for r in self.records), default=0) + 1, "inDate": day.isoformat(), "inTime": clock, "outDate": None, "outTime": None})
 
     def punch_out(self, emp_number, day, clock, note):
         self._maybe_fail("punch_out")
         latest_open = [r for r in self.records if r["emp"] == emp_number and r["outTime"] is None][-1]
         latest_open["outDate"], latest_open["outTime"] = day.isoformat(), clock
+
+    def delete_attendance_records(self, emp_number, record_ids):
+        self._maybe_fail("delete_attendance_records")
+        self.records = [r for r in self.records if not (r["emp"] == emp_number and r["id"] in record_ids)]
 
     def attendance_url(self):
         return "http://hrm.example/attendance"
@@ -106,7 +111,7 @@ def working_pair(offset: int = 10) -> tuple[date, date]:
 @pytest.fixture
 def world(client):
     container = client.app.state.container
-    people = (("EMP-111111", "Aarav Sharma", 77), ("EMP-222222", "Meera Kulkarni", None))  # the second one has no OrangeHRM number recorded
+    people = (("AE-111111", "Aarav Sharma", 77), ("AE-222222", "Meera Kulkarni", None))  # the second one has no OrangeHRM number recorded
     for ident, name, emp_number in people:
         container.repository.add(Employee(
             id=ident, full_name=name, email=f"{ident.lower()}@example.com", phone="+91 98765 43210", dob=date(1995, 7, 20),
@@ -120,11 +125,11 @@ def world(client):
     return client, gw
 
 
-def leave_body(start: date, end: date, leave_type: str = "Casual Leave", ref: str = "EMP-111111") -> dict:
+def leave_body(start: date, end: date, leave_type: str = "Casual Leave", ref: str = "AE-111111") -> dict:
     return {"employeeRef": ref, "leaveType": leave_type, "startDate": start.isoformat(), "endDate": end.isoformat(), "reason": "Family function"}
 
 
-def balance(client, leave_type: str = "Casual Leave", ref: str = "EMP-111111") -> dict:
+def balance(client, leave_type: str = "Casual Leave", ref: str = "AE-111111") -> dict:
     return next(b for b in client.get("/api/leave/balances", params={"ref": ref}).json() if b["leaveType"] == leave_type)
 
 
@@ -138,10 +143,6 @@ def test_working_days_use_the_work_week_and_holidays():
     assert [h.name for h in policy.holidays_skipped(mon, fri, policy.DEFAULT_WORK_WEEK, holidays)] == ["Founders Day"]
 
 
-def test_previous_working_days_go_backwards_over_the_weekend():
-    assert policy.previous_working_days(date(2026, 11, 2), 2, policy.DEFAULT_WORK_WEEK, {}) == [date(2026, 10, 30), date(2026, 10, 29)]
-
-
 def test_hours_worked():
     assert policy.hours_worked("09:12", "18:30") == "9h 18m"
 
@@ -149,7 +150,7 @@ def test_hours_worked():
 # ------------------------------------------------------------------------------------------------------ reads
 def test_lookup_options_balances_and_holidays(world):
     client, gw = world
-    assert client.get("/api/leave/lookup", params={"ref": "emp-111111"}).json()["workEmail"] == "emp-111111@example.com"
+    assert client.get("/api/leave/lookup", params={"ref": "ae-111111"}).json()["workEmail"] == "ae-111111@example.com"
     assert client.get("/api/leave/lookup", params={"ref": "nobody@x.com"}).status_code == 404
 
     assert client.get("/api/leave/options").json()["leaveTypes"] == ["Casual Leave", "Sick Leave", "Privilege Leave"]
@@ -157,7 +158,7 @@ def test_lookup_options_balances_and_holidays(world):
     client.get("/api/leave/options")
     assert gw.orangehrm.created == ["Privilege Leave"]  # and nothing is created twice
     assert (balance(client)["total"], balance(client)["used"], balance(client)["left"]) == (18, 4, 14)
-    assert balance(client, ref="EMP-222222")["left"] == 14  # no recorded number: found by name
+    assert balance(client, ref="AE-222222")["left"] == 14  # no recorded number: found by name
 
     soon, later = date.today() + timedelta(days=20), date.today() + timedelta(days=5)
     gw.orangehrm.holiday_list = [{"name": "Later", "date": soon.isoformat(), "length": 0}, {"name": "Sooner", "date": later.isoformat(), "length": 0}]
@@ -259,41 +260,75 @@ def test_a_leave_that_does_not_pass_the_checks_is_not_saved(world):
 
 
 # ----------------------------------------------------------------------------------------------- attendance
-def test_the_demo_sets_up_a_missing_punch_and_the_correction_is_recorded(world):
+def past_day(back: int = 3) -> date:
+    return date.today() - timedelta(days=back)
+
+
+def attendance_body(day: date, in_punch: str = "09:10", out_punch: str = "18:30", ref: str = "AE-111111") -> dict:
+    return {"employeeRef": ref, "attendanceDate": day.isoformat(), "inPunch": in_punch, "outPunch": out_punch, "reason": "Scanner was offline"}
+
+
+def test_an_attendance_request_takes_the_day_and_both_times_and_is_recorded_after_approval(world):
     client, gw = world
-    ref = {"ref": "EMP-111111"}
-    assert client.get("/api/leave/attendance", params=ref).json() == {"days": [], "missing": []}  # nothing in OrangeHRM yet
+    day = past_day()
+    assert client.get("/api/leave/attendance", params={"ref": "AE-111111", "date": day.isoformat()}).json() == {"date": day.isoformat(), "records": []}
 
-    prepared = client.post("/api/leave/attendance/demo-punch", params=ref).json()
-    assert prepared["created"] is True and len(gw.orangehrm.records) == 1 and gw.orangehrm.records[0]["inTime"] == "09:12"
-    assert client.post("/api/leave/attendance/demo-punch", params=ref).json()["created"] is False  # one is enough
-    assert len(gw.orangehrm.records) == 1
-
-    log = client.get("/api/leave/attendance", params=ref).json()
-    day = prepared["day"]
-    assert [d["date"] for d in log["missing"]] == [day] and log["missing"][0]["outPunch"] is None
-
-    body = {"employeeRef": "EMP-111111", "attendanceDate": day, "outPunch": "18:30", "reason": "Scanner was offline"}
-    request = client.post("/api/leave/requests/regularization", json=body).json()
-    assert request["id"].startswith("AT-") and request["inPunch"] == "09:12" and request["hoursWorked"] == "9h 18m"
-    assert client.get("/api/leave/attendance", params=ref).json()["days"][0]["state"] == "pending"
-    assert client.post("/api/leave/requests/regularization", json=body).status_code == 422  # already waiting
+    request = client.post("/api/leave/requests/regularization", json=attendance_body(day)).json()
+    assert request["id"].startswith("AT-") and (request["inPunch"], request["outPunch"], request["hoursWorked"]) == ("09:10", "18:30", "9h 20m")
+    assert client.post("/api/leave/requests/regularization", json=attendance_body(day)).status_code == 422  # already waiting
 
     client.post(f"/api/leave/requests/{request['id']}/approve")
-    assert gw.orangehrm.records[0]["outTime"] is None  # approved, not yet recorded
+    assert gw.orangehrm.records == []  # approved, not yet recorded
     done = client.post(f"/api/leave/requests/{request['id']}/apply").json()
-    assert done["applied"] and gw.orangehrm.records[0]["outTime"] == "18:30" and gw.orangehrm.records[0]["outDate"] == day
-    assert client.get("/api/leave/attendance", params=ref).json()["days"][0] == {"date": day, "inPunch": "09:12", "outPunch": "18:30", "state": "ok"}
+    assert done["applied"] and done["orangeHrmUrl"] == "http://hrm.example/attendance"
+    assert [(r["inTime"], r["outTime"], r["inDate"]) for r in gw.orangehrm.records] == [("09:10", "18:30", day.isoformat())]
+    shown = client.get("/api/leave/attendance", params={"ref": "AE-111111", "date": day.isoformat()}).json()
+    assert shown["records"] == [{"inPunch": "09:10", "outPunch": "18:30"}]
+
+    again = client.post(f"/api/leave/requests/{request['id']}/apply").json()  # a repeat records nothing more
+    assert again["applied"] and len(gw.orangehrm.records) == 1
 
 
-def test_regularization_validation(world):
+def test_an_approved_attendance_request_replaces_what_orangehrm_holds_for_the_day(world):
+    client, gw = world
+    day, other = past_day(), past_day(5)
+    gw.orangehrm.records += [  # the day has a complete record, the other day an open punch-in
+        {"emp": 77, "id": 1, "inDate": day.isoformat(), "inTime": "08:00", "outDate": day.isoformat(), "outTime": "12:00"},
+        {"emp": 77, "id": 2, "inDate": other.isoformat(), "inTime": "09:00", "outDate": None, "outTime": None},
+    ]
+    shown = client.get("/api/leave/attendance", params={"ref": "AE-111111", "date": day.isoformat()}).json()
+    assert shown["records"] == [{"inPunch": "08:00", "outPunch": "12:00"}]
+
+    request = client.post("/api/leave/requests/regularization", json=attendance_body(day)).json()
+    client.post(f"/api/leave/requests/{request['id']}/approve")
+    client.post(f"/api/leave/requests/{request['id']}/apply")
+    mine = [(r["inDate"], r["inTime"], r["outTime"]) for r in gw.orangehrm.records]
+    assert (day.isoformat(), "09:10", "18:30") in mine and (day.isoformat(), "08:00", "12:00") not in mine  # replaced
+    assert (other.isoformat(), "09:00", None) in mine  # another day is left alone
+
+
+def test_a_failed_record_can_be_applied_again_without_duplicates(world):
+    client, gw = world
+    day = past_day()
+    request = client.post("/api/leave/requests/regularization", json=attendance_body(day)).json()
+    client.post(f"/api/leave/requests/{request['id']}/approve")
+    gw.orangehrm.fail.add("punch_out")
+    assert client.post(f"/api/leave/requests/{request['id']}/apply").status_code == 502
+    assert [r["outTime"] for r in gw.orangehrm.records] == [None]  # punched in, not out
+    gw.orangehrm.fail.clear()
+    assert client.post(f"/api/leave/requests/{request['id']}/apply").json()["applied"]
+    assert [(r["inTime"], r["outTime"]) for r in gw.orangehrm.records] == [("09:10", "18:30")]
+
+
+def test_attendance_request_validation(world):
     client, _ = world
-    day = client.post("/api/leave/attendance/demo-punch", params={"ref": "EMP-111111"}).json()["day"]
-    base = {"employeeRef": "EMP-111111", "attendanceDate": day, "outPunch": "18:30", "reason": "Forgot"}
-    assert client.post("/api/leave/requests/regularization", json={**base, "outPunch": "6:30pm"}).status_code == 422
-    assert "after the in-punch" in client.post("/api/leave/requests/regularization", json={**base, "outPunch": "08:00"}).json()["detail"]
-    other = (date.fromisoformat(day) - timedelta(days=3)).isoformat()
-    assert "no missing out-punch" in client.post("/api/leave/requests/regularization", json={**base, "attendanceDate": other}).json()["detail"]
+    post = lambda **changes: client.post("/api/leave/requests/regularization", json={**attendance_body(past_day()), **changes})  # noqa: E731
+    assert post(inPunch="9am").status_code == 422 and post(outPunch="6:30pm").status_code == 422
+    assert "after the in time" in post(inPunch="18:30", outPunch="09:00").json()["detail"]
+    assert "already passed" in post(attendanceDate=date.today().isoformat()).json()["detail"]
+    assert "already passed" in post(attendanceDate=(date.today() + timedelta(days=1)).isoformat()).json()["detail"]
+    assert "30 days" in post(attendanceDate=(date.today() - timedelta(days=31)).isoformat()).json()["detail"]
+    assert post(attendanceDate=(date.today() - timedelta(days=30)).isoformat()).status_code == 201  # the 30th day back is still allowed
 
 
 def test_clear_removes_decided_requests_only(world):
@@ -365,7 +400,7 @@ def test_the_balances_give_every_standard_type_a_quota_and_only_those_are_shown(
     client, gw = world
     gw.orangehrm.types.append({"id": 9, "name": "Study Leave"})
     gw.orangehrm.entitled[9], gw.orangehrm.taken[9] = 5.0, 0.0  # an extra type the demo does not use
-    shown = {b["leaveType"]: b["total"] for b in client.get("/api/leave/balances", params={"ref": "EMP-111111"}).json()}
+    shown = {b["leaveType"]: b["total"] for b in client.get("/api/leave/balances", params={"ref": "AE-111111"}).json()}
     assert shown == {"Casual Leave": 18, "Sick Leave": 12, "Privilege Leave": 15}
 
 

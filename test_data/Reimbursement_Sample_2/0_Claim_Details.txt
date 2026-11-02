@@ -1,0 +1,24 @@
+REIMBURSEMENT TEST DATA - Reimbursement Sample 2
+==========================================================
+A train trip with a hotel stay and a mobile bill: some bills fall outside the policy. All bills are fictional.
+
+HOW TO TEST (Reimbursement & Benefits demo, Manual · Live)
+  1. Type your employee ID or work e-mail when the chat asks (any onboarded employee works; the claim is saved for that person).
+  2. Upload the 3 PDFs in this folder as the bills, one at a time (use "Add another bill" after each).
+  3. Check that each bill is read as shown below, then submit the claim.
+  4. On the Approvals page (Reimbursement tab) approve or reject each bill as the manager.
+  5. The approved bills are then recorded in OrangeHRM (Claim).
+
+WHAT EACH BILL SHOULD BE READ AS
+  file                         category policy          date        amount
+  1_Train_Ticket.pdf           Travel   within policy   22/10/2026  INR     668.60   Indian Railways e-Ticket (IRCTC)
+  2_Hotel_Bill.pdf             Stay     outside policy  24/10/2026  INR   7,168.00   Hotel Sunrise Residency, Mumbai
+  3_Mobile_Bill.pdf            Mobile   outside policy  28/10/2026  INR     749.30   Airtel Postpaid
+
+  Claim total: INR 8,585.90
+
+NOTES
+  - "Within policy" means the category the company reimburses (Travel and Food). The manager can still approve any bill.
+  - The category is decided by the reader (OpenAI) from the bill itself; if it reads a bill differently from the table, tell me which one.
+  - Amounts are the final amount on each bill, with tax. Dates are printed as DD/MM/YYYY.
+  - Suggested checks: approve every bill once; reject one bill and approve the others; try uploading a file that is not a bill (for example 0_Claim_Details.txt) to see it refused.

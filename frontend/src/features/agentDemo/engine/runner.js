@@ -60,7 +60,7 @@ export function createRunner({ dispatch, isCurrent, gateRef, askRef, timing = DE
   /**
    * Manual mode: pause until the user acts. `awaiting` tells the phone UI what to enable:
    *   { kind: 'text', suggestions?: string[] }   typed message (or a suggestion chip / answer button)
-   *   { kind: 'attach', docKey, label }          file picked with the paperclip
+   *   { kind: 'attach', docKey, label, accept? }  file picked with the paperclip (accept: the allowed extensions)
    *   { kind: 'form' }                        the in-chat form (resolved by that bubble)
    */
   const ask = (awaiting) =>

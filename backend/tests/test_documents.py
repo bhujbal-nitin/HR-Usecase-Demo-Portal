@@ -78,7 +78,7 @@ def test_blurry_document_fails():
 
 @pytest.fixture
 def api(tmp_path):
-    settings = Settings(_env_file=None, data_dir=tmp_path / "d", offers_dir=tmp_path / "o", approval_poller_enabled=False)
+    settings = Settings(_env_file=None, data_dir=tmp_path / "d", offers_dir=tmp_path / "o", hr_documents_dir=tmp_path / "h", approval_poller_enabled=False)
     app = create_app(settings)
     with TestClient(app) as client:
         yield client, app

@@ -283,9 +283,6 @@ class AutomationEdgeClient:
     def verify_documents(self) -> WorkflowResult:
         return self.execute_workflow(self._s.ae_workflow_document_verification, {})
 
-    def send_mail(self, subject: str) -> WorkflowResult:
-        return self.execute_workflow(self._s.ae_workflow_send_mail, {"subject": subject})
-
     # ------------------------------------------- leave & attendance workflows
     def leave_balance(self) -> WorkflowResult:
         return self.execute_workflow(self._s.ae_workflow_leave_balance, {})
@@ -304,3 +301,45 @@ class AutomationEdgeClient:
 
     def punch_out_orangehrm(self) -> WorkflowResult:
         return self.execute_workflow(self._s.ae_workflow_punch_out, {})
+
+    # ------------------------------------------------ reimbursement workflows
+    def read_bill(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_read_bill, {})
+
+    def check_reimbursement_policy(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_check_reimbursement_policy, {})
+
+    def submit_expense_claim(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_submit_expense_claim, {})
+
+    def create_claim_orangehrm(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_create_claim, {})
+
+    # ------------------------------------------- HR policy & documents workflows
+    def search_policy(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_search_policy, {})
+
+    def get_policy_document(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_get_policy, {})
+
+    def ask_policy_question(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_ask_policy, {})
+
+    def generate_address_proof_letter(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_address_proof_letter, {})
+
+    def generate_bank_account_letter(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_bank_account_letter, {})
+
+    # ------------------------------------------------ payroll & salary workflows
+    def fetch_salary_details(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_fetch_salary, {})
+
+    def generate_payslip(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_generate_payslip, {})
+
+    def generate_ctc_statement(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_generate_ctc, {})
+
+    def generate_form16(self) -> WorkflowResult:
+        return self.execute_workflow(self._s.ae_workflow_generate_form16, {})

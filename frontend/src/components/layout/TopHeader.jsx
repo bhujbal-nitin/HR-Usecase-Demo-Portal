@@ -4,7 +4,7 @@ import { THEMES, useTheme } from '../../context/ThemeContext';
 const TITLES = {
   '/': 'HR AI Agents',
   '/agent-demo': 'Onboarding Agent Demo',
-  '/approvals': 'HR Approvals & Provisioning',
+  '/approvals': 'Approvals & Provisioning',
 };
 
 export default function TopHeader({ onToggleSidebar, collapsed }) {

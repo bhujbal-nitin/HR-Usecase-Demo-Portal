@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { documentUrl, offerLetterUrl, retryIntake, retryProvisioning, sendOfferLetter, skipIntakeStep, skipProvisioningStep } from '../../api/employees';
+import { documentUrl, retryIntake, retryProvisioning, skipIntakeStep, skipProvisioningStep } from '../../api/employees';
 import Modal from '../../components/common/Modal';
 import StatusBadge from '../../components/common/StatusBadge';
 import { useEmployees } from '../../context/EmployeesContext';
@@ -35,13 +34,11 @@ const external = (url, text) => (url ? <a href={url} target="_blank" rel="norefe
 export default function CandidateDetailModal({ employeeId, onClose, onApprove, onReject }) {
   const { employees, refresh } = useEmployees();
   const { showToast } = useToast();
-  const [sending, setSending] = useState(false);
   const employee = employees.find((e) => e.id === employeeId);
   if (!employee) return null;
 
-  const { serviceNow: sn, office365, orangeHrm, laptop, offerLetter } = employee;
+  const { serviceNow: sn, office365, orangeHrm, laptop } = employee;
   const pending = employee.status === 'Pending Review';
-  const done = employee.status === 'Approved';
 
   const retry = async () => {
     try {
@@ -72,19 +69,6 @@ export default function CandidateDetailModal({ employeeId, onClose, onApprove, o
     } catch (error) {
       showToast(error.message, 'error');
     } finally {
-      refresh();
-    }
-  };
-
-  const resend = async () => {
-    setSending(true);
-    try {
-      await sendOfferLetter(employee.id);
-      showToast('Offer letter e-mailed.', 'success');
-    } catch (error) {
-      showToast(error.message, 'error');
-    } finally {
-      setSending(false);
       refresh();
     }
   };
@@ -194,26 +178,13 @@ export default function CandidateDetailModal({ employeeId, onClose, onApprove, o
         <PipelineTracker steps={employee.pipeline} />
       </Section>
 
-      {(office365 || orangeHrm || laptop || offerLetter) && (
+      {(office365 || orangeHrm || laptop) && (
         <Section icon="fa-circle-check" title="Provisioned">
           <Rows rows={[
             ['Corporate e-mail', office365?.userPrincipalName ? external(office365.adminUrl, office365.userPrincipalName) : '—'],
             ['Temporary password', office365?.initialPassword ? <Sensitive key="p" value={office365.initialPassword} label="temporary password" /> : office365?.alreadyExisted ? 'Account already existed' : '—'],
             ['OrangeHRM profile', orangeHrm?.empNumber ? external(orangeHrm.profileUrl, `#${orangeHrm.empNumber}`) : '—'],
             ['Laptop incident', laptop?.ticketNumber ? external(laptop.ticketUrl, laptop.ticketNumber) : '—'],
-            ['Offer letter', offerLetter?.filename ? (
-              <span key="o" style={{ display: 'inline-flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <a href={offerLetterUrl(employee.id)} target="_blank" rel="noreferrer"><i className="fa-solid fa-file-pdf"></i> Download PDF</a>
-                <span className={`badge ${offerLetter.emailed ? 'badge-approved' : 'badge-pending'}`}>
-                  {offerLetter.emailed ? `E-mailed to ${offerLetter.recipient}` : 'Not e-mailed'}
-                </span>
-                {done && (
-                  <button type="button" className="link-btn" onClick={resend} disabled={sending}>
-                    <i className={`fa-solid ${sending ? 'fa-spinner fa-spin' : 'fa-envelope'}`}></i> {offerLetter.emailed ? 'Resend' : 'Send now'}
-                  </button>
-                )}
-              </span>
-            ) : '—'],
           ]} />
         </Section>
       )}

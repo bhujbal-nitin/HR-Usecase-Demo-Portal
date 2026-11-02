@@ -10,7 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
-from app.api.routes import documents, employees, leave, offboardings, system
+from app.api.routes import documents, employees, hr_policy, leave, offboardings, payroll, reimbursement, system
 from app.container import Container, build_container
 from app.core.config import BACKEND_DIR, Settings, get_settings
 from app.core.exceptions import AppError, IntegrationError, NotFoundError
@@ -63,6 +63,9 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     app.include_router(documents.router, prefix="/api")
     app.include_router(offboardings.router, prefix="/api")
     app.include_router(leave.router, prefix="/api")
+    app.include_router(payroll.router, prefix="/api")
+    app.include_router(reimbursement.router, prefix="/api")
+    app.include_router(hr_policy.router, prefix="/api")
 
     _serve_built_frontend(app)
     return app

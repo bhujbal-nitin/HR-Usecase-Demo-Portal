@@ -1,4 +1,4 @@
-// Scripted "backend activity" for the five demo agents (Offboarding, Leave, Payroll, HR Policy, Reimbursement).
+// Scripted "backend activity" for the earlier prototype answers.
 // These have NO real backend: the right-hand panel plays these steps as an animation and labels them as a demo.
 // Keys are `<agentId>.<action>` (quick prompts / free text) or `<agentId>.<effect>` (widget buttons).
 
@@ -16,7 +16,7 @@ const AE = 'AutomationEdge';
 export const SIMULATED_PROCESSES = {
   // ---- Offboarding -------------------------------------------------------
   'offboarding.init_resignation': sim('Preparing resignation notice', [OHRM, AE], [
-    ['Reading employee record', 'OrangeHRMS PIM · Samantha Chang (EMP-8821)', 900],
+    ['Reading employee record', 'OrangeHRMS PIM · Samantha Chang (AE-8821)', 900],
     ['Calculating notice period', '30 days (Standard Engineering Contract)', 1000],
     ['Resolving last working day', 'Tentative: November 20, 2026', 800],
     ['Looking up reporting manager', 'Michael Torres (Engineering Director)', 900],
@@ -114,67 +114,4 @@ export const SIMULATED_PROCESSES = {
     ['Calculating New Regime', '$10,800 / year', 1100],
     ['Choosing the better option', 'New Regime saves ≈ $1,420', 800],
   ], { title: 'New Regime recommended', rows: [['Annual saving', '$1,420']] }),
-
-  // ---- HR Policy & Document ----------------------------------------------
-  'hr_policy.policy_parental': sim('Searching policy handbook', ['Policy index'], [
-    ['Embedding the question', 'Maternity & paternity leave', 800],
-    ['Retrieving matching clauses', 'HR-POL-042 (3 passages)', 1100],
-    ['Composing the answer', 'Cited from the handbook', 900],
-  ], { title: 'Answer found', rows: [['Source', 'HR-POL-042']] }),
-
-  'hr_policy.policy_remote': sim('Searching policy handbook', ['Policy index'], [
-    ['Embedding the question', 'Remote work & allowances', 800],
-    ['Retrieving matching clauses', 'Hybrid policy (2 passages)', 1100],
-    ['Composing the answer', 'Allowances and core hours', 900],
-  ], { title: 'Answer found', rows: [['Source', 'Hybrid policy']] }),
-
-  'hr_policy.policy_insurance': sim('Searching benefits records', ['Policy index', 'Benefits system'], [
-    ['Embedding the question', 'Medical insurance coverage', 800],
-    ['Retrieving plan details', 'Policy CORP-MED-9921', 1100],
-    ['Checking eligibility', 'Self + spouse + 2 children', 900],
-  ], { title: 'Coverage found', rows: [['Sum insured', '$25,000 family floater']] }),
-
-  'hr_policy.generate_emp_letter': sim('Generating employment letter', [OHRM, AE], [
-    ['Reading employment record', 'Alex Vance · Staff Engineer', 900],
-    ['Filling the letter template', 'Letterhead and HR watermark', 1100],
-    ['Applying digital signature', 'Signed by HR', 1000],
-    ['Publishing document', 'PDF ready to download', 800],
-  ], { title: 'Letter signed', rows: [['Status', 'Permanent, full-time']] }),
-
-  // ---- Reimbursement & Benefits ------------------------------------------
-  'reimbursement_benefits.submit_expense': sim('Scanning receipt', [AE, 'Finance system'], [
-    ['Uploading receipt image', 'receipt_oct20_dinner.jpg', 900],
-    ['Running OCR extraction', '99.4% confidence', 1200],
-    ['Reading merchant and total', 'The Capital Grille · $145.20', 900],
-    ['Applying expense policy', 'Client meals: within limit', 900],
-  ], { title: 'Receipt verified', rows: [['Amount', '$145.20']] }),
-
-  'reimbursement_benefits.submit_claim': sim('Submitting expense claim', ['Finance system', AE], [
-    ['Creating claim EXP-9942', 'Client Relationship & Meals', 1000],
-    ['Running automated audit rules', 'All checks passed', 1100],
-    ['Routing to Finance', 'Approval queue', 900],
-    ['Scheduling payout', 'Next payroll run', 800],
-  ], { title: 'Claim logged', rows: [['Claim', 'EXP-9942']] }),
-
-  'reimbursement_benefits.broadband_claim': sim('Checking allowance eligibility', ['Policy index', 'Finance system'], [
-    ['Reading remote-work policy', '$50 / month internet allowance', 900],
-    ['Checking October claim', 'Not yet claimed', 900],
-    ['Pre-approving', 'Fixed allowance', 800],
-  ], { title: 'Pre-approved', rows: [['Amount', '$50.00']] }),
-
-  'reimbursement_benefits.confirm_broadband': sim('Approving allowance', ['Finance system'], [
-    ['Recording approval', 'October 2026', 900],
-    ['Adding to payroll run', 'Credited with month-end salary', 1000],
-  ], { title: 'Allowance approved', rows: [['Payout', 'Oct 31 salary credit']] }),
-
-  'reimbursement_benefits.dependent_enroll': sim('Checking dependent slots', ['Benefits system'], [
-    ['Reading current enrolment', 'Self + Spouse', 900],
-    ['Counting available slots', 'Up to 2 children, $0 premium', 1000],
-    ['Listing required documents', 'Birth or marriage certificate', 800],
-  ], { title: '2 slots available', rows: [['Extra premium', '$0']] }),
-
-  'reimbursement_benefits.track_claims': sim('Loading claim history', ['Finance system'], [
-    ['Querying claims', 'Last 90 days', 900],
-    ['Reading statuses', '2 closed, 1 pending', 1000],
-  ], { title: '3 claims found', rows: [['Pending', 'EXP-9912']] }),
 };

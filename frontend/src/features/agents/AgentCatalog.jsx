@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AgentDetailsDialog from './AgentDetailsDialog';
 import AgentIcon from './data/AgentIcon';
 import { AGENTS, CATEGORIES } from './data/agentRegistry';
 
@@ -11,6 +12,20 @@ function matches(agent, category, query) {
 }
 
 function AgentCard({ agent, onOpen }) {
+  const desc = useRef(null);
+  const [cutOff, setCutOff] = useState(false); // the description does not fit the card: offer "More"
+  const [details, setDetails] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = desc.current;
+    if (!node) return undefined;
+    const measure = () => setCutOff(node.scrollHeight > node.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure); // the card changes width with the window
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [agent.description]);
+
   return (
     <div className="agent-catalog-card">
       <div className="agent-card-icon-wrapper"><AgentIcon agentId={agent.id} /></div>
@@ -18,7 +33,11 @@ function AgentCard({ agent, onOpen }) {
         <h3 className="agent-card-title">{agent.catalogName}</h3>
         <span className="agent-card-badge">{agent.badge}</span>
       </div>
-      <p className="agent-card-desc">{agent.description}</p>
+      <div className="agent-card-desc-wrap">
+        <p className="agent-card-desc" ref={desc}>{agent.description}</p>
+        {cutOff && <button type="button" className="agent-card-more" onClick={() => setDetails(true)}>More</button>}
+      </div>
+      {details && <AgentDetailsDialog agent={agent} onClose={() => setDetails(false)} />}
       <div className="agent-card-tags">
         {agent.tags.map((tag) => <span key={tag} className="agent-tag-pill">{tag}</span>)}
       </div>
