@@ -8,6 +8,9 @@ export const WORKFLOW_KEYS = new Set([
 ]);
 const STEP_STATUS = { pending: 'queued', running: 'running', success: 'done', failed: 'failed', skipped: 'skipped' };
 const STEP_KIND = { 'E-mail': 'notify' };
+// Screen wording only: the backend's own step names are left as they are.
+const STEP_TITLE = { laptop: 'Asset allocation request' };
+const titleOf = (step) => STEP_TITLE[step.key] ?? step.label;
 
 /** What each real step produced, shown in the card's data. Includes the AutomationEdge status and response. */
 export function stepPayload(step, e) {
@@ -43,7 +46,7 @@ export async function mirrorSteps({
     pick(employee).forEach((step) => {
       if (!cards[step.key]) {
         cards[step.key] = r.addStep(phaseId, {
-          kind: STEP_KIND[step.system] ?? 'api', agent, title: step.label, note: WORKFLOW_KEYS.has(step.key) ? 'An AutomationEdge workflow performs this step. The next step starts only after the workflow is Complete.' : `${step.system}: the next step starts only after this one succeeds.`, name: step.key, live: true,
+          kind: STEP_KIND[step.system] ?? 'api', agent, title: titleOf(step), note: WORKFLOW_KEYS.has(step.key) ? 'An AutomationEdge workflow performs this step. The next step starts only after the workflow is Complete.' : `${step.system}: the next step starts only after this one succeeds.`, name: step.key, live: true,
         });
       }
       const ms = step.startedAt && step.finishedAt ? new Date(step.finishedAt) - new Date(step.startedAt) : 0;
@@ -83,7 +86,7 @@ export async function mirrorWithRerun({ r, set, retry, skip, failed, label, ...o
     if (!failedStep) return { employee, stopped: false };
 
     r.patchStep(memo.cards[failedStep.key], { rerun: true });
-    set({ error: `${label} stopped at “${failedStep.label}”: ${failedStep.message ?? 'see the card for details'}` });
+    set({ error: `${label} stopped at “${titleOf(failedStep)}”: ${failedStep.message ?? 'see the card for details'}` });
     const choice = await r.waitForGate();
     r.patchStep(memo.cards[failedStep.key], { rerun: false });
     if (choice === 'skip' && skip) {
@@ -92,7 +95,7 @@ export async function mirrorWithRerun({ r, set, retry, skip, failed, label, ...o
       continue;
     }
     if (choice !== 'rerun') {
-      set({ error: `${label} stopped at “${failedStep.label}”: ${failedStep.message ?? 'see the card for details'}` });
+      set({ error: `${label} stopped at “${titleOf(failedStep)}”: ${failedStep.message ?? 'see the card for details'}` });
       return { employee, stopped: true, failedStep };
     }
     set({ error: null });

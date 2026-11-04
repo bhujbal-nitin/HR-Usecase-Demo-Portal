@@ -63,6 +63,23 @@ export class PdfPage {
     this.ops.push(`0.8 w ${colour('#1F2F7A')} RG ${num(x0)} ${num(y0)} m ${num(x1)} ${num(y1)} l S`);
   }
 
+  /** A filled circle (used for the head on the sample photos). */
+  circle(cx, cy, radius, { fill = '#000000' } = {}) {
+    const k = radius * 0.5523;
+    const [x, y] = [num(cx), num(cy)];
+    this.ops.push(`${colour(fill)} rg ${num(cx + radius)} ${y} m `
+      + `${num(cx + radius)} ${num(cy + k)} ${num(cx + k)} ${num(cy + radius)} ${x} ${num(cy + radius)} c `
+      + `${num(cx - k)} ${num(cy + radius)} ${num(cx - radius)} ${num(cy + k)} ${num(cx - radius)} ${y} c `
+      + `${num(cx - radius)} ${num(cy - k)} ${num(cx - k)} ${num(cy - radius)} ${x} ${num(cy - radius)} c `
+      + `${num(cx + k)} ${num(cy - radius)} ${num(cx + radius)} ${num(cy - k)} ${num(cx + radius)} ${y} c f`);
+  }
+
+  /** A filled shape through the given [x, y] points. */
+  polygon(points, { fill = '#000000' } = {}) {
+    const [[x0, y0], ...rest] = points;
+    this.ops.push(`${colour(fill)} rg ${num(x0)} ${num(y0)} m ${rest.map(([x, y]) => `${num(x)} ${num(y)} l`).join(' ')} f`);
+  }
+
   /** The logo (a png read with readPng), its lower-left corner at x, y. */
   logo(png, x, y, width, height) {
     this.image = png;

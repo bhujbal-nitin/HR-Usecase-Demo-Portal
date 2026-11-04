@@ -68,18 +68,18 @@ const PAYROLL_MAP = {
   edges: [['cand', 'orch'], ['orch', 'pay'], ['orch', 'ohrm'], ['pay', 'ohrm']],
 };
 
-// Reimbursement & benefits: the agent reads each bill with OpenAI, sends the claim to the manager and records the approved claim in
+// Reimbursement & benefits: the agent scans each bill, sends the claim to the manager and records the approved claim in
 // OrangeHRM. Each step is followed by its AutomationEdge workflow.
 const REIMBURSEMENT_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
     orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
     reimb: { x: 385, y: 116, icon: 'bank', label: 'Reimbursement & Benefits Agent', t: 'agent' },
-    openai: { x: 620, y: 50, icon: 'eye', label: 'OpenAI', sub: 'reads the bills', t: 'system' },
+    scan: { x: 620, y: 50, icon: 'eye', label: 'Document Scanning', sub: 'reads the bills', t: 'system' },
     ohrm: { x: 620, y: 110, icon: 'db', label: 'OrangeHRM', sub: 'Claim', t: 'system' },
     mgr: { x: 620, y: 170, icon: 'user', label: 'Manager', sub: 'Approvals', t: 'person' },
   },
-  edges: [['cand', 'orch'], ['orch', 'reimb'], ['orch', 'ohrm'], ['reimb', 'openai'], ['reimb', 'ohrm'], ['reimb', 'mgr']],
+  edges: [['cand', 'orch'], ['orch', 'reimb'], ['orch', 'ohrm'], ['reimb', 'scan'], ['reimb', 'ohrm'], ['reimb', 'mgr']],
 };
 
 // HR policy & documents: the agent finds policies, asks the knowledge base and makes the letters from the HR documents folder. Each step is followed by its AutomationEdge workflow.
@@ -147,7 +147,7 @@ const HOPS = {
   'ocr.extract()': THROUGH('docs'),
   'file.validate()': THROUGH('docs'),
   'onboarding.stash()': THROUGH('docs'),
-  'openai.verify_document()': THROUGH('docs'),
+  'scanner.verify_document()': THROUGH('docs'),
   'HR Demo Document Verification': THROUGH('docs'),
   'verhoeff.validate()': THROUGH('docs'),
   'compare_identity()': THROUGH('docs'),
@@ -220,14 +220,14 @@ const PAYROLL_HOPS = {
 };
 
 const REIMBURSEMENT_HOPS = {
-  'HR Demo Read Bill': ROUND('reimb', 'openai'),
+  'HR Demo Read Bill': ROUND('reimb', 'scan'),
   'HR Demo Check Reimbursement Policy': [], // the policy rules: no system
   'HR Demo Submit Expense Claim': [['reimb', 'mgr']],
   'HR Demo Create Claim OrangeHRM': ROUND('reimb', 'ohrm'),
   'POST /webhook/whatsapp': [['cand', 'orch']],
   'whatsapp.send_text()': [['reimb', 'orch'], ['orch', 'cand']],
   'employees.lookup()': ROUND('orch', 'ohrm'),
-  'openai.read_bill()': ROUND('reimb', 'openai'),
+  'scanner.read_bill()': ROUND('reimb', 'scan'),
   'POST /api/reimbursement/claims': [['reimb', 'mgr']],
   'hr.approve()': ROUND('reimb', 'mgr'),
   'orangehrm.record_claim()': ROUND('reimb', 'ohrm'),
@@ -284,7 +284,7 @@ const ICON_BY_NAME = {
   'POST /webhook/whatsapp': 'chat', 'whatsapp.send_flow()': 'send', 'whatsapp.send_text()': 'send', 'whatsapp.send_template()': 'send',
   'llm.classify_intent()': 'sparkle', 'llm.plan()': 'sparkle', 'policy.evaluate()': 'gauge', 'hrms.find_candidate()': 'search',
   'validators.run()': 'clipboard', 'media.fetch_and_store()': 'lock', 'llm.vision_classify()': 'eye', 'llm.vision_extract()': 'eye',
-  'llm.document_extract()': 'eye', 'ocr.extract()': 'scan', 'openai.verify_document()': 'eye', 'HR Demo Document Verification': 'bolt', 'verhoeff.validate()': 'key', 'compare_identity()': 'compare',
+  'llm.document_extract()': 'eye', 'ocr.extract()': 'scan', 'scanner.verify_document()': 'eye', 'HR Demo Document Verification': 'bolt', 'verhoeff.validate()': 'key', 'compare_identity()': 'compare',
   'epfo.lookup()': 'bank', 'pii_guard.apply()': 'lock', 'pan.validate_format()': 'key',
   'payslip.sanity_check()': 'gauge', 'file.validate()': 'file', 'onboarding.stash()': 'cloud', 'onboarding.package()': 'file', 'signature.capture()': 'pen',
   'POST /api/employees': 'db', 'servicenow.create_request()': 'ticket', 'hr.approve()': 'user', 'buddy.match()': 'users',
@@ -301,7 +301,7 @@ const ICON_BY_NAME = {
   'HR Demo Search Policy': 'bolt', 'HR Demo Get Policy Document': 'bolt', 'HR Demo Ask Policy Question': 'bolt', 'HR Demo Generate Address Proof Letter': 'bolt', 'HR Demo Generate Bank Account Opening Letter': 'bolt',
   'HR Demo Fetch Salary Details': 'bolt', 'HR Demo Generate Payslip': 'bolt', 'HR Demo Generate CTC Statement': 'bolt', 'HR Demo Generate Form 16': 'bolt',
   'km.query()': 'search', 'hr_documents.list()': 'clipboard', 'hr_documents.get_letter()': 'file', 'hr_documents.search_policies()': 'search', 'hr_documents.get_policy()': 'file',
-  'openai.read_bill()': 'eye', 'policy.check_eligibility()': 'shield', 'POST /api/reimbursement/claims': 'ticket', 'orangehrm.record_claim()': 'db',
+  'scanner.read_bill()': 'eye', 'policy.check_eligibility()': 'shield', 'POST /api/reimbursement/claims': 'ticket', 'orangehrm.record_claim()': 'db',
   'payroll.options()': 'clipboard', 'payroll.payslip()': 'file', 'payroll.ctc()': 'file', 'payroll.form16()': 'file',
 };
 const ICON_BY_KIND = { trigger: 'chat', agent: 'sparkle', tool: 'clipboard', api: 'cloud', human: 'user', notify: 'send' };
@@ -312,7 +312,7 @@ const VIZ_BY_NAME = {
   'POST /webhook/whatsapp': 'inbound', 'llm.classify_intent()': 'intent', 'llm.plan()': 'plan', 'hrms.find_candidate()': 'record',
   'whatsapp.send_flow()': 'sent', 'whatsapp.send_text()': 'sent', 'whatsapp.send_template()': 'sent', 'validators.run()': 'checks',
   'media.fetch_and_store()': 'storage', 'llm.vision_classify()': 'classify', 'llm.vision_extract()': 'classify', 'llm.document_extract()': 'classify',
-  'ocr.extract()': 'ocr', 'openai.verify_document()': 'checks', 'HR Demo Document Verification': 'workflow', 'verhoeff.validate()': 'checksum', 'compare_identity()': 'compare',
+  'ocr.extract()': 'ocr', 'scanner.verify_document()': 'checks', 'HR Demo Document Verification': 'workflow', 'verhoeff.validate()': 'checksum', 'compare_identity()': 'compare',
   'epfo.lookup()': 'external', 'pii_guard.apply()': 'record', 'pan.validate_format()': 'checks',
   'payslip.sanity_check()': 'range', 'file.validate()': 'checks', 'onboarding.stash()': 'record', 'onboarding.package()': 'package',
   'signature.capture()': 'record', 'POST /api/employees': 'external', 'policy.evaluate()': 'gauge', 'hr.approve()': 'approval', 'buddy.match()': 'buddy',
@@ -329,7 +329,7 @@ const VIZ_BY_NAME = {
   'HR Demo Search Policy': 'workflow', 'HR Demo Get Policy Document': 'workflow', 'HR Demo Ask Policy Question': 'workflow', 'HR Demo Generate Address Proof Letter': 'workflow', 'HR Demo Generate Bank Account Opening Letter': 'workflow',
   'HR Demo Fetch Salary Details': 'workflow', 'HR Demo Generate Payslip': 'workflow', 'HR Demo Generate CTC Statement': 'workflow', 'HR Demo Generate Form 16': 'workflow',
   'km.query()': 'external', 'hr_documents.list()': 'record', 'hr_documents.get_letter()': 'package', 'hr_documents.search_policies()': 'record', 'hr_documents.get_policy()': 'package',
-  'openai.read_bill()': 'classify', 'policy.check_eligibility()': 'checks', 'POST /api/reimbursement/claims': 'record', 'orangehrm.record_claim()': 'external',
+  'scanner.read_bill()': 'classify', 'policy.check_eligibility()': 'checks', 'POST /api/reimbursement/claims': 'record', 'orangehrm.record_claim()': 'external',
   'payroll.payslip()': 'package', 'payroll.ctc()': 'package', 'payroll.form16()': 'package',
 };
 const VIZ_BY_KIND = { trigger: 'inbound', agent: 'think', tool: 'record', api: 'external', human: 'approval', notify: 'sent' };

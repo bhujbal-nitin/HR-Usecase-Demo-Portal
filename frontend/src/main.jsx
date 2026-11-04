@@ -8,6 +8,7 @@ import './styles/wizard.css';
 import './styles/dashboard.css';
 import './styles/ae.css';
 import './styles/ai_agents.css';
+import './styles/sample_files.css';
 import './styles/app.css';
 import './styles/agent-demo.css';
 import './styles/agent-stage.css';

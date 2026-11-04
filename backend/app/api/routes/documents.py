@@ -1,4 +1,4 @@
-"""Document verification (OpenAI) used by the agent demo's manual live mode."""
+"""Document verification used by the agent demo's manual live mode."""
 
 from typing import Annotated
 
@@ -83,7 +83,7 @@ async def verify_document(request: Request, verifier: VerifierDep, settings: Set
     """``multipart/form-data``: ``docKey`` (idDoc | panDoc | salaryDoc), ``file``, ``fullName`` (from the joining form)
     and, for the PAN card, ``referenceDob`` (YYYY-MM-DD read from the Aadhaar card)."""
     if not verifier.enabled:
-        raise IntegrationNotConfiguredError("OpenAI")
+        raise IntegrationNotConfiguredError("Document scanning")
     form = await request.form()
     upload = form.get("file")
     if not isinstance(upload, UploadFile) or not upload.filename:

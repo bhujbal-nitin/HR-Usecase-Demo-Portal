@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listEmployees } from '../../../api/employees';
-import { listOffboardings } from '../../../api/offboardings';
+import { eligibleEmployees } from '../lib/eligibleEmployees';
 
 /**
  * Lists the employees a demo can be run for and reports the chosen one: onboarded and approved ones; for offboarding only those with
@@ -8,22 +7,16 @@ import { listOffboardings } from '../../../api/offboardings';
  */
 export default function EmployeePicker({ value, onChange, kind = 'offboarding' }) {
   const offboarding = kind === 'offboarding';
-  const needsOffboardings = offboarding || kind === 'leave' || kind === 'reimbursement';
   const [people, setPeople] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let alive = true;
-    Promise.all([listEmployees(), needsOffboardings ? listOffboardings() : Promise.resolve([])])
-      .then(([employees, offboardings]) => {
-        if (!alive) return;
-        // Offboarding: nobody who already has one. Leave / reimbursement: nobody who has left (OrangeHRM has terminated them).
-        const hidden = new Set(offboardings.filter((o) => (offboarding ? o.status !== 'Rejected' : o.status === 'Completed')).map((o) => o.employeeId));
-        setPeople(employees.filter((e) => e.status === 'Approved' && !hidden.has(e.id)));
-      })
+    eligibleEmployees(kind)
+      .then((employees) => alive && setPeople(employees))
       .catch((err) => alive && setError(err.message));
     return () => { alive = false; };
-  }, [needsOffboardings, offboarding]);
+  }, [kind]);
 
   if (error) return <p className="inline-warning">{error}</p>;
   if (!people) return <p>Loading employees…</p>;

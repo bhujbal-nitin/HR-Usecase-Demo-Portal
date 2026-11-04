@@ -14,7 +14,7 @@ from app.core.exceptions import IntegrationError, IntegrationNotConfiguredError,
 from app.integrations.http import build_session, error_text
 
 logger = logging.getLogger(__name__)
-SYSTEM = "OpenAI"
+SYSTEM = "Document scanning"
 
 _IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
 _WORD_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
@@ -93,7 +93,7 @@ class OpenAIDocumentReader:
         except Exception as exc:  # noqa: BLE001 - network errors of any kind
             raise IntegrationError(SYSTEM, f"could not be reached: {exc}") from exc
         if response.status_code == 401:
-            raise IntegrationError(SYSTEM, "the API key was rejected. Check OPENAI_API_KEY in .env.")
+            raise IntegrationError(SYSTEM, "its access key was rejected. Check the document scanning key in .env.")
         if response.status_code >= 400:
             raise IntegrationError(SYSTEM, error_text(response))
         try:

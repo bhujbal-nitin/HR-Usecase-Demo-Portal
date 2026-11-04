@@ -7,7 +7,7 @@ export const config = {
   catalogName: 'Payroll & Salary',
   category: 'core',
   description: 'Gives the employee their payslip, CTC statement and Form 16 to download as PDFs, made from the salary recorded in OrangeHRM.',
-  tags: ['Payslip PDF', 'CTC Statement PDF', 'Form 16 PDF', 'OrangeHRM Salary Records'],
+  tags: ['Payslip PDF', 'CTC Statement PDF', 'Form 16 PDF'],
   badge: 'Secure Bank-Grade',
   greeting: (
     <>

@@ -27,7 +27,7 @@ const simulatedProvisioning = (D) => [
     payload: { upn: `${D.first}.${D.last}@acme.example`.toLowerCase(), groups: [D.department, 'All-Staff'], enabled_from: D.startDate, mfa: 'enrol on first sign-in' },
   },
   {
-    kind: 'tool', agent: 'prov', title: 'Order the laptop', note: 'Simulated: raises a request with the right model for the role.', name: 'itsm.create_request()', lat: 610,
+    kind: 'tool', agent: 'prov', title: 'Asset allocation request', note: 'Simulated: raises a request with the right model for the role.', name: 'itsm.create_request()', lat: 610,
     payload: { catalog_item: D.hardware, ship_to: 'Office reception', deliver_by: D.startDate, ticket: 'REQ-30918' },
   },
 ];
@@ -133,7 +133,7 @@ export async function setup({ r, D, S, set, live }) {
             You’re all set, {D.first}! Here’s what I arranged:
             <ul className="cl">
               <li><span>Work email</span><b>{upn ?? 'Pending IT set-up'}</b></li>
-              <li><span>Laptop</span><b>{laptop ? `${D.hardware} (${laptop})` : `${D.hardware} (request pending)`}</b></li>
+              <li><span>Asset allocation</span><b>{laptop ? `${D.hardware} (${laptop})` : `${D.hardware} (request pending)`}</b></li>
               <li><span>Buddy</span><b>Rohan Mehta</b></li>
               <li><span>Day 1</span><b>{formatDate(D.startDate)}</b></li>
             </ul>

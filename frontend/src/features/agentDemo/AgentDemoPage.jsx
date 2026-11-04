@@ -141,12 +141,12 @@ export default function AgentDemoPage() {
               </>
             ) : isReimbursement && picking ? (
               <>
-                <p>This is a <b>real</b> run: three sample bills are uploaded and read with OpenAI, each step followed by its AutomationEdge workflow. After the manager approves or rejects each bill on the Approvals page (Reimbursement tab), the approved bills are recorded in OrangeHRM (Claim). Pick a test employee.</p>
+                <p>This is a <b>real</b> run: three sample bills are uploaded and scanned, each step followed by its AutomationEdge workflow. After the manager approves or rejects each bill on the Approvals page (Reimbursement tab), the approved bills are recorded in OrangeHRM (Claim). Pick a test employee.</p>
                 <EmployeePicker value={employeeRef} onChange={setEmployeeRef} kind="reimbursement" />
               </>
             ) : isReimbursement ? (
               <>
-                <p><b>Manual · Live</b> — you are the employee. Give your employee ID or work e-mail (it must be someone onboarded through this portal), then upload your bills of any kind, one after another (PDF or a photo). Each bill is read with <b>OpenAI</b>: the kind of expense, its date, amount and vendor, and the steps are followed by their <b>AutomationEdge</b> workflows. <b>Travel and Food</b> are within the company policy, but your manager approves or rejects <b>every bill</b> on the Approvals page (Reimbursement tab); only the approved bills are recorded in <b>OrangeHRM</b>.</p>
+                <p><b>Manual · Live</b> — you are the employee. Give your employee ID or work e-mail (it must be someone onboarded through this portal), then upload your bills of any kind, one after another (PDF or a photo). Each bill is <b>scanned</b>: the kind of expense, its date, amount and vendor, and the steps are followed by their <b>AutomationEdge</b> workflows. <b>Travel and Food</b> are within the company policy, but your manager approves or rejects <b>every bill</b> on the Approvals page (Reimbursement tab); only the approved bills are recorded in <b>OrangeHRM</b>.</p>
                 <p><b>Auto-play · Live</b> uploads three sample bills for an employee you choose. <b>Auto-play · Simulated</b> is the scripted demo; nothing is saved or contacted.</p>
               </>
             ) : isPayroll && picking ? (

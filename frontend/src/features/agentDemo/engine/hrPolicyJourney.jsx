@@ -2,7 +2,7 @@ import * as realApi from '../../../api/hrPolicy';
 import { AUTO_POLICY_WORD, AUTO_QUESTIONS, SCENARIOS, SUGGESTED_QUESTIONS, detectIntent, findLetter } from '../lib/hrPolicy';
 import DownloadLink from '../components/DownloadLink';
 import { LETTER_WORKFLOWS, hrPolicyWorkflowStep } from './phases/hrPolicyWorkflow';
-import { card, fillForm, firstName, identify, makeAsk, showCard, understand } from './leaveJourney.jsx';
+import { card, fillForm, firstName, identify, loadSamples, askWho, makeAsk, showCard, understand } from './leaveJourney.jsx';
 import { createSimulatedHrPolicyApi } from './simulatedHrPolicyApi';
 
 // HR policy & documents. Manual: YOU are the employee and the chat waits for you at every step. Auto-play: the same journey with the
@@ -213,9 +213,10 @@ export async function runHrPolicy({ r, set, auto = null, simulated = false }) {
   r.msg('out', first.text);
   await understand({ r, text: first.text, intent: 'greeting', workflow: 'hr_policy.v1' });
   await r.bot('Hi, I’m your HR policy and document assistant.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  const samples = await loadSamples('hr_policy', auto, S.api);
+  await askWho(r, samples);
 
-  const employee = await identify({ r, set, ask, auto, api: S.api });
+  const employee = await identify({ r, set, ask, auto, api: S.api, samples });
   await r.bot(<>Thanks, <b>{firstName(employee)}</b>. I found you: <b>{employee.jobTitle}</b>, {employee.department}, reporting to {employee.manager}.</>);
   await r.bot('I can give you a policy to download, answer questions about the company’s policies, or give you a letter: an address proof letter or a bank account opening letter. What would you like to do?', { wait: 600 });
 

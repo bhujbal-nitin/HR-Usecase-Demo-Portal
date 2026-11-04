@@ -1,4 +1,4 @@
-// The Reimbursement & Benefits agent runs from features/agentDemo (reimbursementJourney.jsx): its bills are read with OpenAI and its
+// The Reimbursement & Benefits agent runs from features/agentDemo (reimbursementJourney.jsx): its bills are scanned and its
 // claims go to the manager and into OrangeHRM. This file only describes the agent on its card.
 
 export const config = {
@@ -8,7 +8,7 @@ export const config = {
   category: 'compliance',
   description:
     'Reads expense bills of any kind (PDF or photo), marks what is within the policy, lets the manager approve or reject each bill and records the approved ones in OrangeHRM.',
-  tags: ['Bill Reading (OpenAI)', 'All Bill Types', 'Per-Bill Approval', 'OrangeHRM Claim', 'AutomationEdge'],
+  tags: ['Bill Reading', 'All Bill Types', 'Per-Bill Approval', 'OrangeHRM Claim'],
   badge: 'Instant Approvals',
   greeting: (
     <>

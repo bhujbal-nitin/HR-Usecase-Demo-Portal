@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { formatFileSize } from '../../../utils/format';
+import { openProps } from '../lib/fileInfo';
 
 /**
  * "Upload your document" card inside the chat.
@@ -19,7 +20,7 @@ export default function UploadCard({ upload, onPick }) {
       <h5><i className="fa-solid fa-file-arrow-up"></i> Upload your {label}</h5>
       <p>{hint ?? 'PDF or Word, up to 10 MB.'}</p>
       {file ? (
-        <div className="ad-upload-done">
+        <div className={`ad-upload-done${file.blob ? ' openable' : ''}`} {...openProps(file)}>
           <i className="fa-solid fa-circle-check"></i>
           <div><b>{file.name}</b>{file.size ? <span> · {formatFileSize(file.size)}</span> : null}</div>
         </div>

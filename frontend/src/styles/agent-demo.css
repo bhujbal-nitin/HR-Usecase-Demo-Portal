@@ -192,6 +192,8 @@
 .agent-demo .ad-file i { font-size: 1.6rem; color: #d1342f; }
 .agent-demo .ad-file b { display: block; font-size: 0.82rem; overflow-wrap: anywhere; }
 .agent-demo .ad-file span { font-size: 0.7rem; color: var(--wa-muted); }
+.agent-demo .ad-file.openable, .agent-demo .ad-upload-done.openable { cursor: pointer; }
+.agent-demo .ad-file.openable:hover b, .agent-demo .ad-upload-done.openable:hover b { text-decoration: underline; }
 .agent-demo .ad-widget-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .agent-demo .ad-widget-btn {
   border: 1px solid color-mix(in srgb, var(--wa-accent) 45%, transparent); background: color-mix(in srgb, var(--wa-accent) 10%, var(--wa-in));

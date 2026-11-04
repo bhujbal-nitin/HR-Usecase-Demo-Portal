@@ -7,7 +7,7 @@ export const config = {
   catalogName: 'HR Policy & Document',
   category: 'compliance',
   description: 'Lets the employee pick a company policy from a dropdown to download, answers questions about them from the knowledge base, and gives official letters on request as Word files with the employee’s own details: an address proof (bonafide) letter and a bank account opening letter.',
-  tags: ['Policy Search · Dropdown Download', 'Policy Q&A (Knowledge Base)', 'Follow-up Questions', 'Address Proof Letter', 'Bank Account Opening Letter', 'AutomationEdge'],
+  tags: ['Policy Download', 'Policy Q&A (Knowledge Base)', 'Follow-up Questions', 'Address Proof Letter', 'Bank Account Opening Letter'],
   badge: '24/7 Available',
   greeting: (
     <>

@@ -7,7 +7,7 @@ export const config = {
   category: 'core',
   description:
     'Applies for leave, checks PTO and sick balances, raises attendance requests for missed punches, and retrieves holiday schedules in one chat.',
-  tags: ['Balances · Holidays', 'Leave Application', 'Attendance Request', 'Manager Approval', 'OrangeHRM · AutomationEdge'],
+  tags: ['Balances · Holidays', 'Leave Application', 'Attendance Request', 'Manager Approval', 'OrangeHRM'],
   badge: 'Real-Time',
   greeting: (
     <>

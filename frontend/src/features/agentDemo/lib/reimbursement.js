@@ -1,5 +1,5 @@
 // The reimbursement chat: what the employee can ask for, the policy hint and the sample bills Auto-play uploads.
-// The live run reads each bill with OpenAI; the backend has the same policy hint (backend/app/services/reimbursement/policy.py).
+// The live run scans each bill; the backend has the same policy hint (backend/app/services/reimbursement/policy.py).
 
 import { makeSamplePdf } from './samplePdf';
 import { toIso } from './leave';

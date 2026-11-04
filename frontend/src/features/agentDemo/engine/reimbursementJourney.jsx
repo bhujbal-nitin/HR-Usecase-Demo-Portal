@@ -2,12 +2,13 @@ import * as realApi from '../../../api/reimbursement';
 import { formatDate, formatInr } from '../../../utils/format';
 import { BILL_ACCEPT, MAX_BILLS, SCENARIOS, buildSampleBills, detectIntent, splitByPolicy, totalOf, validateBill, withinPolicy } from '../lib/reimbursement';
 import { trigger } from './phases/common';
-import { awaitDecision, card, firstName, identify, makeAsk, showCard, understand } from './leaveJourney.jsx';
+import { awaitDecision, card, firstName, identify, loadSamples, askWho, makeAsk, showCard, understand } from './leaveJourney.jsx';
 import { reimbursementWorkflowStep } from './phases/reimbursementWorkflow';
 import { createSimulatedReimbursementApi } from './simulatedReimbursementApi';
+import { fileInfo } from '../lib/fileInfo';
 
 // Reimbursement & benefits. Manual: YOU are the employee and the chat waits for you at every step (you upload your own bills).
-// Auto-play: the same journey with three sample bills uploaded for you. Live: each bill is read with OpenAI (category, date, amount,
+// Auto-play: the same journey with three sample bills uploaded for you. Live: each bill is scanned (category, date, amount,
 // vendor), bills of every kind go into the claim (Travel and Food are within the company policy, a hint), the manager approves or rejects
 // each bill on the Approvals page (Reimbursement tab), and the approved bills are then recorded in OrangeHRM (Claim). Auto-play · Simulated: the very same journey runs against
 // simulatedReimbursementApi, so the flows cannot drift apart; its steps are tagged Simulated.
@@ -45,14 +46,14 @@ async function collectBill({ r, S, set, employee, auto, number, sample }) {
   } else {
     ({ file } = await r.ask({ kind: 'attach', docKey: upload.docKey, label: upload.label, accept: BILL_ACCEPT }));
   }
-  r.msg('out', null, { kind: 'file', file: { name: file.name, size: file.size } });
+  r.msg('out', null, { kind: 'file', file: fileInfo(file) });
   const problem = validateBill(file);
   if (problem) {
     r.patchMsg(cardId, { upload: { ...upload, error: problem } });
     await r.bot(<>That file can’t be used: {problem}</>, { wait: 500 });
     return null;
   }
-  r.patchMsg(cardId, { upload: { ...upload, file: { name: file.name, size: file.size } } });
+  r.patchMsg(cardId, { upload: { ...upload, file: fileInfo(file) } });
 
   let bill = null;
   let failure = '';
@@ -60,8 +61,8 @@ async function collectBill({ r, S, set, employee, auto, number, sample }) {
   await r.runSteps(phase, [
     trigger('Document received', 'A file arrives on the thread.', { type: 'document', document: { mime_type: file.type || 'application/pdf', filename: file.name }, size_kb: Math.max(1, Math.round(file.size / 1024)) }),
     {
-      kind: 'api', agent: 'reimb', title: 'Read the bill', name: 'openai.read_bill()', live: !S.api.simulated,
-      note: 'A vision model reads the bill: the kind of expense (Travel, Food, Mobile, Stay, Medical or Others), its date, the final amount and the vendor.',
+      kind: 'api', agent: 'reimb', title: 'Read the bill', name: 'scanner.read_bill()', live: !S.api.simulated,
+      note: 'The bill is scanned: the kind of expense (Travel, Food, Mobile, Stay, Medical or Others), its date, the final amount and the vendor.',
       run: async () => {
         try {
           bill = await S.api.readBill(employee.employeeId, file);
@@ -223,17 +224,18 @@ export async function runReimbursement({ r, set, auto = null, simulated = false 
   r.msg('sys', simulated
     ? 'Auto-play · Simulated: this uploads three sample bills for a sample employee. Nothing is contacted or saved anywhere.'
     : auto
-    ? 'Auto-play · Live: this uploads three sample bills for the employee you chose. It is real: the bills are read with OpenAI and, after the manager decides on the Approvals page, the approved bills are recorded in OrangeHRM.'
-    : 'Manual mode: you are the employee. Type a message to begin. It is real: your bills are read with OpenAI and, after the manager decides on the Approvals page, the approved bills are recorded in OrangeHRM.');
+    ? 'Auto-play · Live: this uploads three sample bills for the employee you chose. It is real: the bills are scanned and, after the manager decides on the Approvals page, the approved bills are recorded in OrangeHRM.'
+    : 'Manual mode: you are the employee. Type a message to begin. It is real: your bills are scanned and, after the manager decides on the Approvals page, the approved bills are recorded in OrangeHRM.');
   set({ stage: 'idle' });
 
   const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });
   r.msg('out', first.text);
   await understand({ r, text: first.text, intent: 'greeting', workflow: 'reimbursement_benefits.v1' });
   await r.bot('Hi, I’m your reimbursement assistant.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  const employeeSamples = await loadSamples('reimbursement', auto, S.api);
+  await askWho(r, employeeSamples);
 
-  const employee = await identify({ r, set, ask, auto, api: S.api });
+  const employee = await identify({ r, set, ask, auto, api: S.api, samples: employeeSamples });
   await r.bot(<>Thanks, <b>{firstName(employee)}</b>. I found you: <b>{employee.jobTitle}</b>, {employee.department}, reporting to {employee.manager}.</>);
   await r.bot('I can read your bills of any kind and send an expense claim to your manager, who approves or rejects each bill. What would you like to do?', { wait: 600 });
 

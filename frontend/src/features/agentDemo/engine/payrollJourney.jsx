@@ -3,7 +3,7 @@ import DownloadLink from '../components/DownloadLink';
 import { SCENARIOS, detectIntent, monthLabel } from '../lib/payroll';
 import { payrollWorkflowStep } from './phases/payrollWorkflow';
 import { createSimulatedPayrollApi } from './simulatedPayrollApi';
-import { fillForm, firstName, identify, makeAsk, understand } from './leaveJourney.jsx';
+import { fillForm, firstName, identify, loadSamples, askWho, makeAsk, understand } from './leaveJourney.jsx';
 
 // Payroll & salary. Manual: YOU are the employee and the chat waits for you at every step. Auto-play: the same journey with the chosen
 // employee's answers filled in for you. The employee can download three documents, PDFs the backend draws from their figures: the payslip of a month, the
@@ -103,9 +103,10 @@ export async function runPayrollSalary({ r, set, auto = null, simulated = false 
   r.msg('out', first.text);
   await understand({ r, text: first.text, intent: 'greeting', workflow: 'payroll_salary.v1' });
   await r.bot('Hi, I’m your payroll and salary assistant.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  const samples = await loadSamples('payroll', auto, S.api);
+  await askWho(r, samples);
 
-  const employee = await identify({ r, set, ask, auto, api: S.api });
+  const employee = await identify({ r, set, ask, auto, api: S.api, samples });
   await r.bot(<>Thanks, <b>{firstName(employee)}</b>. I found you: <b>{employee.jobTitle}</b>, {employee.department}, reporting to {employee.manager}.</>);
   await r.bot('I can give you your payslip, your CTC statement or your Form 16 to download. What would you like?', { wait: 600 });
 

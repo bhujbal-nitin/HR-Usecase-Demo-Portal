@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FORM_FIELDS } from '../engine/phases/intake.jsx';
 import { formatFileSize } from '../../../utils/format';
+import { openProps } from '../lib/fileInfo';
 import ChatForm from './ChatForm';
 import ManualForm from './ManualForm';
 import ResignationForm from './ResignationForm';
@@ -40,7 +41,7 @@ function hintFor(state) {
 
 function FileBubble({ file }) {
   return (
-    <div className="ad-file">
+    <div className={`ad-file${file.blob ? ' openable' : ''}`} {...openProps(file)}>
       <i className="fa-solid fa-file-pdf"></i>
       <div><b>{file.name}</b><span>{formatFileSize(file.size)}</span></div>
     </div>

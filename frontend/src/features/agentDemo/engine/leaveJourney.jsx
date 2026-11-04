@@ -5,6 +5,7 @@ import {
   ATTENDANCE_FIELDS, IN_PUNCH, LEAVE_FIELDS, LEAVE_POLICY, SCENARIOS, SHIFT_END, addDays, attendanceDateRange, detectIntent, hoursWorked, previousWorkingDays,
   sampleLeaveDates,
 } from '../lib/leave';
+import { sampleEmployeeIds } from '../lib/eligibleEmployees';
 import { trigger } from './phases/common';
 import { leaveWorkflowStep } from './phases/leaveWorkflow';
 
@@ -53,11 +54,17 @@ export async function understand({ r, text, intent, workflow }) {
   ]);
 }
 
+/** The one-tap sample employee IDs for a Manual · Live demo (none in Auto-play or Simulated, where the employee is already chosen). */
+export const loadSamples = (kind, auto, api) => (auto || api.simulated ? Promise.resolve([]) : sampleEmployeeIds(kind));
+
+/** The bot's question "who are you?", mentioning the samples when there are any. */
+export const askWho = (r, samples) => r.bot(<>First, who are you? Please type your <b>employee ID</b> or your <b>work e-mail</b>{samples.length > 0 && ', or tap one of the samples below'}.</>, { wait: 500 });
+
 /** Ask until the portal recognises an onboarded employee. Returns the employee summary. */
-export async function identify({ r, set, ask, auto, api }) {
+export async function identify({ r, set, ask, auto, api, samples = [] }) {
   set({ stage: 'identify' });
   for (;;) {
-    const { text } = await ask({ kind: 'text', suggestions: [] }, { text: auto?.employeeId });
+    const { text } = await ask({ kind: 'text', suggestions: samples }, { text: auto?.employeeId });
     r.msg('out', text);
     const phase = r.phase('Identify the employee', 'The HR records are searched for the employees onboarded through this portal.');
     let found = null;
@@ -466,9 +473,10 @@ export async function runLeaveAttendance({ r, set, auto = null, simulated = fals
   r.msg('out', first.text);
   await understand({ r, text: first.text, intent: 'greeting', workflow: 'leave_attendance.v1' });
   await r.bot('Hi, I’m your leave and attendance assistant.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  const samples = await loadSamples('leave', auto, S.api);
+  await askWho(r, samples);
 
-  const employee = await identify({ r, set, ask, auto, api: S.api });
+  const employee = await identify({ r, set, ask, auto, api: S.api, samples });
   await r.bot(<>Thanks, <b>{firstName(employee)}</b>. I found you: <b>{employee.jobTitle}</b>, {employee.department}, reporting to {employee.manager}.</>);
   await r.bot('I can check your leave balance and the holidays, apply for leave, or raise an attendance request. What would you like to do?', { wait: 600 });
 

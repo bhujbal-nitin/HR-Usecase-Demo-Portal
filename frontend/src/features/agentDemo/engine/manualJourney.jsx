@@ -6,10 +6,11 @@ import { maskPhone, trigger } from './phases/common';
 import { documentWorkflowStep } from './phases/workflowStep';
 import { record } from './phases/record.jsx';
 import { setup } from './phases/setup.jsx';
+import { fileInfo } from '../lib/fileInfo';
 
 // Manual onboarding: YOU are the candidate. The chat waits for you at every step - you type, fill the form, attach
 // your own documents. The real backend then creates a record from exactly what you entered (live only).
-// When OPENAI_API_KEY is set on the backend, each document is read and checked before it is accepted (right document,
+// When document scanning is set up on the backend, each document is read and checked before it is accepted (right document,
 // name matches the form, Aadhaar and PAN dates of birth agree). Without a key the files are only attached.
 
 export const MANUAL_FIELDS = [...PERSONAL_FIELDS.filter((f) => f.id !== 'uan'), ...EMPLOYMENT_FIELDS];
@@ -78,13 +79,13 @@ function checkPayload(result) {
   };
 }
 
-/** Reads the document with OpenAI. Returns { result } or { unavailable } when the check itself could not run. */
+/** Scans the document. Returns { result } or { unavailable } when the check itself could not run. */
 async function checkDocument({ r, S, doc, file, values }) {
   const phase = r.phase(`Checking the ${doc.label}`, 'The document is read and compared with what you entered in the form.');
   const outcome = {};
   await r.runSteps(phase, [{
-    kind: 'api', agent: 'doc', title: `Read and check the ${doc.label}`, name: 'openai.verify_document()', live: true,
-    note: 'An OpenAI vision model reads the file: is it the right document, does the name match the joining form'
+    kind: 'api', agent: 'doc', title: `Read and check the ${doc.label}`, name: 'scanner.verify_document()', live: true,
+    note: 'The document is scanned: is it the right document, does the name match the joining form'
       + (doc.key === 'panDoc' ? ', and is the date of birth the same as on the Aadhaar card.' : '.'),
     run: async () => {
       try {
@@ -115,7 +116,7 @@ async function collectDocument({ r, S, doc, values }) {
   const cardId = r.msg('in', null, { kind: 'upload', wide: true, upload: { docKey: doc.key, label: doc.title } });
   for (;;) {
     const { file } = await r.ask({ kind: 'attach', docKey: doc.key, label: doc.label });
-    r.msg('out', null, { kind: 'file', file: { name: file.name, size: file.size } });
+    r.msg('out', null, { kind: 'file', file: fileInfo(file) });
     const problem = validateFile(file);
     if (problem) {
       r.patchMsg(cardId, { upload: { docKey: doc.key, label: doc.title, error: problem } });
@@ -151,7 +152,7 @@ async function collectDocument({ r, S, doc, values }) {
       kind: 'tool', agent: 'doc', title: 'Keep the file for the onboarding record', note: 'The file stays in this browser until the record is created, then it is uploaded with the record and attached to the ServiceNow request.', name: 'onboarding.stash()', lat: 30, live: true,
       payload: { document: doc.label, file: file.name, uploaded_when: 'the onboarding record is created' },
     }]);
-    r.patchMsg(cardId, { upload: { docKey: doc.key, label: doc.title, file: { name: file.name, size: file.size } } });
+    r.patchMsg(cardId, { upload: { docKey: doc.key, label: doc.title, file: fileInfo(file) } });
     S.files[doc.key] = file;
     return { matched };
   }

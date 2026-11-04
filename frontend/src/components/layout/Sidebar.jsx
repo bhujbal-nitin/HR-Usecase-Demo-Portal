@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useEmployees } from '../../context/EmployeesContext';
 
 const tabClass = ({ isActive }) => `sidebar-tab-btn${isActive ? ' active' : ''}`;
@@ -19,6 +20,26 @@ function Tab({ to, icon, title, subtitle, badge, featured, onNavigate, end }) {
       </div>
       {badge !== undefined && badge !== null && <span className="tab-badge">{badge}</span>}
     </NavLink>
+  );
+}
+
+/** A sidebar entry that opens and closes a list of pages under it. It starts open when one of those pages is showing. */
+function TabGroup({ icon, title, subtitle, prefix, children }) {
+  const { pathname } = useLocation();
+  const inside = pathname.startsWith(prefix);
+  const [open, setOpen] = useState(inside);
+  return (
+    <>
+      <button type="button" className={`sidebar-tab-btn sidebar-group-btn${inside ? ' active' : ''}`} onClick={() => setOpen(!open)} aria-expanded={open} title={title}>
+        <div className="tab-icon"><i className={`fa-solid ${icon}`}></i></div>
+        <div className="tab-info">
+          <span className="tab-title">{title}</span>
+          <span className="tab-subtitle">{subtitle}</span>
+        </div>
+        <i className={`fa-solid fa-chevron-down sidebar-group-chevron${open ? ' open' : ''}`} aria-hidden="true"></i>
+      </button>
+      {open && <div className="sidebar-subtabs">{children}</div>}
+    </>
   );
 }
 
@@ -63,6 +84,11 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
           onNavigate={onNavigate}
         />
 
+        <div className="sidebar-section-title">SAMPLE DATA</div>
+        <TabGroup icon="fa-file-arrow-down" title="Sample Files" subtitle="Documents & bills" prefix="/sample-files">
+          <Tab to="/sample-files/onboarding" icon="fa-user-plus" title="Onboarding" subtitle="3 people" onNavigate={onNavigate} />
+          <Tab to="/sample-files/reimbursement" icon="fa-file-invoice-dollar" title="Reimbursement" subtitle="9 sample bills" onNavigate={onNavigate} />
+        </TabGroup>
       </nav>
 
       <div className="sidebar-footer">

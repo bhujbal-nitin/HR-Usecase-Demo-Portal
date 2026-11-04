@@ -1,6 +1,6 @@
 import { getAutofillProfile } from '../../../api/system';
 import { makePan } from '../lib/identity';
-import { makeSamplePdf } from '../lib/samplePdf';
+import { aadhaarCardPdf, panCardPdf, salarySlipPdf } from '../lib/sampleIdCards';
 import { toValidAadhaar } from '../lib/verhoeff';
 
 const addDays = (days) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
@@ -52,18 +52,12 @@ export async function buildCandidate() {
     checks: {}, // filled in by the verification phases with the real results
   };
 
-  // The three documents the backend requires (the EPFO UAN card is optional and not part of this demo). All content is fictional and stamped SAMPLE.
+  // The three documents the backend requires (the EPFO UAN card is optional and not part of this demo), drawn to look like the real ones. All content is fictional.
+  const pdf = (blob, name) => new File([blob], name, { type: 'application/pdf' });
   candidate.files = {
-    idDoc: new File([makeSamplePdf('Aadhaar - sample', [
-      `Name: ${profile.fullName}`, `Date of birth: ${candidate.dobDisplay}`, `Aadhaar: XXXX XXXX ${aadhaar.slice(-4)}`, `Address: ${profile.address}`,
-    ])], 'aadhaar_sample.pdf', { type: 'application/pdf' }),
-    panDoc: new File([makeSamplePdf('PAN card - sample', [
-      `Name: ${profile.fullName}`, `Date of birth: ${candidate.dobDisplay}`, `Permanent Account Number: ${candidate.pan ?? 'SAMPLE'}`,
-    ])], 'pan_sample.pdf', { type: 'application/pdf' }),
-    salaryDoc: new File([makeSamplePdf('Salary slip (latest month) - sample', [
-      `Employee: ${profile.fullName}`, 'Month: most recent',
-      `Monthly gross: INR ${candidate.previousMonthlyGross.toLocaleString('en-IN')}`,
-    ])], 'salary_slip_sample.pdf', { type: 'application/pdf' }),
+    idDoc: pdf(aadhaarCardPdf(candidate), 'aadhaar_card.pdf'),
+    panDoc: pdf(panCardPdf(candidate), 'pan_card.pdf'),
+    salaryDoc: pdf(salarySlipPdf(candidate), 'salary_slip.pdf'),
   };
   return candidate;
 }

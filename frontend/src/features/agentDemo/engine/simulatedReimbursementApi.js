@@ -1,6 +1,6 @@
 // A stand-in for the reimbursement service calls, used by Auto-play · Simulated. The journey code is exactly the same as in the live
 // flow (see reimbursementJourney.jsx); only the calls behind it are replaced by this timed, in-memory play-through, so the flows cannot
-// drift apart. Nothing here contacts any system (the live flow reads bills with OpenAI and records the claim in OrangeHRM).
+// drift apart. Nothing here contacts any system (the live flow scans bills and records the claim in OrangeHRM).
 
 import { totalOf, withinPolicy } from '../lib/reimbursement';
 import { REIMBURSEMENT_WORKFLOWS } from './phases/reimbursementWorkflow';

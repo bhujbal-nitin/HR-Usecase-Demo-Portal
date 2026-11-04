@@ -4,6 +4,7 @@ import { formatDate, formatInr } from '../../../utils/format';
 import { RESIGNATION_FIELDS, validateResignation } from '../lib/resignation';
 import { trigger } from './phases/common';
 import { mirrorWithRerun } from './phases/mirror';
+import { askWho, loadSamples } from './leaveJourney.jsx';
 
 const { relievingLetterUrl } = realApi;
 
@@ -35,7 +36,7 @@ function describe(step) {
 }
 
 /** Phase: the employee's first message, then the question "who are you?". */
-async function greeting({ r, text }) {
+async function greeting({ r, text, samples }) {
   const phase = r.phase('Greeting and intent', 'A new thread opens. The agent greets the employee and opens the offboarding workflow.');
   await r.runSteps(phase, [
     trigger('Inbound message received', 'WhatsApp would deliver your message.', {
@@ -47,14 +48,14 @@ async function greeting({ r, text }) {
     },
   ]);
   await r.bot('Hi, I’m your offboarding assistant. If you are leaving, I’ll take care of the resignation and the formalities.');
-  await r.bot(<>First, who are you? Please type your <b>employee ID</b> (like AE-123456) or your <b>work e-mail</b>.</>, { wait: 500 });
+  await askWho(r, samples);
 }
 
 /** Ask until the backend recognises an onboarded employee. Returns the employee summary. */
-async function identify({ r, set, ask, auto, api }) {
+async function identify({ r, set, ask, auto, api, samples }) {
   set({ stage: 'identify' });
   for (;;) {
-    const { text } = await ask({ kind: 'text', suggestions: [] }, { text: auto?.employeeId });
+    const { text } = await ask({ kind: 'text', suggestions: samples }, { text: auto?.employeeId });
     r.msg('out', text);
     const phase = r.phase('Identify the employee', 'The HR records are searched for the employees onboarded through this portal.');
     let found = null;
@@ -262,9 +263,10 @@ export async function runLiveOffboarding({ r, set, auto = null, simulated = fals
 
   const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });
   r.msg('out', first.text);
-  await greeting({ r, text: first.text });
+  const samples = await loadSamples('offboarding', auto, S.api);
+  await greeting({ r, text: first.text, samples });
 
-  const employee = await identify({ r, set, ask, auto, api: S.api });
+  const employee = await identify({ r, set, ask, auto, api: S.api, samples });
   await submit({ r, S, set, employee, options, ask, auto });
   if (S.stopped) return;
   await r.phaseGap();

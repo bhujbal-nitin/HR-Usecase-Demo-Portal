@@ -1,6 +1,6 @@
 import { api } from './client';
 
-/** Is OPENAI_API_KEY set on the backend, i.e. will uploaded documents be read and checked? */
+/** Is document scanning set up on the backend, i.e. will uploaded documents be read and checked? */
 export const getVerificationStatus = () => api.get('/documents/verification');
 
 /** Run the AutomationEdge "HR Demo Document Verification" workflow; resolves when it has finished (can take a while). */

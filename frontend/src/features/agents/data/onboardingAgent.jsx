@@ -7,8 +7,8 @@ export const config = {
   catalogName: 'Onboarding',
   category: 'lifecycle',
   description:
-    'Collects candidate details and Aadhaar, EPFO and payslip documents, routes them for HR approval, then provisions ServiceNow, Active Directory, Microsoft 365, OrangeHRM and the IT laptop.',
-  tags: ['Document Verification', 'HR Approval', 'ServiceNow · AD · O365', 'OrangeHRM · Laptop'],
+    'Collects candidate details and Aadhaar, EPFO and payslip documents, routes them for HR approval, then provisions ServiceNow, Active Directory, Microsoft 365 and OrangeHRM, and raises the asset allocation request.',
+  tags: ['Document Verification', 'HR Approval', 'ServiceNow · AD · O365', 'OrangeHRM · Asset Allocation'],
   badge: 'Autonomous',
   greeting: null,
   quickPrompts: [],

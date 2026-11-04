@@ -2,6 +2,7 @@ import { checkPan, nameSimilarity } from '../../lib/identity';
 import { verhoeffValid } from '../../lib/verhoeff';
 import { maskPhone, trigger } from './common';
 import { documentWorkflowStep } from './workflowStep';
+import { fileInfo } from '../../lib/fileInfo';
 
 /** The inbound WhatsApp event for the file the candidate sent. */
 const documentEvent = (file) => ({
@@ -10,8 +11,8 @@ const documentEvent = (file) => ({
 
 /** The candidate sends the file: it shows in the chat as an attachment, and the request card above it turns to "uploaded". */
 function sendFile(r, file, uploadId, upload) {
-  r.msg('out', null, { kind: 'file', file: { name: file.name, size: file.size } });
-  r.patchMsg(uploadId, { upload: { ...upload, file: { name: file.name, size: file.size } } });
+  r.msg('out', null, { kind: 'file', file: fileInfo(file) });
+  r.patchMsg(uploadId, { upload: { ...upload, file: fileInfo(file) } });
 }
 
 /** Aadhaar: vision + OCR are simulated; the checksum and the name comparison run for real. */

@@ -5,6 +5,8 @@ const TITLES = {
   '/': 'HR AI Agents',
   '/agent-demo': 'Onboarding Agent Demo',
   '/approvals': 'Approvals & Provisioning',
+  '/sample-files/onboarding': 'Sample Files · Onboarding',
+  '/sample-files/reimbursement': 'Sample Files · Reimbursement',
 };
 
 export default function TopHeader({ onToggleSidebar, collapsed }) {
@@ -16,12 +18,20 @@ export default function TopHeader({ onToggleSidebar, collapsed }) {
   // The demo page listens for this navigation state and offers to play the onboarding journey.
   const autoFill = () => navigate('/agent-demo', { state: { autoplay: Date.now() } });
 
+  // Back goes to the previous page; if the portal was opened straight on this page there is none, so it goes to the catalog.
+  const goBack = () => (location.key === 'default' ? navigate('/') : navigate(-1));
+
   return (
     <header className="top-header">
       <div className="top-header-left">
         <button type="button" className="sidebar-toggle-btn" onClick={onToggleSidebar} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
           <i className="fa-solid fa-bars"></i>
         </button>
+        {location.pathname !== '/' && (
+          <button type="button" className="sidebar-toggle-btn" onClick={goBack} aria-label="Go back" title="Go back">
+            <i className="fa-solid fa-arrow-left"></i>
+          </button>
+        )}
         <div className="header-breadcrumbs">
           <span>HR AI Agents</span>
           <i className="fa-solid fa-chevron-right" style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}></i>

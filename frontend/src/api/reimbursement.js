@@ -6,8 +6,8 @@ const id = (claimId) => encodeURIComponent(claimId);
 export const lookupEmployee = (employeeRef) => api.get(`/reimbursement/lookup?ref=${encodeURIComponent(employeeRef)}`);
 
 /**
- * Read one bill (a PDF or a photo) with OpenAI. Nothing is saved.
- * -> { fileName, expenseType, date, amount, vendor, withinPolicy }. Rejects if OpenAI is not set up or the bill cannot be read.
+ * Scan one bill (a PDF or a photo). Nothing is saved.
+ * -> { fileName, expenseType, date, amount, vendor, withinPolicy }. Rejects if document scanning is not set up or the bill cannot be read.
  */
 export function readBill(employeeRef, file) {
   const form = new FormData();
