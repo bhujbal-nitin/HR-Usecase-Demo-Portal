@@ -6,6 +6,7 @@ import ChatForm from './ChatForm';
 import ManualForm from './ManualForm';
 import ResignationForm from './ResignationForm';
 import ReadOnlyWidget from './ReadOnlyWidget';
+import RichText from './RichText';
 import UploadCard from './UploadCard';
 
 function JoiningForm({ form }) {
@@ -75,6 +76,7 @@ export default function PhoneChat({ state, title = 'HR Assistant', initial = 'H'
       case 'manualForm': return <ManualForm form={m.form} active={awaiting?.kind === 'form'} onSubmit={(values) => onRespond({ values })} />;
       case 'resignationForm': return <ResignationForm form={m.form} active={awaiting?.kind === 'form'} onSubmit={(values) => onRespond({ values })} />;
       case 'chatForm': return <ChatForm form={m.form} active={awaiting?.kind === 'form'} onSubmit={(values) => onRespond({ values })} />;
+      case 'answer': return <RichText text={m.text} />;
       case 'file': return <FileBubble file={m.file} />;
       case 'upload': {
         const waiting = state.manual && awaiting?.kind === 'attach' && awaiting.docKey === m.upload.docKey;

@@ -9,7 +9,7 @@ import { WORKFLOW_KEYS } from '../engine/phases/mirror';
 const ONBOARDING_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Candidate', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     prov: { x: 385, y: 116, icon: 'laptop', label: 'Onboarding Agent', t: 'agent' },
     // In the order the work reaches them: the ServiceNow request is raised first, the documents are attached to it next.
     servicenow: { x: 620, y: 30, icon: 'ticket', label: 'ServiceNow', t: 'system' },
@@ -30,7 +30,7 @@ const ONBOARDING_MAP = {
 const OFFBOARDING_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     prov: { x: 385, y: 116, icon: 'laptop', label: 'Offboarding Agent', t: 'agent' },
     servicenow: { x: 620, y: 30, icon: 'ticket', label: 'ServiceNow', t: 'system' },
     ad: { x: 620, y: 74, icon: 'server', label: 'Active Directory', t: 'system' },
@@ -49,7 +49,7 @@ const OFFBOARDING_MAP = {
 const LEAVE_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     leave: { x: 385, y: 116, icon: 'users', label: 'Leave & Attendance Agent', t: 'agent' },
     ohrm: { x: 620, y: 80, icon: 'db', label: 'OrangeHRM', t: 'system' },
     mgr: { x: 620, y: 150, icon: 'user', label: 'Manager', sub: 'Approvals', t: 'person' },
@@ -62,7 +62,7 @@ const LEAVE_MAP = {
 const PAYROLL_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     pay: { x: 385, y: 116, icon: 'bank', label: 'Payroll & Salary Agent', t: 'agent' },
     ohrm: { x: 620, y: 116, icon: 'db', label: 'OrangeHRM', t: 'system' },
   },
@@ -74,7 +74,7 @@ const PAYROLL_MAP = {
 const REIMBURSEMENT_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     reimb: { x: 385, y: 116, icon: 'bank', label: 'Reimbursement & Benefits Agent', t: 'agent' },
     scan: { x: 620, y: 50, icon: 'eye', label: 'Document Scanning', sub: 'reads the bills', t: 'system' },
     ohrm: { x: 620, y: 110, icon: 'db', label: 'OrangeHRM', sub: 'Claim', t: 'system' },
@@ -87,7 +87,7 @@ const REIMBURSEMENT_MAP = {
 const HR_POLICY_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     policy: { x: 385, y: 116, icon: 'file', label: 'HR Policy & Document Agent', t: 'agent' },
     km: { x: 620, y: 80, icon: 'search', label: 'Knowledge base', sub: 'policy answers', t: 'system' },
     docs: { x: 620, y: 150, icon: 'file', label: 'HR documents', sub: 'policies and letters', t: 'system' },
@@ -103,7 +103,7 @@ function genericMap(agentId) {
     .forEach(([, spec]) => spec.systems.forEach((name) => !systems.includes(name) && systems.push(name)));
   const nodes = {
     cand: { x: 48, y: 116, icon: 'chat', label: 'User', sub: 'WhatsApp', t: 'person' },
-    orch: { x: 190, y: 116, icon: 'sparkle', label: 'Orchestrator', t: 'agent' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     spec: { x: 385, y: 76, icon: 'users', label: 'Specialist Agent', t: 'agent' },
     sys: { x: 385, y: 156, icon: 'laptop', label: 'Integration Agent', t: 'agent' },
   };

@@ -5,7 +5,7 @@ import { iconFor } from '../panel/stageSpec';
 import { toRows } from '../lib/humanize';
 
 const KIND_LABEL = { trigger: 'Trigger', agent: 'Agent', tool: 'Tool', api: 'Integration', human: 'Human', notify: 'Notify' };
-const AGENT_NAME = { orch: 'Orchestrator', doc: 'Document Agent', ver: 'Verification Agent', prov: 'Provisioning Agent', spec: 'Specialist Agent', sys: 'Integration Agent', leave: 'Leave & Attendance Agent', pay: 'Payroll & Salary Agent', reimb: 'Reimbursement & Benefits Agent', policy: 'HR Policy & Document Agent' };
+const AGENT_NAME = { orch: 'AutomationEdge Orchestrator', doc: 'Document Agent', ver: 'Verification Agent', prov: 'Provisioning Agent', spec: 'Specialist Agent', sys: 'Integration Agent', leave: 'Leave & Attendance Agent', pay: 'Payroll & Salary Agent', reimb: 'Reimbursement & Benefits Agent', policy: 'HR Policy & Document Agent' };
 const BADGE = { queued: 'Pending', running: 'Active', waiting: 'Waiting', done: 'Done', warn: 'Attention', failed: 'Failed', skipped: 'Skipped' };
 
 function Rows({ rows }) {

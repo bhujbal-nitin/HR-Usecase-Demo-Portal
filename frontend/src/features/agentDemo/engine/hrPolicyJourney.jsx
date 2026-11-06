@@ -102,7 +102,7 @@ async function answerQuestion({ r, S, question, history }) {
     await r.bot('Sorry, I could not get an answer to that right now. Please try again shortly.', { wait: 500 });
     return null;
   }
-  await r.bot(result.answer, { wait: 500 });
+  await r.bot(null, { wait: 500, kind: 'answer', text: result.answer });
   if (result.sources.length) {
     showCard(r, card('Where this comes from', 'fa-book', { label: 'Policy documents', tone: 'verified' }, result.sources.map((name) => ['Source:', name])));
   }

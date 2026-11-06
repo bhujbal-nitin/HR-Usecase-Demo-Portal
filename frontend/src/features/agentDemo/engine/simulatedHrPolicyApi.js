@@ -8,8 +8,8 @@ import { SIM_EMPLOYEE } from './simulatedOffboardingApi';
 
 // What the simulated knowledge base answers: scripted, and clearly not real policy.
 const ANSWERS = {
-  [AUTO_QUESTIONS[0]]: { answer: 'Every employee gets paid casual, sick and privilege leave each year. You apply for leave in advance and your manager approves it.', sources: ['AE Leave Policy.pdf'] },
-  [AUTO_QUESTIONS[1]]: { answer: 'Leave has to be applied for before it is taken, it needs your manager’s approval, and the balance of that leave type must cover the days you ask for.', sources: ['AE Leave Policy.pdf'] },
+  [AUTO_QUESTIONS[0]]: { answer: 'Here are the key points of the leave policy:\n\n- Every employee gets **paid casual, sick and privilege leave** each year.\n- You **apply for leave in advance**.\n- Your **manager approves** it.', sources: ['AE Leave Policy.pdf'] },
+  [AUTO_QUESTIONS[1]]: { answer: 'To take leave, three things must be true:\n\n- You **apply before** you take it.\n- Your **manager approves** it.\n- Your **balance** of that leave type covers the days you ask for.', sources: ['AE Leave Policy.pdf'] },
 };
 const FALLBACK = { answer: 'The simulated run only answers its own sample questions.', sources: [] };
 

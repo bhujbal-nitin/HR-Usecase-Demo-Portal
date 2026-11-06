@@ -73,6 +73,11 @@
 .agent-demo .ad-bubble { max-width: 84%; padding: 7px 9px 6px; border-radius: 10px; color: var(--wa-ink); font-size: 0.88rem; line-height: 1.4; overflow-wrap: anywhere; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08); }
 .agent-demo .ad-msg.in .ad-bubble { background: var(--wa-in); border-top-left-radius: 2px; }
 .agent-demo .ad-msg.out .ad-bubble { background: var(--wa-out); border-top-right-radius: 2px; }
+.agent-demo .ad-rich p { margin: 0 0 6px; }
+.agent-demo .ad-rich p.lead { font-weight: 700; }
+.agent-demo .ad-rich ul, .agent-demo .ad-rich ol { margin: 0 0 6px; padding-left: 18px; }
+.agent-demo .ad-rich li { margin: 0 0 5px; padding-left: 2px; }
+.agent-demo .ad-rich > :last-child { margin-bottom: 0; }
 .agent-demo .ad-msg.wide .ad-bubble { width: 92%; max-width: 92%; }
 .agent-demo .ad-meta { display: block; text-align: right; font-size: 0.66rem; color: var(--wa-muted); margin-top: 2px; }
 .agent-demo .ad-ticks { color: var(--wa-accent); letter-spacing: -2px; }

@@ -37,11 +37,11 @@ export function createRunner({ dispatch, isCurrent, gateRef, askRef, timing = DE
   const patchMsg = (id, patch) => dispatch({ type: 'patchMsg', id, patch });
 
   const setTyping = (typing) => dispatch({ type: 'set', patch: { typing } });
-  const bot = async (body, { wait: typingMs = 700 } = {}) => {
+  const bot = async (body, { wait: typingMs = 700, ...extra } = {}) => {
     setTyping(true);
     await sleep(typingMs);
     setTyping(false);
-    const id = msg('in', body);
+    const id = msg('in', body, extra);
     await wait(timing.messageGapMs);
     return id;
   };

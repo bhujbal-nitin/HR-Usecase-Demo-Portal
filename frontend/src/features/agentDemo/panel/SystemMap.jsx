@@ -113,7 +113,7 @@ export default function SystemMap({ config, activeNodes, usedNodes, hops, ae = n
         <text className="ad-zone" x="20" y="14">Channel</text>
         <text className="ad-zone" x="150" y="14">Orchestration</text>
         <text className="ad-zone" x="330" y="14">Agents</text>
-        <text className="ad-zone" x="650" y="11">Systems</text>
+        <text className="ad-zone" x="650" y="11">Target Systems</text>
         {staticMarkup.map(([a, b]) => (
           <path key={`${a}-${b}`} ref={(el) => { edgeEls.current[edgeKey(a, b)] = el; }} className="ad-edge" d={pathFor(nodes, a, b)} />
         ))}

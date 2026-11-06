@@ -373,7 +373,7 @@ export function Workflow({ step }) {
   if (step.status === 'running' || step.status === 'queued') {
     return (
       <div className="ad-vz ad-v-api">
-        <div className="ad-v-box"><Icon name="sparkle" size={22} /><b>Orchestrator</b><small>dispatched the step</small></div>
+        <div className="ad-v-box"><Icon name="sparkle" size={22} /><b>AutomationEdge Orchestrator</b><small>dispatched the step</small></div>
         <div className="ad-v-wire"><i className="ad-v-pk out loop"></i></div>
         <div className="ad-v-box srv"><Icon name="bolt" size={22} /><b>{run?.workflowName ?? step.title}</b><small>waiting to complete</small></div>
         <div className="ad-v-res"><span className="ad-v-big wait"><span className="ad-spinner"></span>RUNNING · {seconds}s</span><div className="ad-v-chips"><span className="ad-v-chip">Next step starts when this one succeeds</span></div></div>
