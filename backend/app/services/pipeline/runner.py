@@ -47,16 +47,24 @@ class ProvisioningRunner:
         self._intake_steps = intake_steps or INTAKE_STEPS
 
     # ---------------------------------------------------------------- intake
-    def run_intake(self, ctx: PipelineContext, *, retry: bool = False) -> Employee:
-        """ServiceNow request, then the candidate-details workflow. ``retry`` keeps steps that already succeeded."""
+    def run_intake(self, ctx: PipelineContext, *, retry: bool = False, until: str | None = None) -> Employee:
+        """ServiceNow request, then the candidate-details workflow. ``retry`` keeps steps that already succeeded.
+
+        ``until`` stops after the step with that key and leaves the candidate "awaiting documents": the request exists but the
+        rest of the chain waits for the candidate's documents (see ``OnboardingService.finish_documents``).
+        """
         employee_id = ctx.employee.id
         logger.info("Intake started for %s (%s)", ctx.employee.full_name, employee_id)
+        steps = self._intake_steps
+        if until:
+            steps = steps[: next(i for i, step in enumerate(steps) if step.key == until) + 1]
         self._repo.update(employee_id, lambda e: setattr(e, "intake_status", IntakeStatus.RUNNING))
-        failed_at = self._execute(ctx, self._intake_steps, "intake", keep_successful=retry)
+        failed_at = self._execute(ctx, steps, "intake", keep_successful=retry)
+        success = IntakeStatus.AWAITING_DOCUMENTS if until else IntakeStatus.COMPLETED
 
         def finish(employee: Employee) -> None:
             ctx.apply_to(employee)
-            employee.intake_status = IntakeStatus.FAILED if failed_at is not None else IntakeStatus.COMPLETED
+            employee.intake_status = IntakeStatus.FAILED if failed_at is not None else success
 
         return self._repo.update(employee_id, finish)
 

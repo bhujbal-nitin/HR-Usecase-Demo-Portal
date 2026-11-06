@@ -136,17 +136,7 @@ class ServiceNowClient:
             "emergency_contact": f"{emp.emergency_name} ({emp.emergency_phone})",
             "hardware": emp.hardware,
         }
-        doc_lines = "\n".join(f"  - {a.filename}" for a in attachments) or "  (none)"
-        summary = (
-            f"Candidate Details:\n"
-            f"  - Full Legal Name: {emp.full_name}\n  - Employee ID: {emp.id}\n"
-            f"  - Department: {emp.department}\n  - Designation: {emp.job_title}\n"
-            f"  - Date of Joining: {emp.start_date.isoformat()}\n  - Requested Workstation: {emp.hardware}\n"
-            f"  - Residential Address: {emp.address}\n"
-            f"  - Emergency Contact: {emp.emergency_name} ({emp.emergency_phone})\n\n"
-            f"Uploaded Verification Documents:\n{doc_lines}\n\n"
-            "HR Verification Action: review the documents and approve to proceed with provisioning."
-        )
+        summary = self._candidate_summary(emp, [a.filename for a in attachments])
 
         warnings: list[str] = []
         req_number = req_sys_id = None
@@ -201,6 +191,21 @@ class ServiceNowClient:
         # 4. Approval task for the integration user.
         self._best_effort(warnings, "create approval task", lambda: self._create_approval_task(req_sys_id, emp))
 
+        # 4b. Work note on the request and the item: who raised it and what it contains.
+        if attachments:
+            note = (
+                f"Onboarding request created from the HR Demo Portal for {emp.full_name} ({emp.id}). "
+                f"Details and {len(attachments)} verification document(s) submitted; awaiting HR verification and approval."
+            )
+        else:
+            note = (
+                f"Onboarding request created from the HR Demo Portal for {emp.full_name} ({emp.id}). "
+                "Candidate details submitted; awaiting the Aadhaar card, PAN card and latest salary slip, which will be attached to this request."
+            )
+        for table, sys_id in (("sc_request", req_sys_id), ("sc_req_item", ritm_sys_id)):
+            if sys_id:
+                self._best_effort(warnings, f"work note on {table}", lambda t=table, s=sys_id: self._add_work_note(t, s, note))
+
         # 5. Documents on both the request and the item.
         attached: list[str] = []
         for attachment in attachments:
@@ -224,6 +229,59 @@ class ServiceNowClient:
             attached=attached,
             warnings=warnings,
         )
+
+    @staticmethod
+    def _candidate_summary(emp: Employee, filenames: list[str]) -> str:
+        """The request description: the candidate's details and the documents attached so far."""
+        doc_lines = "\n".join(f"  - {name}" for name in filenames) or "  (to be attached by the candidate)"
+        return (
+            f"Candidate Details:\n"
+            f"  - Full Legal Name: {emp.full_name}\n  - Employee ID: {emp.id}\n"
+            f"  - Department: {emp.department}\n  - Designation: {emp.job_title}\n"
+            f"  - Date of Joining: {emp.start_date.isoformat()}\n  - Requested Workstation: {emp.hardware}\n"
+            f"  - Residential Address: {emp.address}\n"
+            f"  - Emergency Contact: {emp.emergency_name} ({emp.emergency_phone})\n\n"
+            f"Uploaded Verification Documents:\n{doc_lines}\n\n"
+            "HR Verification Action: review the documents and approve to proceed with provisioning."
+        )
+
+    # ---------------------------------------------------- documents after the request
+    def attach_document(self, emp: Employee, attachment: Attachment) -> list[str]:
+        """Attach one more document to the employee's existing request and item. Returns warnings (one place failed);
+        raises when it could not be attached anywhere."""
+        sn = emp.service_now
+        warnings: list[str] = []
+        attached = 0
+        for table, sys_id in (("sc_request", sn.req_sys_id), ("sc_req_item", sn.ritm_sys_id)):
+            if not sys_id:
+                continue
+            try:
+                self.attach_file(table, sys_id, attachment)
+                attached += 1
+            except IntegrationError as exc:
+                warnings.append(f"attach {attachment.filename} to {table}: {exc.message}")
+        if not attached:
+            raise IntegrationError(SYSTEM, "; ".join(warnings) or "no ServiceNow request is linked to this candidate")
+        return warnings
+
+    def add_request_note(self, emp: Employee, note: str) -> None:
+        """A work note on the request and the item (a courtesy: it never fails the caller)."""
+        sn = emp.service_now
+        for table, sys_id in (("sc_request", sn.req_sys_id), ("sc_req_item", sn.ritm_sys_id)):
+            if sys_id:
+                self._note_quietly(table, sys_id, note)
+
+    def update_request_documents(self, emp: Employee, filenames: list[str]) -> None:
+        """Keep the "Uploaded Verification Documents" list in the description up to date (best effort)."""
+        sn = emp.service_now
+        summary = self._candidate_summary(emp, filenames)
+        for table, sys_id in (("sc_request", sn.req_sys_id), ("sc_req_item", sn.ritm_sys_id)):
+            if not sys_id:
+                continue
+            try:
+                self._call("PUT", f"/api/now/table/{table}/{sys_id}", json={"description": summary})
+            except IntegrationError as exc:
+                logger.warning("ServiceNow description update on %s failed: %s", table, exc.message)
 
     def _ensure_ritm(self, req_sys_id: str, emp: Employee, summary: str, warnings: list[str]):
         ritm_number = ritm_sys_id = None
@@ -271,6 +329,9 @@ class ServiceNowClient:
             },
         )
 
+    def _add_work_note(self, table: str, sys_id: str, note: str) -> None:
+        self._call("PUT", f"/api/now/table/{table}/{sys_id}", json={"work_notes": note})
+
     @staticmethod
     def _best_effort(warnings: list[str], what: str, action) -> None:
         try:
@@ -292,6 +353,10 @@ class ServiceNowClient:
         else:
             body = {"approval": "rejected", "request_state": "closed_rejected", "stage": "closed_incomplete", "state": "4"}
         self._call("PUT", f"/api/now/table/sc_request/{req_sys_id}", json=body)
+        try:
+            self._add_work_note("sc_request", req_sys_id, comment)
+        except IntegrationError as exc:
+            logger.warning("ServiceNow work note failed: %s", exc.message)
         # Approver tasks are secondary; ServiceNow may already have closed them.
         try:
             tasks = self._call(
@@ -315,36 +380,41 @@ class ServiceNowClient:
     # --------------------------------------------------------------- incidents
     def create_incident(self, short_description: str, description: str, category: str = "inquiry") -> Incident:
         """A plain ITSM incident, used for offboarding tickets (asset return, clearances, the umbrella request)."""
-        created = self._call(
-            "POST", "/api/now/table/incident",
-            json={"short_description": short_description, "description": description, "category": category, "impact": "3", "urgency": "3"},
-            timeout=30,
+        return self._open_incident(
+            {"short_description": short_description, "description": description, "category": category, "impact": "3", "urgency": "3"}
         )
-        number, sys_id = created.get("number"), created.get("sys_id")
-        if not number or not sys_id:
-            raise IntegrationError(SYSTEM, "incident was created but ServiceNow returned no number")
-        return Incident(number=number, sys_id=sys_id, url=self.record_url("incident", sys_id))
 
     def resolve_incident(self, sys_id: str, note: str) -> None:
         self._call(
             "PUT", f"/api/now/table/incident/{sys_id}",
             json={"state": "6", "close_code": "Solved (Permanently)", "close_notes": note},
         )
+        self._note_quietly("incident", sys_id, f"Ticket resolved from the HR Demo Portal. {note}")
 
     def create_hardware_incident(self, emp: Employee, description: str, orange_emp_number: int | None) -> Incident:
         suffix = f" (OrangeHRM #{orange_emp_number})" if orange_emp_number else ""
-        created = self._call(
-            "POST", "/api/now/table/incident",
-            json={
+        return self._open_incident(
+            {
                 "short_description": f"IT Provisioning: Deploy {emp.hardware} for {emp.full_name}{suffix}",
                 "description": description,
                 "category": "Hardware",
                 "impact": "2",
                 "urgency": "2",
-            },
-            timeout=30,
+            }
         )
+
+    def _open_incident(self, body: dict) -> Incident:
+        """Create an incident and leave a work note saying the portal raised it."""
+        created = self._call("POST", "/api/now/table/incident", json=body, timeout=30)
         number, sys_id = created.get("number"), created.get("sys_id")
         if not number or not sys_id:
             raise IntegrationError(SYSTEM, "incident was created but ServiceNow returned no number")
+        self._note_quietly("incident", sys_id, f"Ticket created from the HR Demo Portal: {body['short_description']}")
         return Incident(number=number, sys_id=sys_id, url=self.record_url("incident", sys_id))
+
+    def _note_quietly(self, table: str, sys_id: str, note: str) -> None:
+        """A work note is a courtesy: if it cannot be written the ticket and the flow carry on."""
+        try:
+            self._add_work_note(table, sys_id, note)
+        except IntegrationError as exc:
+            logger.warning("ServiceNow work note on %s failed: %s", table, exc.message)

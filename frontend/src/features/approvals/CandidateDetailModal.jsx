@@ -144,7 +144,7 @@ export default function CandidateDetailModal({ employeeId, onClose, onApprove, o
                 <i className="fa-solid fa-file-pdf"></i>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <strong>{title}</strong>
-                  <div className="file-name" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{doc?.filename ?? 'Not available'}</div>
+                  <div className="file-name" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{doc?.filename ?? (employee.intakeStatus === 'awaiting_documents' ? 'Not received yet' : 'Not available')}</div>
                 </div>
                 {doc && (
                   <a className="btn btn-secondary" style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }} href={documentUrl(employee.id, key)} target="_blank" rel="noreferrer">

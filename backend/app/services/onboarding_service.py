@@ -12,7 +12,9 @@ from app.core.exceptions import (
     ValidationFailedError,
 )
 from app.repositories.employee_repository import EmployeeRepository
+from app.integrations.servicenow import Attachment
 from app.schemas.employee import (
+    DOCUMENT_KEYS,
     DOCUMENT_LABELS,
     REQUIRED_DOCUMENT_KEYS,
     CandidateCreate,
@@ -86,14 +88,98 @@ class OnboardingService:
         return employee
 
     def _run_intake(self, employee_id: str, retry: bool) -> None:
-        """ServiceNow request, then the candidate-details workflow - in order, stopping at the first failure."""
+        """ServiceNow request, then the candidate-details workflow - in order, stopping at the first failure.
+
+        A candidate whose documents are still to come (``staged_intake``) only gets the request now; the workflow follows
+        once ``finish_documents`` says every required document is in.
+        """
         snapshot = self._repo.require(employee_id)
+        until = "servicenow_request" if snapshot.staged_intake and not self._has_required_documents(snapshot) else None
         try:
-            self._runner.run_intake(PipelineContext(employee=snapshot, gateways=self._gw), retry=retry)
+            self._runner.run_intake(PipelineContext(employee=snapshot, gateways=self._gw), retry=retry, until=until)
         except Exception as exc:  # noqa: BLE001 - e.g. disk failure while saving progress
             logger.exception("Intake aborted for %s", employee_id)
             self._abort_intake(employee_id, str(exc))
             raise
+
+    @staticmethod
+    def _has_required_documents(employee: Employee) -> bool:
+        return all(key in employee.documents for key in REQUIRED_DOCUMENT_KEYS)
+
+    # --------------------------------------------- request first, documents after
+    def start(self, data: CandidateCreate) -> Employee:
+        """Register a candidate *without documents*: the ServiceNow request is raised now and the documents are attached
+        to it as they arrive (``add_document``). The wizard does not use this; it sends everything with ``submit``."""
+        employee = Employee(
+            id=self._new_id(), **data.model_dump(), staged_intake=True, intake=initial_intake(), intake_status=IntakeStatus.RUNNING,
+        )
+        self._repo.add(employee)
+        self._tasks.enqueue(f"Intake {employee.full_name}", self._run_intake, employee.id, False)
+        return employee
+
+    def add_document(self, employee_id: str, key: str, filename: str, data: bytes) -> Employee:
+        """Store one document of a candidate who is still sending them and attach it to the ServiceNow request.
+
+        A document sent again (after it failed a check) replaces the stored one; the earlier file stays on the request as
+        part of its history and the work note says it was replaced.
+        """
+        if key not in DOCUMENT_KEYS:
+            raise ValidationFailedError("Unknown document type.")
+        employee = self._require_collecting(self._repo.require(employee_id))
+        stored = self._gw.documents.save_document(employee_id, key, filename, data)
+        replaced = key in employee.documents
+
+        warnings: list[str] = []
+        names = list(employee.service_now.attached_documents)
+        sn = self._gw.servicenow
+        if employee.service_now.req_sys_id and sn.is_configured():
+            warnings = sn.attach_document(employee, Attachment(stored.filename, data, stored.content_type))
+            if stored.filename not in names:
+                names.append(stored.filename)
+            verb = "replaced by a new upload" if replaced else "received and attached"
+            sn.add_request_note(employee, f"{stored.label} {verb} ({stored.filename}).")
+            sn.update_request_documents(employee, names)
+
+        def mutate(e: Employee) -> None:
+            e.documents[key] = stored
+            e.service_now.attached_documents = names
+            if warnings:
+                e.service_now.sync_error = "; ".join(filter(None, [e.service_now.sync_error, *warnings]))
+
+        return self._repo.update(employee_id, mutate)
+
+    def note_document_check(self, employee_id: str, key: str, passed: bool, findings: list[str]) -> None:
+        """Leave the outcome of a document check as a work note on the candidate's request."""
+        employee = self._repo.get(employee_id)
+        if employee is None or not employee.staged_intake or not employee.service_now.req_sys_id or not self._gw.servicenow.is_configured():
+            return
+        label = DOCUMENT_LABELS.get(key, key)
+        text = f"{label} checked by document scanning: {'passed' if passed else 'did not pass'}."
+        if findings:
+            text += " " + "; ".join(findings)
+        self._gw.servicenow.add_request_note(employee, text)
+
+    def finish_documents(self, employee_id: str) -> Employee:
+        """Every required document is in and has passed: run the rest of the intake (the candidate-details workflow)."""
+
+        def mutate(e: Employee) -> None:
+            self._require_collecting(e)
+            missing = [DOCUMENT_LABELS[k] for k in REQUIRED_DOCUMENT_KEYS if k not in e.documents]
+            if missing:
+                raise ValidationFailedError(f"Missing required document(s): {', '.join(missing)}.")
+            e.intake_status = IntakeStatus.RUNNING
+
+        employee = self._repo.update(employee_id, mutate)
+        if employee.service_now.req_sys_id and self._gw.servicenow.is_configured():
+            self._gw.servicenow.add_request_note(employee, "All required documents received; running the candidate-details workflow.")
+        self._tasks.enqueue(f"Intake {employee.full_name}", self._run_intake, employee_id, True)
+        return employee
+
+    @staticmethod
+    def _require_collecting(employee: Employee) -> Employee:
+        if not employee.staged_intake or employee.status != EmployeeStatus.PENDING_REVIEW or employee.intake_status != IntakeStatus.AWAITING_DOCUMENTS:
+            raise ConflictError(f"{employee.full_name} is not waiting for documents.")
+        return employee
 
     def retry_intake(self, employee_id: str) -> Employee:
         """Re-run a failed intake chain. Steps that already succeeded (e.g. the ServiceNow request) are kept."""
@@ -146,6 +232,8 @@ class OnboardingService:
                 raise ConflictError(f"{e.full_name} is already {e.status.value.lower()}; nothing to approve.")
             if e.intake_status == IntakeStatus.RUNNING:
                 raise ConflictError(f"{e.full_name}: intake is still running. Wait for it to finish before approving.")
+            if e.intake_status == IntakeStatus.AWAITING_DOCUMENTS:
+                raise ConflictError(f"{e.full_name}: the documents have not all arrived yet.")
             if e.intake_status == IntakeStatus.FAILED:
                 raise ConflictError(f"{e.full_name}: intake did not complete successfully. Retry it before approving.")
             e.status = EmployeeStatus.PROCESSING

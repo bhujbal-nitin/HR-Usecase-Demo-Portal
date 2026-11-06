@@ -4,12 +4,14 @@ import { validateField, validateFile } from '../../onboarding/validation';
 import { formatFileSize } from '../../../utils/format';
 import { maskPhone, trigger } from './phases/common';
 import { documentWorkflowStep } from './phases/workflowStep';
-import { record } from './phases/record.jsx';
+import { finishIntake, openRequest } from './phases/record.jsx';
+import { attachDocumentStep } from './phases/attachDocument';
 import { setup } from './phases/setup.jsx';
 import { fileInfo } from '../lib/fileInfo';
 
 // Manual onboarding: YOU are the candidate. The chat waits for you at every step - you type, fill the form, attach
-// your own documents. The real backend then creates a record from exactly what you entered (live only).
+// your own documents. The real backend creates a record and raises the ServiceNow request from the form first (live only);
+// each document you attach is then added to that request.
 // When document scanning is set up on the backend, each document is read and checked before it is accepted (right document,
 // name matches the form, Aadhaar and PAN dates of birth agree). Without a key the files are only attached.
 
@@ -89,7 +91,7 @@ async function checkDocument({ r, S, doc, file, values }) {
       + (doc.key === 'panDoc' ? ', and is the date of birth the same as on the Aadhaar card.' : '.'),
     run: async () => {
       try {
-        outcome.result = await verifyDocument(doc.key, file, values.fullName, doc.key === 'panDoc' ? S.aadhaarDob : undefined);
+        outcome.result = await verifyDocument(doc.key, file, values.fullName, doc.key === 'panDoc' ? S.aadhaarDob : undefined, S.employeeId);
       } catch (error) {
         outcome.unavailable = error.message ?? 'The check could not run.';
         return { warn: true, payload: { Result: 'The document could not be checked automatically', Reason: outcome.unavailable } };
@@ -123,13 +125,14 @@ async function collectDocument({ r, S, doc, values }) {
       await r.bot(<>That file can’t be used: {problem} Please attach your {doc.label} again.</>, { wait: 500 });
       continue;
     }
-    const phase = r.phase(`Document received: ${doc.label}`, S.verify.enabled ? 'The file is checked, then read and compared with your form.' : 'The file is checked and attached.');
+    const phase = r.phase(`Document received: ${doc.label}`, S.verify.enabled ? 'The file is checked and attached to your request, then read and compared with your form.' : 'The file is checked and attached to your request.');
     await r.runSteps(phase, [
       trigger('Document received', 'A file arrives on the thread.', { type: 'document', document: { mime_type: file.type || 'application/octet-stream', filename: file.name }, size_kb: Math.round(file.size / 1024) }),
       {
         kind: 'tool', agent: 'doc', title: 'Check the file type and size', note: 'Only PDF and Word files up to 10 MB are accepted, like the onboarding wizard. Checked for real.', name: 'file.validate()', lat: 10, live: true,
         payload: { name: file.name, size: formatFileSize(file.size), accepted: ['.pdf', '.doc', '.docx'], result: 'accepted' },
       },
+      attachDocumentStep({ S, docKey: doc.key, label: doc.label, file, live: true }),
     ]);
 
     let matched = '';
@@ -148,18 +151,13 @@ async function collectDocument({ r, S, doc, values }) {
 
     await confirmWithWorkflow({ r, doc });
 
-    await r.runSteps(r.phase(`Keep the ${doc.label}`, 'The file is kept for the onboarding record.'), [{
-      kind: 'tool', agent: 'doc', title: 'Keep the file for the onboarding record', note: 'The file stays in this browser until the record is created, then it is uploaded with the record and attached to the ServiceNow request.', name: 'onboarding.stash()', lat: 30, live: true,
-      payload: { document: doc.label, file: file.name, uploaded_when: 'the onboarding record is created' },
-    }]);
     r.patchMsg(cardId, { upload: { docKey: doc.key, label: doc.title, file: fileInfo(file) } });
-    S.files[doc.key] = file;
     return { matched };
   }
 }
 
 export async function runManualOnboarding({ r, set }) {
-  const S = { files: {}, verify: { enabled: false } };
+  const S = { verify: { enabled: false } };
   S.verify = await getVerificationStatus().catch(() => ({ enabled: false }));
   r.msg('sys', 'Manual mode: you are the candidate. Type a message to begin. Everything you enter is real and creates a real record.');
   if (!S.verify.enabled) r.msg('sys', 'Automatic document checking is switched off, so files are only attached.');
@@ -174,18 +172,6 @@ export async function runManualOnboarding({ r, set }) {
   r.msg('out', <><b>{values.fullName}</b><br />{values.email}<br />{maskPhone(values.phone.replace(/\D/g, '').slice(-10))} · {values.jobTitle}<br />{values.department}</>);
   await r.phaseGap();
   await intake({ r, values });
-  await r.bot(<>Thanks, {values.fullName.split(/\s+/)[0]}. Your details are captured.</>);
-  await r.bot(DOCS[0].ask, { wait: 600 });
-  set({ stage: 'docs' });
-
-  for (const [index, doc] of DOCS.entries()) {
-    if (index > 0) await r.bot(doc.ask, { wait: 500 });
-    const { matched } = await collectDocument({ r, S, doc, values });
-    await r.bot(<>Got your <b>{doc.label}</b>{matched ? `: ${matched}.` : '.'}</>, { wait: 400 });
-  }
-  await r.bot('Thanks, I have all three documents.', { wait: 500 });
-  await r.bot(<>That’s everything I need. I’m <b>saving your file for HR</b> now.</>, { wait: 500 });
-  set({ stage: 'record' });
 
   const parts = values.fullName.trim().split(/\s+/);
   const D = {
@@ -198,11 +184,32 @@ export async function runManualOnboarding({ r, set }) {
     uan: '',
     annualCtc: Number(values.annualCtc),
     checks: {},
-    files: S.files,
   };
 
+  // The ServiceNow request is raised first; the documents you attach next are added to it.
+  set({ stage: 'record' });
   await r.phaseGap();
-  await record({ r, D, S, set, live: true });
+  await openRequest({
+    r, D, S, set, live: true,
+    ask: async () => {
+      await r.bot(<>Thanks, {D.first}. Your details are captured{S.requestNumber ? <>, and I have opened request <b>{S.requestNumber}</b> for your onboarding</> : null}.</>);
+      await r.bot(DOCS[0].ask, { wait: 600 });
+      set({ stage: 'docs' });
+    },
+  });
+  if (S.stopped) return;
+
+  for (const [index, doc] of DOCS.entries()) {
+    if (index > 0) await r.bot(doc.ask, { wait: 500 });
+    const { matched } = await collectDocument({ r, S, doc, values });
+    await r.bot(<>Got your <b>{doc.label}</b>{matched ? `: ${matched}.` : '.'}</>, { wait: 400 });
+  }
+  await r.bot('Thanks, I have all three documents.', { wait: 500 });
+  await r.bot(<>That’s everything I need. I’m <b>passing your file to HR</b> now.</>, { wait: 500 });
+  set({ stage: 'record' });
+
+  await r.phaseGap();
+  await finishIntake({ r, D, S, set, live: true });
   if (S.stopped) return;
   await r.phaseGap();
   await setup({ r, D, S, set, live: true });

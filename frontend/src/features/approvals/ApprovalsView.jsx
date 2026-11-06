@@ -9,6 +9,13 @@ import { useAgentDemo } from '../agentDemo/engine/AgentDemoContext';
 import { formatDate, initials } from '../../utils/format';
 import CandidateDetailModal from './CandidateDetailModal';
 
+// Why Approve is greyed out, by intake state.
+const APPROVE_BLOCKED = {
+  running: 'Intake is still running',
+  failed: 'Intake failed: open the candidate and retry it first',
+  awaiting_documents: 'The candidate is still sending documents',
+};
+
 const STATS = [
   { status: 'Pending Review', label: 'Pending Review', icon: 'fa-hourglass-half', color: 'amber' },
   { status: 'Processing Approval', label: 'Provisioning', icon: 'fa-gear', color: 'cyan' },
@@ -209,8 +216,8 @@ export default function ApprovalsView({ embedded = false }) {
                         <>
                           <button
                             type="button" className="icon-btn approve" onClick={() => openApprove(employee)}
-                            disabled={employee.intakeStatus === 'running' || employee.intakeStatus === 'failed'}
-                            title={employee.intakeStatus === 'running' ? 'Intake is still running' : employee.intakeStatus === 'failed' ? 'Intake failed: open the candidate and retry it first' : 'Approve & provision'}
+                            disabled={['running', 'failed', 'awaiting_documents'].includes(employee.intakeStatus)}
+                            title={APPROVE_BLOCKED[employee.intakeStatus] ?? 'Approve & provision'}
                             aria-label={`Approve ${employee.fullName}`}
                           >
                             <i className="fa-solid fa-check"></i>

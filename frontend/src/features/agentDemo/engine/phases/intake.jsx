@@ -36,7 +36,7 @@ export async function greeting({ r, D, S, set }) {
 }
 
 /** The candidate fills and submits the in-chat form (animated), then the form phase runs. */
-export async function joiningForm({ r, D, S, set }) {
+export async function joiningForm({ r, D, S }) {
   const display = { ...D, mobile: D.mobile };
   const values = {};
   for (const [id] of FORM_FIELDS) {
@@ -55,7 +55,7 @@ export async function joiningForm({ r, D, S, set }) {
     }),
     {
       kind: 'agent', agent: 'orch', title: 'Plan the next actions', note: 'The agent writes a short plan and moves the thread to the next state.', name: 'llm.plan()', lat: 580,
-      payload: { state_change: 'AWAITING_FORM → FORM_RECEIVED', plan: ['validate_form', 'collect_documents', 'verify_identity', 'create_onboarding_record'], on_failure: 'ask_candidate_to_correct' },
+      payload: { state_change: 'AWAITING_FORM → FORM_RECEIVED', plan: ['validate_form', 'create_onboarding_record', 'raise_servicenow_request', 'collect_documents', 'verify_identity'], on_failure: 'ask_candidate_to_correct' },
     },
     {
       kind: 'tool', agent: 'orch', title: 'Validate every field', note: 'Runs the same validation rules as the onboarding wizard, on the real values. Same input, same answer.', name: 'validators.run()', lat: 120, live: true,
@@ -68,15 +68,13 @@ export async function joiningForm({ r, D, S, set }) {
         return Object.fromEntries(Object.entries(checks).map(([k, v]) => [k, v || 'ok']));
       },
     },
-    {
-      kind: 'notify', agent: 'orch', title: 'Ask for the Aadhaar card', note: 'Sends the next request and waits for the file.', name: 'whatsapp.send_text()', lat: 160,
-      payload: { to: maskPhone(D.mobile), expects: 'image/jpeg | image/png | application/pdf', state: 'AWAITING_AADHAAR' },
-      after: async () => {
-        await r.bot(<>Thanks, {D.first}. Your details are captured.</>);
-        await r.bot(<>Next, please attach your <b>Aadhaar card</b> (PDF or Word) with the paperclip.</>, { wait: 600 });
-        D.idUploadId = r.msg('in', null, { kind: 'upload', wide: true, upload: { docKey: 'idDoc', label: 'Aadhaar card' } });
-        set({ stage: 'docs' });
-      },
-    },
   ]);
+}
+
+/** Once the request is open: thank the candidate, say which request it is and ask for the first document. */
+export async function askForAadhaar({ r, D, S, set }) {
+  await r.bot(<>Thanks, {D.first}. Your details are captured{S.requestNumber ? <>, and I have opened request <b>{S.requestNumber}</b> for your onboarding</> : null}.</>);
+  await r.bot(<>First, please attach your <b>Aadhaar card</b> (PDF or Word) with the paperclip. I will add it to the request.</>, { wait: 600 });
+  D.idUploadId = r.msg('in', null, { kind: 'upload', wide: true, upload: { docKey: 'idDoc', label: 'Aadhaar card' } });
+  set({ stage: 'docs' });
 }

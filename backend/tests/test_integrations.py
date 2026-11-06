@@ -169,6 +169,8 @@ def test_servicenow_catalog_failure_falls_back_to_table_api(monkeypatch, employe
         make_response(200, {"result": {}}),  # RITM update
         make_response(200, {"result": {}}),  # request update
         make_response(201, {"result": {}}),  # approval task
+        make_response(200, {"result": {}}),  # work note on request
+        make_response(200, {"result": {}}),  # work note on item
         make_response(201, {"result": {"sys_id": "att-1"}}),  # attach to request
         make_response(201, {"result": {"sys_id": "att-2"}}),  # attach to item
     )
@@ -176,6 +178,8 @@ def test_servicenow_catalog_failure_falls_back_to_table_api(monkeypatch, employe
     request = client.create_onboarding_request(employee, [Attachment("id.pdf", b"%PDF", "application/pdf")])
 
     assert (request.req_number, request.ritm_number) == ("REQ1", "RITM1")
+    notes = [c for c in client._session.calls if "work_notes" in str(c)]
+    assert len(notes) == 2
     assert request.req_url == "https://dev.service-now.com/nav_to.do?uri=sc_request.do?sys_id=req-sys"
     assert request.attached == ["id.pdf"]
     assert any("catalog order failed" in w for w in request.warnings)
@@ -185,3 +189,82 @@ def test_servicenow_catalog_failure_falls_back_to_table_api(monkeypatch, employe
 def test_servicenow_not_configured():
     with pytest.raises(IntegrationNotConfiguredError):
         ServiceNowClient(Settings(_env_file=None)).check_connection()
+
+
+def _incident_client(*responses):
+    settings = Settings(_env_file=None, sn_instance_url="https://dev.service-now.com/", sn_username="u", sn_password="p")
+    client = ServiceNowClient(settings)
+    client._session = ScriptedSession(*responses)
+    return client
+
+
+def test_servicenow_incident_gets_a_work_note_on_creation_and_resolution():
+    client = _incident_client(
+        make_response(201, {"result": {"number": "INC1", "sys_id": "inc-sys"}}),
+        make_response(200, {"result": {}}),  # work note: created
+        make_response(200, {"result": {}}),  # resolve
+        make_response(200, {"result": {}}),  # work note: resolved
+    )
+
+    incident = client.create_incident("Offboarding: Jane", "details")
+    client.resolve_incident(incident.sys_id, "Done")
+
+    bodies = [c[2]["json"] for c in client._session.calls]
+    assert "Ticket created from the HR Demo Portal" in bodies[1]["work_notes"]
+    assert "Ticket resolved from the HR Demo Portal. Done" in bodies[3]["work_notes"]
+
+
+def test_servicenow_incident_survives_a_failed_work_note():
+    client = _incident_client(
+        make_response(201, {"result": {"number": "INC1", "sys_id": "inc-sys"}}),
+        make_response(403, {"error": {"message": "ACL"}}),  # work note denied
+    )
+
+    assert client.create_incident("Offboarding: Jane", "details").number == "INC1"
+
+
+def _linked(employee):
+    employee.service_now.req_sys_id, employee.service_now.ritm_sys_id = "req-sys", "ritm-sys"
+    return employee
+
+
+def test_servicenow_attaches_a_later_document_to_the_request_and_the_item(employee):
+    client = _incident_client(make_response(201, {"result": {"sys_id": "a1"}}), make_response(201, {"result": {"sys_id": "a2"}}))
+
+    warnings = client.attach_document(_linked(employee), Attachment("aadhaar.pdf", b"%PDF", "application/pdf"))
+
+    assert warnings == []
+    urls = [call[1] for call in client._session.calls]
+    assert "table_name=sc_request&table_sys_id=req-sys" in urls[0]
+    assert "table_name=sc_req_item&table_sys_id=ritm-sys" in urls[1]
+
+
+def test_servicenow_attach_document_survives_one_failure_but_not_both(employee):
+    one_fails = _incident_client(make_response(201, {"result": {"sys_id": "a1"}}), make_response(403, {"error": {"message": "ACL"}}))
+    assert "sc_req_item" in one_fails.attach_document(_linked(employee), Attachment("a.pdf", b"%PDF", "application/pdf"))[0]
+
+    both_fail = _incident_client(make_response(403, {"error": {"message": "ACL"}}), make_response(403, {"error": {"message": "ACL"}}))
+    with pytest.raises(IntegrationError):
+        both_fail.attach_document(_linked(employee), Attachment("a.pdf", b"%PDF", "application/pdf"))
+
+
+def test_servicenow_request_without_documents_says_they_are_awaited(monkeypatch, employee):
+    monkeypatch.setattr("app.integrations.servicenow.time.sleep", lambda _: None)
+    client = _incident_client(
+        make_response(201, {"result": {"number": "REQ1", "sys_id": "req-sys"}}),  # sc_request
+        make_response(200, {"result": [{"number": "RITM1", "sys_id": "ritm-sys"}]}),  # RITM lookup
+        make_response(200, {"result": {}}),  # RITM update
+        make_response(200, {"result": {}}),  # request update
+        make_response(201, {"result": {}}),  # approval task
+        make_response(200, {"result": {}}),  # work note on request
+        make_response(200, {"result": {}}),  # work note on item
+    )
+    client._user_sys_id = "approver"
+
+    request = client.create_onboarding_request(employee, [])
+
+    assert request.attached == []
+    notes = [c[2]["json"]["work_notes"] for c in client._session.calls if "work_notes" in str(c[2])]
+    assert len(notes) == 2 and "awaiting the Aadhaar card" in notes[0]
+    descriptions = [c[2]["json"]["description"] for c in client._session.calls if "description" in c[2].get("json", {})]
+    assert descriptions and all("(to be attached by the candidate)" in d for d in descriptions)

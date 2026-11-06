@@ -315,11 +315,12 @@ export function Range({ step }) {
 
 export function Package({ step }) {
   const p = step.payload ?? {};
-  const docs = Object.keys(p.documents ?? {});
+  const later = typeof p.documents === 'string' ? p.documents : null; // the documents are not part of the package: they follow
+  const docs = later ? [] : Object.keys(p.documents ?? {});
   return (
     <Pipe items={[
       { icon: 'clipboard', label: 'Details', sub: `${p.fields ?? '—'} fields` },
-      { icon: 'file', label: 'Documents', sub: docs.length ? `${docs.length} files` : 'attached' },
+      { icon: 'file', label: 'Documents', sub: later ?? (docs.length ? `${docs.length} files` : 'attached') },
       { icon: 'cloud', label: 'Package', sub: 'ready to submit' },
     ]}
     />

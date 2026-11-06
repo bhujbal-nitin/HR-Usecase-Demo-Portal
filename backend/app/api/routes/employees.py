@@ -30,6 +30,17 @@ async def _read_upload(upload: UploadFile, limit: int) -> tuple[str, bytes]:
     return upload.filename or "", data
 
 
+def _text_fields(form) -> dict[str, str]:
+    return {key: value for key, value in form.items() if isinstance(value, str)}
+
+
+def _candidate(text_fields: dict[str, str]) -> CandidateCreate:
+    try:
+        return CandidateCreate.model_validate(text_fields)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
 @router.get("", response_model=list[Employee])
 def list_employees(service: OnboardingDep):
     return service.list_employees()
@@ -48,11 +59,8 @@ async def submit_candidate(request: Request, service: OnboardingDep, settings: S
         raise ValidationFailedError("The upload is too large.")
 
     form = await request.form()
-    text_fields = {key: value for key, value in form.items() if isinstance(value, str)}
-    try:
-        data = CandidateCreate.model_validate(text_fields)
-    except ValidationError as exc:
-        raise RequestValidationError(exc.errors()) from exc
+    text_fields = _text_fields(form)
+    data = _candidate(text_fields)
 
     signature = text_fields.get("signature", "")
     files = {}
@@ -61,6 +69,16 @@ async def submit_candidate(request: Request, service: OnboardingDep, settings: S
         if isinstance(upload, UploadFile) and upload.filename:
             files[key] = await _read_upload(upload, settings.max_upload_bytes)
     return service.submit(data, files, signature)
+
+
+@router.post("/start", response_model=Employee, status_code=status.HTTP_201_CREATED)
+async def start_candidate(request: Request, service: OnboardingDep):
+    """Register a candidate *without documents* (``multipart/form-data``, the same text fields as ``POST /employees``).
+
+    The ServiceNow request is raised in the background; the candidate then sends each document with
+    ``POST /employees/{id}/documents/{key}`` and finishes with ``POST /employees/{id}/finish-documents``.
+    """
+    return service.start(_candidate(_text_fields(await request.form())))
 
 
 @router.post("/sync-servicenow", response_model=list[Employee])
@@ -87,6 +105,23 @@ def approve_candidate(employee_id: str, service: OnboardingDep):
     Poll ``GET /employees/{id}`` - ``pipeline`` shows live per-step progress.
     """
     return service.start_approval(employee_id)
+
+
+@router.post("/{employee_id}/documents/{key}", response_model=Employee)
+async def add_document(employee_id: str, key: str, request: Request, service: OnboardingDep, settings: SettingsDep):
+    """Send one document (``multipart/form-data``, file field ``file``) to a candidate started with ``POST /employees/start``.
+    It is stored and attached to the candidate's ServiceNow request."""
+    upload = (await request.form()).get("file")
+    if not isinstance(upload, UploadFile) or not upload.filename:
+        raise ValidationFailedError("Attach the document.")
+    filename, data = await _read_upload(upload, settings.max_upload_bytes)
+    return service.add_document(employee_id, key, filename, data)
+
+
+@router.post("/{employee_id}/finish-documents", response_model=Employee, status_code=status.HTTP_202_ACCEPTED)
+def finish_documents(employee_id: str, service: OnboardingDep):
+    """All required documents have been sent and accepted: run the rest of the intake in the background."""
+    return service.finish_documents(employee_id)
 
 
 @router.post("/{employee_id}/retry-intake", response_model=Employee, status_code=status.HTTP_202_ACCEPTED)

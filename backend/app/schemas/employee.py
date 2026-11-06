@@ -48,6 +48,7 @@ class IntakeStatus(StrEnum):
 
     NOT_STARTED = "not_started"
     RUNNING = "running"
+    AWAITING_DOCUMENTS = "awaiting_documents"  # the ServiceNow request exists; the candidate is still sending documents
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -204,6 +205,7 @@ class Employee(CamelModel):
 
     documents: dict[str, StoredDocument] = Field(default_factory=dict)
     signature_file: str | None = None
+    staged_intake: bool = False  # request first, documents afterwards (the agent demo); the wizard sends everything at once
 
     status: EmployeeStatus = EmployeeStatus.PENDING_REVIEW
     provisioning_status: ProvisioningStatus = ProvisioningStatus.NOT_STARTED

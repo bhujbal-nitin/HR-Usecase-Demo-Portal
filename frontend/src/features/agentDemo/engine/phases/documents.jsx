@@ -3,6 +3,7 @@ import { verhoeffValid } from '../../lib/verhoeff';
 import { maskPhone, trigger } from './common';
 import { documentWorkflowStep } from './workflowStep';
 import { fileInfo } from '../../lib/fileInfo';
+import { attachDocumentStep } from './attachDocument';
 
 /** The inbound WhatsApp event for the file the candidate sent. */
 const documentEvent = (file) => ({
@@ -16,11 +17,12 @@ function sendFile(r, file, uploadId, upload) {
 }
 
 /** Aadhaar: vision + OCR are simulated; the checksum and the name comparison run for real. */
-export async function aadhaar({ r, D, set, live }) {
+export async function aadhaar({ r, D, S, set, live }) {
   sendFile(r, D.files.idDoc, D.idUploadId, { docKey: 'idDoc', label: 'Aadhaar card' });
   const phase = r.phase('Aadhaar check', 'The file is read, then its number and its details are checked against the form.');
   await r.runSteps(phase, [
     trigger('Document received', 'A file arrives. The agent does not yet know what is in it.', documentEvent(D.files.idDoc)),
+    attachDocumentStep({ S, docKey: 'idDoc', label: 'Aadhaar card', file: D.files.idDoc, live }),
     {
       kind: 'tool', agent: 'doc', title: 'Download, scan and encrypt', note: 'The file would be virus-scanned and stored encrypted with a 90-day retention rule.', name: 'media.fetch_and_store()', lat: 440,
       payload: { antivirus: 'clean', content_type: D.files.idDoc.type || 'application/pdf', storage: `s3://hr-kyc/${D.last.toUpperCase()}/doc-01.enc`, encryption: 'SSE-KMS', retention_days: 90 },
@@ -67,11 +69,12 @@ export async function aadhaar({ r, D, set, live }) {
 }
 
 /** PAN: structure check and name match run for real; the tax-database lookup is simulated. */
-export async function pan({ r, D, live }) {
+export async function pan({ r, D, S, live }) {
   sendFile(r, D.files.panDoc, D.panUploadId, { docKey: 'panDoc', label: 'PAN card' });
   const phase = r.phase('PAN check', 'Same pattern as Aadhaar: read, validate the format, then match the name and date of birth.');
   await r.runSteps(phase, [
     trigger('Document received', 'A second file arrives on the same thread.', documentEvent(D.files.panDoc)),
+    attachDocumentStep({ S, docKey: 'panDoc', label: 'PAN card', file: D.files.panDoc, live }),
     {
       kind: 'agent', agent: 'doc', title: 'Identify and read the PAN card', note: 'One vision call classifies the document and reads its fields.', name: 'llm.vision_extract()', lat: 1020,
       payload: { label: 'pan_card', confidence: 0.99, fields: { pan: D.pan, name: D.panName, father_name: D.fatherName, dob: D.dob }, quality: { blur: 'low', glare: 'none' } },
@@ -105,11 +108,12 @@ export async function pan({ r, D, live }) {
 }
 
 /** Latest salary slip. */
-export async function payslips({ r, D, live }) {
+export async function payslips({ r, D, S, live }) {
   sendFile(r, D.files.salaryDoc, D.salaryUploadId, { docKey: 'salaryDoc', label: 'latest salary slip' });
   const phase = r.phase('Salary slip check', 'The latest month’s salary slip is read and sanity-checked against the offer.');
   await r.runSteps(phase, [
     trigger('Document received', 'A PDF arrives.', documentEvent(D.files.salaryDoc)),
+    attachDocumentStep({ S, docKey: 'salaryDoc', label: 'latest salary slip', file: D.files.salaryDoc, live }),
     {
       kind: 'agent', agent: 'doc', title: 'Read the salary slip', note: 'The model extracts the pay month and gross pay from the latest slip.', name: 'llm.document_extract()', lat: 1180,
       payload: { months: 1, currency: 'INR', gross_per_month: D.previousMonthlyGross, employer: 'Previous employer (sample)' },

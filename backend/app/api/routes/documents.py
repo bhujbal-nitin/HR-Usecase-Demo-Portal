@@ -1,5 +1,6 @@
 """Document verification used by the agent demo's manual live mode."""
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
@@ -10,6 +11,7 @@ from app.core.exceptions import IntegrationNotConfiguredError, ValidationFailedE
 from app.schemas.common import CamelModel
 from app.services.document_verification_service import DocumentVerificationService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
@@ -79,9 +81,10 @@ def run_verification_workflow(container: ContainerDep, settings: SettingsDep):
 
 
 @router.post("/verify", response_model=VerificationOut)
-async def verify_document(request: Request, verifier: VerifierDep, settings: SettingsDep):
+async def verify_document(request: Request, verifier: VerifierDep, settings: SettingsDep, container: ContainerDep):
     """``multipart/form-data``: ``docKey`` (idDoc | panDoc | salaryDoc), ``file``, ``fullName`` (from the joining form)
-    and, for the PAN card, ``referenceDob`` (YYYY-MM-DD read from the Aadhaar card)."""
+    and, for the PAN card, ``referenceDob`` (YYYY-MM-DD read from the Aadhaar card). With ``employeeId`` (a candidate whose
+    ServiceNow request is already open) the outcome is also left as a work note on that request."""
     if not verifier.enabled:
         raise IntegrationNotConfiguredError("Document scanning")
     form = await request.form()
@@ -99,6 +102,13 @@ async def verify_document(request: Request, verifier: VerifierDep, settings: Set
         str(form.get("fullName", "")),
         str(form.get("referenceDob", "")) or None,
     )
+    employee_id = str(form.get("employeeId", "")).strip()
+    if employee_id:
+        findings = [c.detail or c.label for c in result.checks if not c.passed] or [c.label for c in result.checks]
+        try:
+            container.onboarding.note_document_check(employee_id, result.doc_key, result.passed, findings)
+        except Exception:  # noqa: BLE001 - the note is a courtesy; the check result is what the caller needs
+            logger.warning("Could not note the document check on the ServiceNow request", exc_info=True)
     return VerificationOut(
         doc_key=result.doc_key,
         passed=result.passed,

@@ -26,3 +26,23 @@ export function submitCandidate(values, files, signature = '') {
   if (signature) form.append('signature', signature);
   return api.post('/employees', form);
 }
+
+/**
+ * Register a candidate without documents: the backend raises the ServiceNow request now and the documents follow one by one
+ * (`attachDocument`), then `finishDocuments`. Used by the agent demo; the onboarding wizard sends everything at once with `submitCandidate`.
+ */
+export function startCandidate(values) {
+  const form = new FormData();
+  Object.entries(values).forEach(([key, value]) => form.append(key, String(value ?? '').trim()));
+  return api.post('/employees/start', form);
+}
+
+/** Send one document to a candidate started with `startCandidate`; it is attached to the candidate's ServiceNow request. */
+export function attachDocument(id, key, file) {
+  const form = new FormData();
+  form.append('file', file, file.name);
+  return api.post(`/employees/${encodeURIComponent(id)}/documents/${key}`, form);
+}
+
+/** Every required document is in and accepted: the backend runs the rest of the intake. */
+export const finishDocuments = (id) => api.post(`/employees/${encodeURIComponent(id)}/finish-documents`);
