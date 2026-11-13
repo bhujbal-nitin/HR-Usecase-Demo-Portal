@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 from app.api.routes import documents, employees, hr_policy, leave, offboardings, payroll, reimbursement, system
 from app.container import Container, build_container
@@ -18,6 +18,7 @@ from app.core.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
 FRONTEND_DIST = BACKEND_DIR.parent / "frontend" / "dist"
+FRONTEND_BASE = "/hr"  # the built portal is served here (must match `base` in frontend/vite.config.js)
 
 
 def create_app(settings: Settings | None = None, container: Container | None = None) -> FastAPI:
@@ -78,10 +79,16 @@ def _serve_built_frontend(app: FastAPI) -> None:
     index = FRONTEND_DIST / "index.html"
     root = FRONTEND_DIST.resolve()
 
-    @app.get("/{path:path}", include_in_schema=False)
+    @app.get("/", include_in_schema=False)
+    async def home() -> RedirectResponse:
+        return RedirectResponse(f"{FRONTEND_BASE}/")
+
+    @app.get(FRONTEND_BASE, include_in_schema=False)
+    async def home_no_slash() -> RedirectResponse:
+        return RedirectResponse(f"{FRONTEND_BASE}/")
+
+    @app.get(FRONTEND_BASE + "/{path:path}", include_in_schema=False)
     async def spa(path: str) -> FileResponse:
-        if path == "api" or path.startswith("api/"):
-            raise NotFoundError("Unknown API endpoint.")
         candidate = (FRONTEND_DIST / path).resolve()
         if path and candidate.is_file() and root in candidate.parents:
             return FileResponse(candidate)

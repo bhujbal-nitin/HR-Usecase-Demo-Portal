@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react';
 const backend = process.env.VITE_BACKEND_URL ?? 'http://127.0.0.1:8080';
 
 export default defineConfig({
+  base: '/hr/', // the portal lives under /hr/ (http://localhost:3000/hr/); the API stays at /api
   plugins: [react()],
   server: {
     port: 3000,

@@ -59,8 +59,8 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
   return (
     <aside className={`sidebar${open ? ' mobile-open' : ''}`} id="mainSidebar">
       <div className="sidebar-header">
-        <div className="sidebar-brand-icon app-brand-icon">
-          <i className="fa-solid fa-robot"></i>
+        <div className="sidebar-brand-icon">
+          <img src={`${import.meta.env.BASE_URL}ae-icon.png`} alt="AutomationEdge" />
         </div>
         <div className="sidebar-brand-text">
           <span className="sidebar-brand-title">HR AI Agents</span>

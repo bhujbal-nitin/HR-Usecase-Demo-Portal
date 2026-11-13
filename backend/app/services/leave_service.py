@@ -34,7 +34,7 @@ from app.schemas.leave import (
     RequestStatus,
 )
 from app.schemas.offboarding import EmployeeSummary
-from app.services.employee_directory import require_still_employed
+from app.services.employee_directory import require_still_employed, resolve_emp_number
 from app.services.leave import policy
 
 logger = logging.getLogger(__name__)
@@ -82,10 +82,8 @@ class LeaveService:
         raise NotFoundError("No employee onboarded through this portal matches that ID or e-mail address.")
 
     def _emp_number(self, employee: Employee) -> int:
-        """The employee's OrangeHRM number: recorded at onboarding, else looked up by name."""
-        if employee.orange_hrm and employee.orange_hrm.emp_number:
-            return employee.orange_hrm.emp_number
-        return self._gw.orangehrm.find_employee_number(employee.full_name)
+        """The employee's OrangeHRM number (see ``resolve_emp_number``)."""
+        return resolve_emp_number(self._employees, self._gw.orangehrm, employee)
 
     def lookup(self, ref: str) -> EmployeeSummary:
         e = self._find_employee(ref)

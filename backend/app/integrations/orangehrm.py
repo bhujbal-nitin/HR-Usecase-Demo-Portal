@@ -3,6 +3,7 @@
 import base64
 import logging
 import re
+import time
 from dataclasses import dataclass, field
 
 import requests
@@ -32,6 +33,13 @@ _CITY_STATE = {
 }
 
 
+_KNOWN_PROFILE_SECONDS = 300  # a profile seen in OrangeHRM is not asked about again for a few minutes
+
+
+class ProfileNotFound(IntegrationError):
+    """OrangeHRM has no current profile with that name (as opposed to OrangeHRM being unreachable)."""
+
+
 @dataclass
 class ProfileResult:
     info: OrangeHrmInfo
@@ -42,6 +50,7 @@ class ProfileResult:
 class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
     def __init__(self, settings: Settings):
         self._s = settings
+        self._known_profiles: dict[int, float] = {}  # empNumber -> when OrangeHRM last confirmed it
 
     @property
     def base_url(self) -> str:
@@ -215,8 +224,26 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
         return "", ""
 
     # ------------------------------------------------------------ termination
+    def employee_exists(self, emp_number: int) -> bool:
+        """Whether OrangeHRM still has this profile. A rebuilt or reset OrangeHRM no longer knows the numbers saved earlier."""
+        if time.time() - self._known_profiles.get(emp_number, 0.0) < _KNOWN_PROFILE_SECONDS:
+            return True
+        try:
+            found = bool(self._leave_call("GET", f"pim/employees/{emp_number}").get("data"))
+        except IntegrationError as exc:
+            if "HTTP 404" not in exc.message and "empNumber" not in exc.message:  # anything else (network, login) is not "missing"
+                raise
+            found = False
+        if found:
+            self._known_profiles[emp_number] = time.time()
+        else:
+            self._known_profiles.pop(emp_number, None)
+        return found
+
     def terminate_employee(self, emp_number: int | None, full_name: str, last_day: str, note: str) -> dict:
-        """End the employment in PIM (the profile stays as a past employee). ``emp_number`` may be unknown."""
+        """End the employment in PIM (the profile stays as a past employee). ``emp_number`` may be unknown or out of date."""
+        if emp_number and not self.employee_exists(emp_number):
+            emp_number = None
         session = self._login()
         if not emp_number:
             emp_number = self._find_emp_number(session, full_name)
@@ -234,7 +261,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
             parts = [item.get("firstName"), item.get("middleName"), item.get("lastName")]
             if " ".join(" ".join(p.strip() for p in parts if p and p.strip()).lower().split()) == wanted:
                 return item["empNumber"]
-        raise IntegrationError(SYSTEM, f"no OrangeHRM profile named {full_name} was found")
+        raise ProfileNotFound(SYSTEM, f"no OrangeHRM profile named {full_name} was found")
 
     def _termination_reason_id(self, session: requests.Session) -> int:
         """The id of the 'Resigned' reason (created if the instance has none with that name)."""

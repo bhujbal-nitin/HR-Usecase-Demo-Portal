@@ -154,6 +154,9 @@ class FakeOrangeHRM:
         self.asked.append(emp_number)
         return self.components
 
+    def employee_exists(self, emp_number):
+        return True
+
     def find_employee_number(self, name):
         return 55
 

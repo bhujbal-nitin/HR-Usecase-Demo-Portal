@@ -95,6 +95,9 @@ class FakeOrangeHRM:
         self.fail_times = 0
         self.calls = 0
 
+    def employee_exists(self, emp_number):
+        return True
+
     def terminate_employee(self, emp_number, name, last_day, note):
         self.calls += 1
         if self.fail_times:

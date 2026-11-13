@@ -135,6 +135,9 @@ class FakeOrangeHRM:
     def claim_url(self, claim_id):
         return f"http://hrm.example/claim/{claim_id}"
 
+    def employee_exists(self, emp_number):
+        return True
+
     def find_employee_number(self, name):
         return 55
 

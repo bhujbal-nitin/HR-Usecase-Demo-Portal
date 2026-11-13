@@ -5,11 +5,12 @@ import secrets
 from datetime import date, datetime
 from pathlib import Path
 
-from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
+from app.core.exceptions import ConflictError, IntegrationError, NotFoundError, ValidationFailedError
 from app.repositories.employee_repository import EmployeeRepository
 from app.repositories.offboarding_repository import OffboardingRepository
 from app.schemas.employee import Employee, EmployeeStatus, IntakeStatus, PipelineStep, ProvisioningStatus, StepStatus, mark_skipped_by_user, step_is_done
 from app.schemas.offboarding import EmployeeSummary, Offboarding, OffboardingStatus, ResignationCreate
+from app.services.employee_directory import resolve_emp_number
 from app.services.offboarding.steps import INTAKE_STEPS, OFFBOARDING_STEPS, OffboardingContext, OffboardingGateways, OffboardingStep
 from app.services.pipeline.attempts import StepOutcome
 from app.utils.task_queue import TaskQueue
@@ -82,6 +83,14 @@ class OffboardingService:
             job_title=employee.job_title, manager=employee.manager, work_email=self._work_email(employee),
         )
 
+    def _orangehrm_number(self, employee: Employee) -> int | None:
+        """The employee's number in the OrangeHRM running now; the saved one if OrangeHRM cannot be asked (the OrangeHRM step then reports it)."""
+        try:
+            return resolve_emp_number(self._employees, self._gw.orangehrm, employee)
+        except IntegrationError as exc:
+            logger.warning("Could not confirm the OrangeHRM profile of %s: %s", employee.id, exc)
+            return employee.orange_hrm.emp_number if employee.orange_hrm else None
+
     # ---------------------------------------------------------------- submit
     def submit(self, data: ResignationCreate) -> Offboarding:
         employee = self._find_employee(data.employee_ref)
@@ -102,7 +111,7 @@ class OffboardingService:
             manager=employee.manager,
             hardware=employee.laptop.hardware if employee.laptop and employee.laptop.hardware else employee.hardware,
             annual_ctc=employee.annual_ctc,
-            emp_number=employee.orange_hrm.emp_number if employee.orange_hrm else None,
+            emp_number=self._orangehrm_number(employee),
             user_principal_name=employee.office365.user_principal_name if employee.office365 else None,
             reason=data.reason,
             comments=data.comments,

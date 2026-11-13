@@ -96,6 +96,9 @@ class FakeOrangeHRM:
     def attendance_url(self):
         return "http://hrm.example/attendance"
 
+    def employee_exists(self, emp_number):
+        return True
+
     def find_employee_number(self, full_name):
         return 55
 
