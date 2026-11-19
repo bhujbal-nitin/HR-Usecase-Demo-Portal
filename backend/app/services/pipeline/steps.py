@@ -1,7 +1,7 @@
 """The ordered provisioning steps executed when HR approves a candidate.
 
 Order (as in the original orchestrator):
-  1. ServiceNow approval            5. OrangeHRM profile
+  1. ServiceNow approval            5. HRMS profile
   2. AutomationEdge mgmt approval   6. Laptop request + ServiceNow incident
   3. Active Directory account
   4. Microsoft 365 account
@@ -96,7 +96,7 @@ def office365(ctx: PipelineContext) -> StepOutcome:
 def orangehrm(ctx: PipelineContext) -> StepOutcome:
     attempts = Attempts()
     gw, emp = ctx.gateways, ctx.employee
-    _workflow(ctx, attempts, "T4 OrangeHRM workflow", lambda: gw.automationedge.add_emp_orangehrm(emp))
+    _workflow(ctx, attempts, "T4 HRMS workflow", lambda: gw.automationedge.add_emp_orangehrm(emp))
 
     def create_profile():
         result = gw.orangehrm.create_employee_profile(emp, ctx.effective_email, _document_payloads(ctx))
@@ -104,13 +104,13 @@ def orangehrm(ctx: PipelineContext) -> StepOutcome:
         attempts.details["notes"] = result.notes
         return result
 
-    profile = attempts.run("OrangeHRM PIM profile", create_profile)
+    profile = attempts.run("HRMS PIM profile", create_profile)
     if profile:
         ctx.orange_hrm = profile.info
         if profile.warnings:
             attempts.failed.append(f"profile created with gaps: {'; '.join(profile.warnings)}")
     number = profile.info.emp_number if profile else None
-    return attempts.outcome(f"OrangeHRM profile #{number} created with work e-mail {ctx.effective_email}")
+    return attempts.outcome(f"HRMS profile #{number} created with work e-mail {ctx.effective_email}")
 
 
 def laptop(ctx: PipelineContext) -> StepOutcome:
@@ -148,7 +148,7 @@ def _incident_description(ctx: PipelineContext) -> str:
     lines += [
         "",
         f"Corporate e-mail: {ctx.effective_email}",
-        f"OrangeHRM profile: #{ctx.orange_hrm.emp_number}" if ctx.orange_hrm else "OrangeHRM profile: not created",
+        f"HRMS profile: #{ctx.orange_hrm.emp_number}" if ctx.orange_hrm else "HRMS profile: not created",
         "",
         f"Hardware to deploy: {emp.hardware}",
         f"Delivery address: {emp.address}",
@@ -163,6 +163,6 @@ PROVISIONING_STEPS: list[Step] = [
     Step("management_approval", "Management approval workflow", "AutomationEdge", management_approval),
     Step("active_directory", "Active Directory account", "AutomationEdge", active_directory),
     Step("office365", "Microsoft 365 account", "Microsoft 365", office365),
-    Step("orangehrm", "OrangeHRM employee profile", "OrangeHRM", orangehrm),
+    Step("orangehrm", "HRMS employee profile", "HRMS", orangehrm),
     Step("laptop", "Laptop request & hardware incident", "ServiceNow", laptop),
 ]

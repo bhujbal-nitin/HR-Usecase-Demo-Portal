@@ -46,7 +46,7 @@ function DetailModal({ record, onClose, onApprove, onReject, onRecord }) {
       footer={
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
-          {needsRecording(record) && <button type="button" className="btn btn-primary" onClick={() => onRecord(record)}><i className="fa-solid fa-cloud-arrow-up"></i> Record in OrangeHRM</button>}
+          {needsRecording(record) && <button type="button" className="btn btn-primary" onClick={() => onRecord(record)}><i className="fa-solid fa-cloud-arrow-up"></i> Record in HRMS</button>}
           {pending && (
             <>
               <button type="button" className="btn btn-rose" onClick={() => onReject(record)}><i className="fa-solid fa-xmark"></i> Reject</button>
@@ -73,10 +73,10 @@ function DetailModal({ record, onClose, onApprove, onReject, onRecord }) {
       </section>
       {record.status === 'Approved' && (
         <section className="detail-section">
-          <h4><i className="fa-solid fa-database text-accent"></i> OrangeHRM</h4>
+          <h4><i className="fa-solid fa-database text-accent"></i> HRMS</h4>
           {record.applied
-            ? <p>Recorded {formatDateTime(record.appliedAt)}. {record.orangeHrmUrl && <a href={record.orangeHrmUrl} target="_blank" rel="noreferrer">Open in OrangeHRM</a>}</p>
-            : <p style={{ color: 'var(--text-muted)' }}>Approved, but not recorded in OrangeHRM yet.</p>}
+            ? <p>Recorded {formatDateTime(record.appliedAt)}. {record.orangeHrmUrl && <a href={record.orangeHrmUrl} target="_blank" rel="noreferrer">Open in HRMS</a>}</p>
+            : <p style={{ color: 'var(--text-muted)' }}>Approved, but not recorded in HRMS yet.</p>}
         </section>
       )}
       {record.decidedAt && <p style={{ color: 'var(--text-muted)' }}>Decided {formatDateTime(record.decidedAt)}.</p>}
@@ -140,10 +140,10 @@ export default function LeaveApprovals() {
   const confirmAction = async () => {
     const { kind, record } = confirm;
     if (kind === 'approve') {
-      // A demo waiting for this decision records it in OrangeHRM itself and carries on in the Agent Demo screen; otherwise record it here.
+      // A demo waiting for this decision records it in HRMS itself and carries on in the Agent Demo screen; otherwise record it here.
       if (await act(approveLeaveRequest, `${record.id} was approved.`, record.id)) {
         if (demoRunning) navigate('/agent-demo/leave_attendance');
-        else await act(applyLeaveRequest, `${record.id} was recorded in OrangeHRM.`, record.id);
+        else await act(applyLeaveRequest, `${record.id} was recorded in HRMS.`, record.id);
       }
     } else if (kind === 'reject') {
       if (await act(rejectLeaveRequest, `${record.id} was rejected.`, record.id) && demoRunning) navigate('/agent-demo/leave_attendance');
@@ -158,7 +158,7 @@ export default function LeaveApprovals() {
       <div className="dashboard-header">
         <div>
           <h2>Leave &amp; Attendance</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Review leave applications and attendance requests. Approving books the leave, or records the day’s punch-in and punch-out, in OrangeHRM.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Review leave applications and attendance requests. Approving books the leave, or records the day’s punch-in and punch-out, in HRMS.</p>
         </div>
         <div className="header-actions">
           <button type="button" className="btn btn-secondary" onClick={refresh}><i className="fa-solid fa-rotate"></i> Refresh</button>
@@ -205,7 +205,7 @@ export default function LeaveApprovals() {
                 <td className="wrap">{summaryOf(record)}<div className="candidate-email">{record.id}</div></td>
                 <td className="wrap">{record.reason}</td>
                 <td className="wrap">{record.manager}</td>
-                <td><StatusBadge status={record.status} />{needsRecording(record) && <div className="candidate-email">Not in OrangeHRM yet</div>}</td>
+                <td><StatusBadge status={record.status} />{needsRecording(record) && <div className="candidate-email">Not in HRMS yet</div>}</td>
                 <td>
                   <div className="action-btn-group" style={{ justifyContent: 'flex-end' }}>
                     <button type="button" className="icon-btn" onClick={() => setDetailId(record.id)} title="View details" aria-label={`View ${record.id}`}><i className="fa-solid fa-eye"></i></button>
@@ -229,25 +229,25 @@ export default function LeaveApprovals() {
           onClose={() => setDetailId(null)}
           onApprove={(r) => { setDetailId(null); setConfirm({ kind: 'approve', record: r }); }}
           onReject={(r) => { setDetailId(null); setConfirm({ kind: 'reject', record: r }); }}
-          onRecord={(r) => act(applyLeaveRequest, `${r.id} was recorded in OrangeHRM.`, r.id)}
+          onRecord={(r) => act(applyLeaveRequest, `${r.id} was recorded in HRMS.`, r.id)}
         />
       )}
 
       {confirm?.kind === 'approve' && (
         <ConfirmDialog title={`Approve ${confirm.record.id}?`} icon="fa-check" confirmLabel="Approve" confirmClass="btn-emerald" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
           <p>{confirm.record.fullName}: {summaryOf(confirm.record)}.</p>
-          <p>{isLeave(confirm.record) ? 'The leave is booked in OrangeHRM and deducted from their balance there.' : 'The day is recorded in OrangeHRM with the requested punch-in and punch-out, replacing any punch record it already has for that day.'}</p>
+          <p>{isLeave(confirm.record) ? 'The leave is booked in HRMS and deducted from their balance there.' : 'The day is recorded in HRMS with the requested punch-in and punch-out, replacing any punch record it already has for that day.'}</p>
         </ConfirmDialog>
       )}
       {confirm?.kind === 'reject' && (
         <ConfirmDialog title={`Reject ${confirm.record.id}?`} icon="fa-xmark" confirmLabel="Reject" confirmClass="btn-rose" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
           <p>{confirm.record.fullName}: {summaryOf(confirm.record)}.</p>
-          <p>{isLeave(confirm.record) ? 'Nothing is booked in OrangeHRM, and the days held for this request go back to their balance.' : 'Nothing is changed in OrangeHRM; their attendance for that day stays as it is.'}</p>
+          <p>{isLeave(confirm.record) ? 'Nothing is booked in HRMS, and the days held for this request go back to their balance.' : 'Nothing is changed in HRMS; their attendance for that day stays as it is.'}</p>
         </ConfirmDialog>
       )}
       {confirm?.kind === 'clear' && (
         <ConfirmDialog title="Clear decided requests?" icon="fa-broom" confirmLabel="Clear history" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
-          <p>Removes approved and rejected requests from this list. What was recorded in OrangeHRM stays there (leave already booked, attendance already recorded). Pending requests are kept.</p>
+          <p>Removes approved and rejected requests from this list. What was recorded in HRMS stays there (leave already booked, attendance already recorded). Pending requests are kept.</p>
         </ConfirmDialog>
       )}
     </>

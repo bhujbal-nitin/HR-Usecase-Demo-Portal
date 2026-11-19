@@ -183,7 +183,7 @@ export default function CandidateDetailModal({ employeeId, onClose, onApprove, o
           <Rows rows={[
             ['Corporate e-mail', office365?.userPrincipalName ? external(office365.adminUrl, office365.userPrincipalName) : '—'],
             ['Temporary password', office365?.initialPassword ? <Sensitive key="p" value={office365.initialPassword} label="temporary password" /> : office365?.alreadyExisted ? 'Account already existed' : '—'],
-            ['OrangeHRM profile', orangeHrm?.empNumber ? external(orangeHrm.profileUrl, `#${orangeHrm.empNumber}`) : '—'],
+            ['HRMS profile', orangeHrm?.empNumber ? external(orangeHrm.profileUrl, `#${orangeHrm.empNumber}`) : '—'],
             ['Laptop incident', laptop?.ticketNumber ? external(laptop.ticketUrl, laptop.ticketNumber) : '—'],
           ]} />
         </Section>

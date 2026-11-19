@@ -17,8 +17,17 @@ def liveness() -> dict[str, str]:
 
 @router.get("/integrations/health", response_model=dict[str, SystemHealth])
 def integrations_health(service: HealthDep):
-    """Live connectivity check against ServiceNow, AutomationEdge, Microsoft 365 and OrangeHRM."""
+    """Live connectivity check against all integrated enterprise systems."""
     return service.check_all()
+
+
+@router.post("/integrations/health/{system}/check", response_model=SystemHealth)
+def check_single_integration(system: str, service: HealthDep):
+    """Test connectivity for a single integration on demand."""
+    health = service.check_one(system)
+    if health is None:
+        raise NotFoundError(f"Integration '{system}' was not found.")
+    return health
 
 
 @router.get("/autofill", response_model=AutofillProfile)

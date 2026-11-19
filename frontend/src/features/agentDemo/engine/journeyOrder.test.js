@@ -8,14 +8,14 @@ const { runJourney } = await import('./index');
 const { CANCELLED, createRunner } = await import('./runner');
 
 /** Plays the simulated onboarding journey instantly and records the phases and steps in the order they appear. */
-async function playSimulated() {
+async function playSimulated({ untilReview = true } = {}) {
   const phases = [];
   const steps = [];
   let stopped = false;
   const dispatch = (action) => {
     if (action.type === 'phase') phases.push(action.phase.title);
     if (action.type === 'step') steps.push(action.step.title);
-    if (action.type === 'set' && action.patch.stage === 'review') stopped = true; // the file is with HR: the approval part is not part of this check
+    if (untilReview && action.type === 'set' && action.patch.stage === 'review') stopped = true; // the file is with HR: the approval part is not part of this check
   };
   const r = createRunner({
     dispatch, isCurrent: () => !stopped, gateRef: { current: null }, askRef: { current: null },
@@ -49,6 +49,27 @@ describe('the onboarding journey order', () => {
     ]);
     expect(raised).toBeLessThan(steps.indexOf(attached[0]));
     expect(steps.indexOf('Run the candidate-details workflow')).toBeGreaterThan(steps.indexOf(attached[2]));
+    expect(S.requestNumber).toBe('REQ0010001');
+  });
+});
+
+describe('the simulated onboarding follows the live run', () => {
+  it('verifies each document with the AutomationEdge workflow, then sets up the same six things in the same order as live', async () => {
+    const { steps, S } = await playSimulated({ untilReview: false });
+
+    // After each of the three documents, as in the live run.
+    expect(steps.filter((s) => s === 'Run the document verification workflow')).toHaveLength(3);
+
+    const after = steps.slice(steps.indexOf('HR approval') + 1);
+    expect(after.slice(0, 6)).toEqual([
+      'ServiceNow request approval',
+      'Management approval workflow',
+      'Active Directory account',
+      'Microsoft 365 account',
+      'HRMS employee profile',
+      'Asset allocation request',
+    ]);
+    expect(steps).toContain('Decide: route to HR approval');
     expect(S.requestNumber).toBe('REQ0010001');
   });
 });

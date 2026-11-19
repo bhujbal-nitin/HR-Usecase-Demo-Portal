@@ -1,6 +1,6 @@
 """In-process background task queue with status tracking.
 
-Used to run long provisioning jobs (minutes of RPA polling) off the request
+Used to run long provisioning jobs (minutes of APA polling) off the request
 thread. Tasks are NOT retried automatically by default: provisioning steps
 create real records in external systems, so a blind retry could duplicate them.
 """

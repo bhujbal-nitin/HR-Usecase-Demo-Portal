@@ -7,7 +7,7 @@ export const config = {
   category: 'lifecycle',
   description:
     'Processes resignations, conducts multi-department clearance across IT/Finance, revokes Active Directory access, and generates relieving letters.',
-  tags: ['Resignation Intake', 'Exit Approval', 'AD · O365 Access Removal', 'OrangeHRM Termination', 'Asset Return · Clearances', 'Settlement · Relieving Letter'],
+  tags: ['Resignation Intake', 'Exit Approval', 'AD · O365 Access Removal', 'HRMS Termination', 'Asset Return · Clearances', 'Settlement · Relieving Letter'],
   badge: 'Autonomous',
   greeting: (
     <>
@@ -30,7 +30,7 @@ export function respond(action) {
         text: (
           <>
             📝 <strong>Resignation Notice Workflow</strong>
-            <br />I can help submit your resignation to OrangeHRMS and initiate notice period tracking.
+            <br />I can help submit your resignation to HRMSS and initiate notice period tracking.
           </>
         ),
         widget: {
@@ -50,10 +50,10 @@ export function respond(action) {
               variant: 'emerald',
               effect: {
                 process: 'offboarding.submit_resignation',
-                toast: ['🚪 Resignation notice logged in OrangeHRMS and manager notified!', 'success'],
+                toast: ['🚪 Resignation notice logged in HRMSS and manager notified!', 'success'],
                 reply: (
                   <>
-                    ✅ <strong>Resignation Recorded in OrangeHRMS!</strong>
+                    ✅ <strong>Resignation Recorded in HRMSS!</strong>
                     <br />Manager approval request sent to Michael Torres. Last working day marked as November 20, 2026.
                   </>
                 ),

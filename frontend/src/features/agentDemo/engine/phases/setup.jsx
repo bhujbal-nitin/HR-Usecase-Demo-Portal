@@ -16,21 +16,29 @@ async function waitForHrDecision(r, employeeId) {
   }
 }
 
-/** Scripted provisioning for simulated mode. */
-const simulatedProvisioning = (D) => [
-  {
-    kind: 'tool', agent: 'orch', title: 'Record the document checks', note: 'Simulated: updates the HR record so payroll and IT can proceed.', name: 'hrms.update_status()', lat: 380,
-    payload: { request: 'PATCH /api/v2/pim/employees/AE-DEMO', body: { documentChecks: 'PASSED', status: 'READY_TO_JOIN' }, response: { status: 200 } },
-  },
-  {
-    kind: 'tool', agent: 'prov', title: 'Create the work account', note: 'Simulated: account created now, enabled on the joining date.', name: 'directory.create_user()', lat: 720,
-    payload: { upn: `${D.first}.${D.last}@acme.example`.toLowerCase(), groups: [D.department, 'All-Staff'], enabled_from: D.startDate, mfa: 'enrol on first sign-in' },
-  },
-  {
-    kind: 'tool', agent: 'prov', title: 'Asset allocation request', note: 'Simulated: raises a request with the right model for the role.', name: 'itsm.create_request()', lat: 610,
-    payload: { catalog_item: D.hardware, ship_to: 'Office reception', deliver_by: D.startDate, ticket: 'REQ-30918' },
-  },
-];
+/** One AutomationEdge workflow's scripted answer, shaped like the live one. */
+const workflow = (workflowName) => [{ workflowName, status: 'Complete', message: `${workflowName} completed` }];
+
+/** Scripted provisioning for simulated mode: the same six steps, in the same order, as the real run (see the backend's PROVISIONING_STEPS). */
+const simulatedProvisioning = (D, S) => {
+  const upn = `${D.first}.${D.last}@acme.example`.toLowerCase();
+  const request = S.requestNumber ?? 'REQ0010001';
+  const step = (key, title, system, lat, workflowName, details) => ({
+    kind: 'api', agent: 'prov', title, name: key, lat,
+    note: workflowName
+      ? 'Simulated: an AutomationEdge workflow performs this step. The next step starts only after the workflow is Complete.'
+      : `Simulated: ${system}: the next step starts only after this one succeeds.`,
+    payload: { status: 'success', ...(workflowName ? { automationEdge: workflow(workflowName) } : {}), ...details },
+  });
+  return [
+    step('servicenow_approval', 'ServiceNow request approval', 'ServiceNow', 610, null, { message: `Request ${request} approved`, request, approval: 'Approved' }),
+    step('management_approval', 'Management approval workflow', 'AutomationEdge', 840, 'HR Demo Management Approval', { message: 'Management approval workflow completed' }),
+    step('active_directory', 'Active Directory account', 'AutomationEdge', 720, 'HR Demo AD user creation and Assign role', { message: 'Active Directory account workflow completed', groups: [D.department, 'All-Staff'], enabled_from: D.startDate }),
+    step('office365', 'Microsoft 365 account', 'Microsoft 365', 780, 'HR Demo O365 User Creation', { message: `Microsoft 365 account ready: ${upn}`, userPrincipalName: upn, displayName: D.fullName }),
+    step('orangehrm', 'HRMS employee profile', 'HRMS', 690, 'HR Demo Add emp HRMS', { message: `HRMS profile created with work e-mail ${upn}`, empNumber: 'AE-DEMO' }),
+    step('laptop', 'Asset allocation request', 'ServiceNow', 640, 'HR Demo Create Laptop Request', { message: 'Asset requested', incident: 'REQ-30918', hardware: D.hardware }),
+  ];
+};
 
 /** Phase 7: decision, human approval gate, provisioning (real or scripted), buddy, welcome. */
 export async function setup({ r, D, S, set, live }) {
@@ -41,7 +49,7 @@ export async function setup({ r, D, S, set, live }) {
 
   await r.runSteps(phase, [
     {
-      kind: 'agent', agent: 'orch', title: live ? 'Decide: route to HR approval' : 'Decide: approve or escalate', note: 'The agent weighs every check from the previous phases against the written KYC policy. The inputs are the real results computed above.', name: 'policy.evaluate()', lat: 560, live: true,
+      kind: 'agent', agent: 'orch', title: 'Decide: route to HR approval', note: 'The agent weighs every check from the previous phases against the written KYC policy. The inputs are the real results computed above.', name: 'policy.evaluate()', lat: 560, live: true,
       payload: () => {
         const checks = D.checks;
         const failed = Object.entries({ aadhaar_checksum: checks.verhoeff, pan_format: checks.pan, payslips: checks.payslips }).filter(([, ok]) => ok === false).map(([k]) => k);
@@ -50,7 +58,7 @@ export async function setup({ r, D, S, set, live }) {
           policy: 'kyc-onboarding-v3',
           documents_received: Object.keys(D.files ?? {}), signals: { aadhaar_checksum: checks.verhoeff, aadhaar_name_similarity: checks.aadhaarName, pan_format: checks.pan, pan_name_similarity: checks.panName, payslips: checks.payslips },
           failed_checks: failed, risk_score: risk, auto_approve_below: 0.15,
-          decision: live ? 'ROUTE_TO_HR_APPROVAL' : risk < 0.15 ? 'AUTO_APPROVE' : 'ESCALATE',
+          decision: 'ROUTE_TO_HR_APPROVAL', // simulated or live, the file always goes to HR next
         };
       },
     },
@@ -58,7 +66,7 @@ export async function setup({ r, D, S, set, live }) {
       kind: 'human', agent: 'orch', title: 'HR approval', note: 'Creating accounts is not reversible from this screen, so the agent waits for HR. HR approves the request on the Approvals page; the run continues as soon as it is approved.', name: 'hr.approve()', live: true,
       run: async ({ patch }) => {
         set({ stage: 'review' });
-        patch({ awaitHr: true, payload: { waiting_for: 'HR, on the Approvals page', candidate: S.employeeId, on_approve: 'ServiceNow → AutomationEdge → Active Directory → Microsoft 365 → OrangeHRM → laptop' } });
+        patch({ awaitHr: true, payload: { waiting_for: 'HR, on the Approvals page', candidate: S.employeeId, on_approve: 'ServiceNow → AutomationEdge → Active Directory → Microsoft 365 → HRMS → laptop' } });
         const decision = await waitForHrDecision(r, S.employeeId);
         patch({ awaitHr: false });
         if (decision === 'rejected') {
@@ -113,7 +121,7 @@ export async function setup({ r, D, S, set, live }) {
       return;
     }
   } else {
-    await r.runSteps(phase, simulatedProvisioning(D));
+    await r.runSteps(phase, simulatedProvisioning(D, S));
   }
 
   const upn = employee ? employee.office365?.userPrincipalName : `${D.first}.${D.last}@acme.example`.toLowerCase();

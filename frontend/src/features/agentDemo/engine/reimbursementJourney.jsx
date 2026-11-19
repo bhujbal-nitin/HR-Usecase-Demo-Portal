@@ -10,10 +10,10 @@ import { fileInfo } from '../lib/fileInfo';
 // Reimbursement & benefits. Manual: YOU are the employee and the chat waits for you at every step (you upload your own bills).
 // Auto-play: the same journey with three sample bills uploaded for you. Live: each bill is scanned (category, date, amount,
 // vendor), bills of every kind go into the claim (Travel and Food are within the company policy, a hint), the manager approves or rejects
-// each bill on the Approvals page (Reimbursement tab), and the approved bills are then recorded in OrangeHRM (Claim). Auto-play · Simulated: the very same journey runs against
+// each bill on the Approvals page (Reimbursement tab), and the approved bills are then recorded in HRMS (Claim). Auto-play · Simulated Environment: the very same journey runs against
 // simulatedReimbursementApi, so the flows cannot drift apart; its steps are tagged Simulated.
 // Four AutomationEdge showcase workflows run, each right AFTER the step it stands for, and the chat goes on once it is Complete: Read Bill and
-// Check Reimbursement Policy once after all the bills, Submit Expense Claim after the claim is saved, Create Claim OrangeHRM after the recording.
+// Check Reimbursement Policy once after all the bills, Submit Expense Claim after the claim is saved, Create Claim HRMS after the recording.
 
 const money = (amount) => formatInr(amount);
 const MORE_LABEL = 'Add another bill';
@@ -110,7 +110,7 @@ async function showClaim(r, bills) {
   }
 }
 
-/** The expense claim: upload bills one after another, see the two tables, submit for approval, get it recorded in OrangeHRM. */
+/** The expense claim: upload bills one after another, see the two tables, submit for approval, get it recorded in HRMS. */
 async function expenseClaim({ r, S, set, ask, auto, employee, samples }) {
   await r.bot('Sure. Please upload your bills one at a time, as a PDF or a photo. I’ll read each one.', { wait: 500 });
   const bills = [];
@@ -159,7 +159,7 @@ async function expenseClaim({ r, S, set, ask, auto, employee, samples }) {
   const submit = r.phase('Send for approval', 'The claim is saved and goes to the manager.');
   await r.runSteps(submit, [{
     kind: 'api', agent: 'reimb', title: 'Submit the claim', name: 'POST /api/reimbursement/claims', live: !S.api.simulated, noSkip: true,
-    note: 'Saves the claim with every bill. The manager approves or rejects each bill; the approved ones are recorded in OrangeHRM.',
+    note: 'Saves the claim with every bill. The manager approves or rejects each bill; the approved ones are recorded in HRMS.',
     run: async () => {
       claim = await S.api.submitClaim({ employeeRef: employee.employeeId, items: bills });
       if (!S.api.simulated) set({ runRecord: { kind: 'reimbursement', id: claim.id } }); // lets the header open what this run created
@@ -179,14 +179,14 @@ async function expenseClaim({ r, S, set, ask, auto, employee, samples }) {
   await r.phaseGap();
 
   let approved = claim;
-  const apply = r.phase('Apply the decision', 'The approved claim is recorded in OrangeHRM (Claim).');
+  const apply = r.phase('Apply the decision', 'The approved claim is recorded in HRMS (Claim).');
   await r.runSteps(apply, [
     {
-      kind: 'api', agent: 'reimb', title: 'Record the claim in OrangeHRM', name: 'orangehrm.record_claim()', live: !S.api.simulated,
-      note: 'Creates the claim for the employee in OrangeHRM with the approved bills as expenses (in INR) and submits it. The claim event and the expense types are created there if they are missing.',
+      kind: 'api', agent: 'reimb', title: 'Record the claim in HRMS', name: 'orangehrm.record_claim()', live: !S.api.simulated,
+      note: 'Creates the claim for the employee in HRMS with the approved bills as expenses (in INR) and submits it. The claim event and the expense types are created there if they are missing.',
       run: async () => {
         approved = await S.api.applyClaim(claim.id);
-        return { payload: { reference: approved.id, status: 'Recorded in OrangeHRM', orangeHrmClaim: approved.orangeHrmId, expenses: approved.items.filter((b) => b.approved).length, amount: money(approved.approvedTotal) } };
+        return { payload: { reference: approved.id, status: 'Recorded in HRMS', orangeHrmClaim: approved.orangeHrmId, expenses: approved.items.filter((b) => b.approved).length, amount: money(approved.approvedTotal) } };
       },
     },
     reimbursementWorkflowStep(S, 'create-claim'),
@@ -208,7 +208,7 @@ async function expenseClaim({ r, S, set, ask, auto, employee, samples }) {
           ...yes.map((b) => [`Approved · ${b.expenseType}:`, `${money(b.amount)} · ${b.vendor}`]),
           ...no.map((b) => [`Not approved · ${b.expenseType}:`, `${money(b.amount)} · ${b.vendor}`]),
           { cells: ['Approved amount:', <strong key="a">{money(approved.approvedTotal)}</strong>], emphasis: 'total' },
-          ['Recorded in OrangeHRM:', approved.orangeHrmId ? `Claim #${approved.orangeHrmId}` : '—'],
+          ['Recorded in HRMS:', approved.orangeHrmId ? `Claim #${approved.orangeHrmId}` : '—'],
           ['Decided by:', approved.manager],
         ]));
       },
@@ -222,10 +222,10 @@ export async function runReimbursement({ r, set, auto = null, simulated = false 
   const S = { api: simulated ? createSimulatedReimbursementApi(r.timing.stepScale, samples) : realApi, stopped: false };
   const ask = makeAsk(r, auto);
   r.msg('sys', simulated
-    ? 'Auto-play · Simulated: this uploads three sample bills for a sample employee. Nothing is contacted or saved anywhere.'
+    ? 'Auto-play · Simulated Environment: this uploads three sample bills for a sample employee. Nothing is contacted or saved anywhere.'
     : auto
-    ? 'Auto-play · Live: this uploads three sample bills for the employee you chose. It is real: the bills are scanned and, after the manager decides on the Approvals page, the approved bills are recorded in OrangeHRM.'
-    : 'Manual mode: you are the employee. Type a message to begin. It is real: your bills are scanned and, after the manager decides on the Approvals page, the approved bills are recorded in OrangeHRM.');
+    ? 'Auto-play · Live: this uploads three sample bills for the employee you chose. It is real: the bills are scanned and, after the manager decides on the Approvals page, the approved bills are recorded in HRMS.'
+    : 'Manual mode: you are the employee. Type a message to begin. It is real: your bills are scanned and, after the manager decides on the Approvals page, the approved bills are recorded in HRMS.');
   set({ stage: 'idle' });
 
   const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });

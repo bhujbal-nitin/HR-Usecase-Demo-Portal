@@ -2,9 +2,11 @@ import { useSearchParams } from 'react-router-dom';
 import ApprovalsView from './ApprovalsView';
 import LeaveApprovals from './LeaveApprovals';
 import OffboardingApprovals from './OffboardingApprovals';
+import PreOnboardingApprovals from './PreOnboardingApprovals';
 import ReimbursementApprovals from './ReimbursementApprovals';
 
 const TABS = [
+  { id: 'pre-onboarding', label: 'Pre-Onboarding', icon: 'fa-file-circle-check' },
   { id: 'onboarding', label: 'Onboarding', icon: 'fa-user-plus' },
   { id: 'offboarding', label: 'Offboarding', icon: 'fa-door-open' },
   { id: 'leave', label: 'Leave & Attendance', icon: 'fa-umbrella-beach' },
@@ -30,7 +32,7 @@ export default function ApprovalsPage() {
           </button>
         ))}
       </div>
-      {tab === 'leave' ? <LeaveApprovals /> : tab === 'reimbursement' ? <ReimbursementApprovals /> : tab === 'offboarding' ? <OffboardingApprovals /> : <ApprovalsView embedded />}
+      {tab === 'pre-onboarding' ? <PreOnboardingApprovals /> : tab === 'leave' ? <LeaveApprovals /> : tab === 'reimbursement' ? <ReimbursementApprovals /> : tab === 'offboarding' ? <OffboardingApprovals /> : <ApprovalsView embedded />}
     </section>
   );
 }

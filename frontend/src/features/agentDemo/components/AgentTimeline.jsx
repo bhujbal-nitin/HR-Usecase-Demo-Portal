@@ -104,37 +104,42 @@ export default function AgentTimeline({ state, onGate, agentId: agent = 'onboard
           <div className="ad-outcome">
             {agentId === 'offboarding-live' ? (
               <>
-                <h3>{state.mode === 'live' ? 'Offboarding complete' : 'Offboarding complete (simulated)'}</h3>
+                <h3>{state.mode === 'live' ? 'Offboarding complete' : 'Offboarding complete (Simulated Environment)'}</h3>
                 <p>Every offboarding step finished: the connected systems were updated, the settlement was calculated and the relieving letter was prepared{state.stats.human ? ', with one human approval.' : '.'}</p>
+              </>
+            ) : agentId === 'pre_onboarding' ? (
+              <>
+                <h3>{state.mode === 'live' ? 'Pre-onboarding handled' : 'Pre-onboarding handled (Simulated Environment)'}</h3>
+                <p>The offer was released and accepted, the candidate's seven documents were read and checked, the names were compared, a background verification ran, HR approved{state.stats.human ? ` (${state.stats.human} human approval${state.stats.human === 1 ? '' : 's'})` : ''}, the joining instructions were e-mailed and the pre-onboarding was completed. {state.mode === 'live' ? 'The ServiceNow request was raised and closed.' : 'Nothing was contacted, saved or sent.'}</p>
               </>
             ) : agentId === 'hr_policy' ? (
               <>
-                <h3>{state.mode === 'live' ? 'Policy question and letters handled' : 'Policy question and letters handled (simulated)'}</h3>
+                <h3>{state.mode === 'live' ? 'Policy question and letters handled' : 'Policy question and letters handled (Simulated Environment)'}</h3>
                 <p>A policy was chosen and downloaded, the employee's policy question and follow-up were answered from the policy documents, and both letters were made for the employee as Word files. {state.mode === 'live' ? 'Nothing was changed in any system.' : 'Nothing was contacted or saved anywhere.'}</p>
               </>
             ) : agentId === 'reimbursement_benefits' ? (
               <>
-                <h3>{state.mode === 'live' ? 'Expense claim handled' : 'Expense claim handled (simulated)'}</h3>
-                <p>The employee's bills were read, checked against the policy and sent to the manager, who decided each bill{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'The approved bills were recorded in OrangeHRM.' : 'Nothing was saved anywhere.'}</p>
+                <h3>{state.mode === 'live' ? 'Expense claim handled' : 'Expense claim handled (Simulated Environment)'}</h3>
+                <p>The employee's bills were read, checked against the policy and sent to the manager, who decided each bill{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'The approved bills were recorded in HRMS.' : 'Nothing was saved anywhere.'}</p>
               </>
             ) : agentId === 'payroll_salary' ? (
               <>
-                <h3>{state.mode === 'live' ? 'Payroll & salary handled' : 'Payroll & salary handled (simulated)'}</h3>
-                <p>The employee's payslip, CTC statement and Form 16 were made for download in one chat. {state.mode === 'live' ? 'The salary was read from OrangeHRM and nothing was changed there.' : 'Nothing was contacted or saved anywhere.'}</p>
+                <h3>{state.mode === 'live' ? 'Payroll & salary handled' : 'Payroll & salary handled (Simulated Environment)'}</h3>
+                <p>The employee's payslip, CTC statement and Form 16 were made for download in one chat. {state.mode === 'live' ? 'The salary was read from HRMS and nothing was changed there.' : 'Nothing was contacted or saved anywhere.'}</p>
               </>
             ) : agentId === 'leave_attendance' ? (
               <>
-                <h3>{state.mode === 'live' ? 'Leave & attendance handled' : 'Leave & attendance handled (simulated)'}</h3>
-                <p>The employee's balance, leave request and attendance request were handled in one chat{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'Approved requests were recorded in OrangeHRM.' : 'Nothing was saved anywhere.'}</p>
+                <h3>{state.mode === 'live' ? 'Leave & attendance handled' : 'Leave & attendance handled (Simulated Environment)'}</h3>
+                <p>The employee's balance, leave request and attendance request were handled in one chat{state.stats.human ? `, with ${state.stats.human} manager approval${state.stats.human === 1 ? '' : 's'}` : ''}. {state.mode === 'live' ? 'Approved requests were recorded in HRMS.' : 'Nothing was saved anywhere.'}</p>
               </>
             ) : agentName === 'Onboarding' ? (
               <>
-                <h3>{state.mode === 'live' ? 'Candidate onboarded' : 'Candidate verified and set up (simulated)'}</h3>
+                <h3>{state.mode === 'live' ? 'Candidate onboarded' : 'Candidate verified and set up (Simulated Environment)'}</h3>
                 <p>Three documents checked (Aadhaar, PAN, salary slip) and Day 1 arranged from one WhatsApp conversation{state.stats.human ? ', with one human approval.' : ', with no work for HR.'}</p>
               </>
             ) : (
               <>
-                <h3>{agentName} demo complete (simulated)</h3>
+                <h3>{agentName} demo complete (Simulated Environment)</h3>
                 <p>The scripted conversation finished. No real system was contacted.</p>
               </>
             )}

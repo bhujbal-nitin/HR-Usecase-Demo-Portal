@@ -270,7 +270,7 @@ export default function OffboardingApprovals() {
             <li>AutomationEdge exit approval</li>
             <li>Active Directory account disabled</li>
             <li>Microsoft 365 sign-in blocked and licences removed</li>
-            <li>OrangeHRM employment ended</li>
+            <li>HRMS employment ended</li>
             <li>Asset return and clearance tickets</li>
             <li>Final settlement and the relieving letter</li>
           </ol>

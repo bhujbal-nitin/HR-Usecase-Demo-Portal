@@ -3,7 +3,7 @@ import { getIntegrationHealth } from '../api/system';
 
 const REFRESH_MS = 60000;
 
-/** Live status of ServiceNow / AutomationEdge / Microsoft 365 / OrangeHRM (null until first answer). */
+/** Live status of ServiceNow / AutomationEdge / Microsoft 365 / HRMS (null until first answer). */
 export function useIntegrationHealth() {
   const [health, setHealth] = useState(null);
   const [backendUp, setBackendUp] = useState(true);

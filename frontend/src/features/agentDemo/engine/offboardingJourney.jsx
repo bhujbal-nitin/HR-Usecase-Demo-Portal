@@ -8,10 +8,10 @@ import { askWho, loadSamples } from './leaveJourney.jsx';
 
 const { relievingLetterUrl } = realApi;
 
-// Offboarding. Live: the calls are real. Simulated (Auto-play · Simulated): the very same journey runs against
+// Offboarding. Live: the calls are real. Simulated (Auto-play · Simulated Environment): the very same journey runs against
 // simulatedOffboardingApi, so both flows stay identical and the simulated steps are tagged Simulated. Manual: YOU are the employee leaving and the chat waits for you at every step. Auto-play: the same
 // journey with the chosen employee's answers filled in for you. Either way the backend does the real work: AutomationEdge
-// workflows, then its own calls to ServiceNow, Microsoft 365, OrangeHRM and e-mail, one step after another.
+// workflows, then its own calls to ServiceNow, Microsoft 365, HRMS and e-mail, one step after another.
 
 /** Manual: wait for the person. Auto-play: wait a moment, then answer with the scripted value. */
 const makeAsk = (r, auto) => (awaiting, scripted) => (auto ? r.sleep(900).then(() => scripted) : r.ask(awaiting));
@@ -236,7 +236,7 @@ async function farewell({ r, S, set }) {
           <ul className="cl">
             <li><span>Last working day</span><b>{formatDate(record.lastWorkingDay)}</b></li>
             <li><span>Microsoft 365</span><b>{outcomeOf('o365_block', 'Sign-in blocked')}</b></li>
-            <li><span>OrangeHRM</span><b>{outcomeOf('hrm_terminate', 'Employment ended')}</b></li>
+            <li><span>HRMS</span><b>{outcomeOf('hrm_terminate', 'Employment ended')}</b></li>
             <li><span>Laptop</span><b>{outcomeOf('asset_return', 'Return ticket raised')}</b></li>
             {settlement && <li><span>Settlement (estimate)</span><b>{formatInr(settlement.netPayable)}</b></li>}
             {letter?.filename && <li><span>Relieving letter</span><b>{letter.emailed ? 'E-mailed' : 'Generated'}</b></li>}
@@ -254,7 +254,7 @@ export async function runLiveOffboarding({ r, set, auto = null, simulated = fals
   const S = { api: simulated ? createSimulatedOffboardingApi(r.timing.stepScale) : realApi };
   const ask = makeAsk(r, auto);
   r.msg('sys', simulated
-    ? 'Auto-play · Simulated: this plays a resignation for a sample employee. Nothing is contacted or changed anywhere.'
+    ? 'Auto-play · Simulated Environment: this plays a resignation for a sample employee. Nothing is contacted or changed anywhere.'
     : auto
     ? 'Auto-play · Live: this plays a resignation for the employee you chose. Everything is real: it creates a real offboarding record and ticket, and changes real accounts after HR approves.'
     : 'Manual mode: you are the employee leaving. Type a message to begin. Everything is real: it creates a real offboarding record and ticket, and changes real accounts after HR approves.');

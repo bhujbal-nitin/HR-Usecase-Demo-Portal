@@ -1,8 +1,8 @@
 """Use-cases for reimbursement claims.
 
-The employee uploads bills of any kind in the chat; each is read with OpenAI (category, date, amount, vendor). Travel and Food are within the
+The employee uploads bills of any kind in the chat; each is read with Google Gemini (category, date, amount, vendor). Travel and Food are within the
 company's reimbursement policy (policy.POLICY_TYPES), which the chat and the manager see as a hint: the manager approves or rejects each
-bill. Once decided, the approved bills are recorded in OrangeHRM as a claim (Claim module): the event and the expense types are created there
+bill. Once decided, the approved bills are recorded in HRMS as a claim (Claim module): the event and the expense types are created there
 if they are missing. The portal keeps the claim (the bills' details, not the files) so the manager can decide.
 """
 
@@ -42,7 +42,7 @@ class ReimbursementService:
         self._repo = repository
         self._dir = directory
         self._gw = gateways
-        self._apply_lock = threading.Lock()  # recording a claim in OrangeHRM must never happen twice
+        self._apply_lock = threading.Lock()  # recording a claim in HRMS must never happen twice
 
     # ------------------------------------------------------------------- the chat
     def lookup(self, ref: str) -> EmployeeSummary:
@@ -112,16 +112,16 @@ class ReimbursementService:
             raise ConflictError(f"{claim.id} is already {claim.status.value.lower()}.")
 
     def clear(self) -> int:
-        """Delete decided claims from the portal. What was recorded in OrangeHRM stays there."""
+        """Delete decided claims from the portal. What was recorded in HRMS stays there."""
         return self._repo.delete_where(lambda c: c.status in _FINAL)
 
-    # ---------------------------------------------------------------- OrangeHRM
+    # ---------------------------------------------------------------- HRMS
     def apply(self, claim_id: str) -> ReimbursementClaim:
-        """Record an approved claim in OrangeHRM. Safe to call again: it carries on where it stopped and never records twice."""
+        """Record an approved claim in HRMS. Safe to call again: it carries on where it stopped and never records twice."""
         with self._apply_lock:
             claim = self._repo.require(claim_id)
             if claim.status != RequestStatus.APPROVED:
-                raise ConflictError("Only an approved claim can be recorded in OrangeHRM.")
+                raise ConflictError("Only an approved claim can be recorded in HRMS.")
             if claim.applied:
                 return claim
             oh = self._gw.orangehrm
@@ -155,15 +155,15 @@ class ReimbursementService:
         known = {e["name"]: e["id"] for e in oh.claim_events()}
         if CLAIM_EVENT not in known:
             known[CLAIM_EVENT] = oh.create_claim_event(CLAIM_EVENT)
-            logger.info("Created the claim event '%s' in OrangeHRM", CLAIM_EVENT)
+            logger.info("Created the claim event '%s' in HRMS", CLAIM_EVENT)
         return known[CLAIM_EVENT]
 
     def _expense_type_ids(self, needed: set[str]) -> dict[str, int]:
-        """The OrangeHRM expense type of each category in ``needed``; one that is missing there is created."""
+        """The HRMS expense type of each category in ``needed``; one that is missing there is created."""
         oh = self._gw.orangehrm
         known = {t["name"]: t["id"] for t in oh.claim_expense_types()}
         for name in sorted(needed):
             if name not in known:
                 known[name] = oh.create_claim_expense_type(name)
-                logger.info("Created the expense type '%s' in OrangeHRM", name)
+                logger.info("Created the expense type '%s' in HRMS", name)
         return {name: known[name] for name in needed}

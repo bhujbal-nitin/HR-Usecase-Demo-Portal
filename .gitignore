@@ -16,9 +16,14 @@ node_modules/
 backend/data_backup_*/
 ~$*
 backend/generated_offers/
+backend/data/hrms.json
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+
+# Google service-account key (never commit)
+backend/credentials/
+*service-account*.json

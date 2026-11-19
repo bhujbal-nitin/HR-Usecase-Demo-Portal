@@ -16,7 +16,7 @@ const ONBOARDING_MAP = {
     docs: { x: 620, y: 74, icon: 'file', label: 'Documents', sub: 'ID, PAN, salary slip', t: 'system' },
     ad: { x: 620, y: 118, icon: 'server', label: 'Active Directory', t: 'system' },
     o365: { x: 620, y: 162, icon: 'windows', label: 'Microsoft 365', t: 'system' },
-    ohrm: { x: 620, y: 206, icon: 'db', label: 'OrangeHRM', t: 'system' },
+    ohrm: { x: 620, y: 206, icon: 'db', label: 'HRMS', t: 'system' },
   },
   edges: [
     ['cand', 'orch'], ['orch', 'prov'],
@@ -26,7 +26,7 @@ const ONBOARDING_MAP = {
   alias: { doc: 'prov', ver: 'prov' },
 };
 
-// Offboarding (Manual · Live): AutomationEdge workflows, then the backend's own calls to ServiceNow, Microsoft 365, OrangeHRM and e-mail.
+// Offboarding (Manual · Live): AutomationEdge workflows, then the backend's own calls to ServiceNow, Microsoft 365, HRMS and e-mail.
 const OFFBOARDING_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
@@ -35,7 +35,7 @@ const OFFBOARDING_MAP = {
     servicenow: { x: 620, y: 30, icon: 'ticket', label: 'ServiceNow', t: 'system' },
     ad: { x: 620, y: 74, icon: 'server', label: 'Active Directory', t: 'system' },
     o365: { x: 620, y: 118, icon: 'windows', label: 'Microsoft 365', t: 'system' },
-    ohrm: { x: 620, y: 162, icon: 'db', label: 'OrangeHRM', t: 'system' },
+    ohrm: { x: 620, y: 162, icon: 'db', label: 'HRMS', t: 'system' },
     mail: { x: 620, y: 206, icon: 'mail', label: 'E-mail', t: 'system' },
   },
   edges: [
@@ -44,40 +44,40 @@ const OFFBOARDING_MAP = {
   ],
 };
 
-// Leave & attendance: the agent reads balances, holidays and punches in OrangeHRM (and records approved requests there),
+// Leave & attendance: the agent reads balances, holidays and punches in HRMS (and records approved requests there),
 // and sends each request to the manager. Each step is preceded by its AutomationEdge workflow.
 const LEAVE_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
     orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     leave: { x: 385, y: 116, icon: 'users', label: 'Leave & Attendance Agent', t: 'agent' },
-    ohrm: { x: 620, y: 80, icon: 'db', label: 'OrangeHRM', t: 'system' },
+    ohrm: { x: 620, y: 80, icon: 'db', label: 'HRMS', t: 'system' },
     mgr: { x: 620, y: 150, icon: 'user', label: 'Manager', sub: 'Approvals', t: 'person' },
   },
   edges: [['cand', 'orch'], ['orch', 'leave'], ['orch', 'ohrm'], ['leave', 'ohrm'], ['leave', 'mgr']],
 };
 
-// Payroll & salary: the agent reads the employee's salary record in OrangeHRM and works out the payslip and the tax itself.
-// Each document is preceded by its AutomationEdge workflows, drawn as the link between the agent and OrangeHRM.
+// Payroll & salary: the agent reads the employee's salary record in HRMS and works out the payslip and the tax itself.
+// Each document is preceded by its AutomationEdge workflows, drawn as the link between the agent and HRMS.
 const PAYROLL_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
     orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     pay: { x: 385, y: 116, icon: 'bank', label: 'Payroll & Salary Agent', t: 'agent' },
-    ohrm: { x: 620, y: 116, icon: 'db', label: 'OrangeHRM', t: 'system' },
+    ohrm: { x: 620, y: 116, icon: 'db', label: 'HRMS', t: 'system' },
   },
   edges: [['cand', 'orch'], ['orch', 'pay'], ['orch', 'ohrm'], ['pay', 'ohrm']],
 };
 
 // Reimbursement & benefits: the agent scans each bill, sends the claim to the manager and records the approved claim in
-// OrangeHRM. Each step is followed by its AutomationEdge workflow.
+// HRMS. Each step is followed by its AutomationEdge workflow.
 const REIMBURSEMENT_MAP = {
   nodes: {
     cand: { x: 48, y: 116, icon: 'chat', label: 'Employee', sub: 'WhatsApp', t: 'person' },
     orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
     reimb: { x: 385, y: 116, icon: 'bank', label: 'Reimbursement & Benefits Agent', t: 'agent' },
     scan: { x: 620, y: 50, icon: 'eye', label: 'Document Scanning', sub: 'reads the bills', t: 'system' },
-    ohrm: { x: 620, y: 110, icon: 'db', label: 'OrangeHRM', sub: 'Claim', t: 'system' },
+    ohrm: { x: 620, y: 110, icon: 'db', label: 'HRMS', sub: 'Claim', t: 'system' },
     mgr: { x: 620, y: 170, icon: 'user', label: 'Manager', sub: 'Approvals', t: 'person' },
   },
   edges: [['cand', 'orch'], ['orch', 'reimb'], ['orch', 'ohrm'], ['reimb', 'scan'], ['reimb', 'ohrm'], ['reimb', 'mgr']],
@@ -93,6 +93,22 @@ const HR_POLICY_MAP = {
     docs: { x: 620, y: 150, icon: 'file', label: 'HR documents', sub: 'policies and letters', t: 'system' },
   },
   edges: [['cand', 'orch'], ['orch', 'policy'], ['policy', 'km'], ['policy', 'docs']],
+};
+
+// Pre-onboarding: the agent raises the ServiceNow request, e-mails the offer letter and the joining instructions, reads each document, runs a dummy background
+// verification and waits for HR to decide on the Approvals page. AutomationEdge is not used in this demo.
+const PRE_ONBOARDING_MAP = {
+  nodes: {
+    cand: { x: 48, y: 116, icon: 'chat', label: 'Candidate', sub: 'WhatsApp', t: 'person' },
+    orch: { x: 190, y: 116, icon: 'sparkle', label: 'AutomationEdge Orchestrator', t: 'agent' },
+    pre: { x: 385, y: 116, icon: 'file', label: 'Pre-Onboarding Agent', t: 'agent' },
+    servicenow: { x: 620, y: 30, icon: 'ticket', label: 'ServiceNow', t: 'system' },
+    scan: { x: 620, y: 74, icon: 'eye', label: 'Document Scanning', sub: 'reads the documents', t: 'system' },
+    bgv: { x: 620, y: 118, icon: 'shield', label: 'Background Verification', sub: 'dummy check', t: 'system' },
+    hr: { x: 620, y: 162, icon: 'user', label: 'HR', sub: 'Approvals', t: 'system' },
+    mail: { x: 620, y: 206, icon: 'mail', label: 'E-mail', sub: 'offer & joining letters', t: 'system' },
+  },
+  edges: [['cand', 'orch'], ['orch', 'pre'], ['pre', 'servicenow'], ['pre', 'scan'], ['pre', 'bgv'], ['pre', 'hr'], ['pre', 'mail']],
 };
 
 /** Map for the scripted agents: their own systems, taken from their scripted processes. */
@@ -117,7 +133,7 @@ function genericMap(agentId) {
   return { nodes, edges, systemCount: systems.length };
 }
 
-const MAPS = { onboarding: ONBOARDING_MAP, 'offboarding-live': OFFBOARDING_MAP, leave_attendance: LEAVE_MAP, payroll_salary: PAYROLL_MAP, reimbursement_benefits: REIMBURSEMENT_MAP, hr_policy: HR_POLICY_MAP };
+const MAPS = { pre_onboarding: PRE_ONBOARDING_MAP, onboarding: ONBOARDING_MAP, 'offboarding-live': OFFBOARDING_MAP, leave_attendance: LEAVE_MAP, payroll_salary: PAYROLL_MAP, reimbursement_benefits: REIMBURSEMENT_MAP, hr_policy: HR_POLICY_MAP };
 export const mapFor = (agentId) => MAPS[agentId] ?? genericMap(agentId);
 
 // ---- Hops (which edges light up) ------------------------------------------------------------------------------------
@@ -190,10 +206,10 @@ const OFFBOARDING_HOPS = {
 const LEAVE_HOPS = {
   'HR Demo Get Leave Balance': ROUND('leave', 'ohrm'),
   'HR Demo Check Leave Request': ROUND('leave', 'ohrm'),
-  'HR Demo Assign Leave OrangeHRM': ROUND('leave', 'ohrm'),
+  'HR Demo Assign Leave HRMS': ROUND('leave', 'ohrm'),
   'HR Demo Get Attendance Records': ROUND('leave', 'ohrm'),
-  'HR Demo Add Punch In OrangeHRM': ROUND('leave', 'ohrm'),
-  'HR Demo Punch Out OrangeHRM': ROUND('leave', 'ohrm'),
+  'HR Demo Add Punch In HRMS': ROUND('leave', 'ohrm'),
+  'HR Demo Punch Out HRMS': ROUND('leave', 'ohrm'),
   'POST /webhook/whatsapp': [['cand', 'orch']],
   'whatsapp.send_text()': [['leave', 'orch'], ['orch', 'cand']],
   'employees.lookup()': ROUND('orch', 'ohrm'),
@@ -225,7 +241,7 @@ const REIMBURSEMENT_HOPS = {
   'HR Demo Read Bill': ROUND('reimb', 'scan'),
   'HR Demo Check Reimbursement Policy': [], // the policy rules: no system
   'HR Demo Submit Expense Claim': [['reimb', 'mgr']],
-  'HR Demo Create Claim OrangeHRM': ROUND('reimb', 'ohrm'),
+  'HR Demo Create Claim HRMS': ROUND('reimb', 'ohrm'),
   'POST /webhook/whatsapp': [['cand', 'orch']],
   'whatsapp.send_text()': [['reimb', 'orch'], ['orch', 'cand']],
   'employees.lookup()': ROUND('orch', 'ohrm'),
@@ -250,6 +266,23 @@ const HR_POLICY_HOPS = {
   'hr_documents.get_letter()': ROUND('policy', 'docs'),
 };
 
+const PRE_ONBOARDING_HOPS = {
+  'POST /webhook/whatsapp': [['cand', 'orch']],
+  'whatsapp.send_text()': [['pre', 'orch'], ['orch', 'cand']],
+  'POST /api/pre-onboarding/candidates': ROUND('pre', 'servicenow'),
+  'preonboarding.check_document()': ROUND('pre', 'scan'),
+  'preonboarding.verify()': [], // the names are compared inside the agent: no system is called
+  'preonboarding.accept()': ROUND('pre', 'servicenow'),
+  'preonboarding.personal()': ROUND('pre', 'servicenow'),
+  'bgv.check()': ROUND('pre', 'bgv'),
+  'hr.approve_preonboarding()': ROUND('pre', 'hr'),
+  'offer_letter.generate()': [],
+  'email.send()': ROUND('pre', 'mail'),
+  'joining.send()': ROUND('pre', 'mail'),
+  'preonboarding.complete()': [],
+  servicenow_close: ROUND('pre', 'servicenow'),
+};
+
 /**
  * The AutomationEdge workflow a step runs, or null. The map shows it on the link between the agent and the system it works on (there is no AutomationEdge box:
  * AutomationEdge is what carries out the process), tagged with the workflow's name.
@@ -264,6 +297,7 @@ export function aeWorkflowOf(step, config) {
 
 /** Edges to animate for a step. Scripted agents spread their steps over the agent's own systems. */
 export function hopsFor(step, agentId, stepIndex = 0, systemCount = 0) {
+  if (agentId === 'pre_onboarding') return PRE_ONBOARDING_HOPS[step.name] ?? [];
   if (agentId === 'onboarding') return HOPS[step.name] ?? [];
   if (agentId === 'offboarding-live') return OFFBOARDING_HOPS[step.name] ?? [];
   if (agentId === 'leave_attendance') return LEAVE_HOPS[step.name] ?? [];
@@ -296,14 +330,17 @@ const ICON_BY_NAME = {
   asset_return: 'laptop', clearances: 'clipboard', settlement: 'gauge', relieving_letter: 'mail', servicenow_close: 'ticket',
   'directory.create_user()': 'server', 'itsm.create_request()': 'ticket', 'hrms.update_status()': 'db',
   'orangehrm.leave_types()': 'clipboard', 'orangehrm.leave_balances()': 'gauge', 'orangehrm.holidays()': 'file', 'orangehrm.check_leave()': 'gauge', 'policy.check_leave()': 'shield',
-  'HR Demo Get Leave Balance': 'bolt', 'HR Demo Check Leave Request': 'bolt', 'HR Demo Assign Leave OrangeHRM': 'bolt',
-  'HR Demo Get Attendance Records': 'bolt', 'HR Demo Add Punch In OrangeHRM': 'bolt', 'HR Demo Punch Out OrangeHRM': 'bolt',
+  'HR Demo Get Leave Balance': 'bolt', 'HR Demo Check Leave Request': 'bolt', 'HR Demo Assign Leave HRMS': 'bolt',
+  'HR Demo Get Attendance Records': 'bolt', 'HR Demo Add Punch In HRMS': 'bolt', 'HR Demo Punch Out HRMS': 'bolt',
   'POST /api/leave/requests': 'ticket', 'orangehrm.assign_leave()': 'db', 'orangehrm.punch_log()': 'search', 'orangehrm.record_attendance()': 'db',
-  'HR Demo Read Bill': 'bolt', 'HR Demo Check Reimbursement Policy': 'bolt', 'HR Demo Submit Expense Claim': 'bolt', 'HR Demo Create Claim OrangeHRM': 'bolt',
+  'HR Demo Read Bill': 'bolt', 'HR Demo Check Reimbursement Policy': 'bolt', 'HR Demo Submit Expense Claim': 'bolt', 'HR Demo Create Claim HRMS': 'bolt',
   'HR Demo Search Policy': 'bolt', 'HR Demo Get Policy Document': 'bolt', 'HR Demo Ask Policy Question': 'bolt', 'HR Demo Generate Address Proof Letter': 'bolt', 'HR Demo Generate Bank Account Opening Letter': 'bolt',
   'HR Demo Fetch Salary Details': 'bolt', 'HR Demo Generate Payslip': 'bolt', 'HR Demo Generate CTC Statement': 'bolt', 'HR Demo Generate Form 16': 'bolt',
   'km.query()': 'search', 'hr_documents.list()': 'clipboard', 'hr_documents.get_letter()': 'file', 'hr_documents.search_policies()': 'search', 'hr_documents.get_policy()': 'file',
   'scanner.read_bill()': 'eye', 'policy.check_eligibility()': 'shield', 'POST /api/reimbursement/claims': 'ticket', 'orangehrm.record_claim()': 'db',
+  'POST /api/pre-onboarding/candidates': 'ticket', 'preonboarding.check_document()': 'eye', 'preonboarding.verify()': 'compare', 'hr.approve_preonboarding()': 'user', 'preonboarding.accept()': 'check', 'preonboarding.personal()': 'user',
+  'bgv.check()': 'shield', 'joining.send()': 'mail', 'preonboarding.complete()': 'check',
+  'offer_letter.generate()': 'file', 'email.send()': 'mail',
   'payroll.options()': 'clipboard', 'payroll.payslip()': 'file', 'payroll.ctc()': 'file', 'payroll.form16()': 'file',
 };
 const ICON_BY_KIND = { trigger: 'chat', agent: 'sparkle', tool: 'clipboard', api: 'cloud', human: 'user', notify: 'send' };
@@ -324,15 +361,16 @@ const VIZ_BY_NAME = {
   'HR Demo Get Employee Details': 'workflow', 'servicenow.create_request()': 'external',
   exit_details: 'workflow', exit_approval: 'workflow', ad_disable: 'workflow', o365_block: 'workflow', hrm_terminate: 'workflow', asset_return: 'workflow', clearances: 'workflow',
   'orangehrm.leave_balances()': 'gauge', 'orangehrm.check_leave()': 'gauge', 'policy.check_leave()': 'checks', 'POST /api/leave/requests': 'record',
-  'HR Demo Get Leave Balance': 'workflow', 'HR Demo Check Leave Request': 'workflow', 'HR Demo Assign Leave OrangeHRM': 'workflow',
-  'HR Demo Get Attendance Records': 'workflow', 'HR Demo Add Punch In OrangeHRM': 'workflow', 'HR Demo Punch Out OrangeHRM': 'workflow',
+  'HR Demo Get Leave Balance': 'workflow', 'HR Demo Check Leave Request': 'workflow', 'HR Demo Assign Leave HRMS': 'workflow',
+  'HR Demo Get Attendance Records': 'workflow', 'HR Demo Add Punch In HRMS': 'workflow', 'HR Demo Punch Out HRMS': 'workflow',
   'orangehrm.assign_leave()': 'external', 'orangehrm.record_attendance()': 'external',
-  'HR Demo Read Bill': 'workflow', 'HR Demo Check Reimbursement Policy': 'workflow', 'HR Demo Submit Expense Claim': 'workflow', 'HR Demo Create Claim OrangeHRM': 'workflow',
+  'HR Demo Read Bill': 'workflow', 'HR Demo Check Reimbursement Policy': 'workflow', 'HR Demo Submit Expense Claim': 'workflow', 'HR Demo Create Claim HRMS': 'workflow',
   'HR Demo Search Policy': 'workflow', 'HR Demo Get Policy Document': 'workflow', 'HR Demo Ask Policy Question': 'workflow', 'HR Demo Generate Address Proof Letter': 'workflow', 'HR Demo Generate Bank Account Opening Letter': 'workflow',
   'HR Demo Fetch Salary Details': 'workflow', 'HR Demo Generate Payslip': 'workflow', 'HR Demo Generate CTC Statement': 'workflow', 'HR Demo Generate Form 16': 'workflow',
   'km.query()': 'external', 'hr_documents.list()': 'record', 'hr_documents.get_letter()': 'package', 'hr_documents.search_policies()': 'record', 'hr_documents.get_policy()': 'package',
   'scanner.read_bill()': 'classify', 'policy.check_eligibility()': 'checks', 'POST /api/reimbursement/claims': 'record', 'orangehrm.record_claim()': 'external',
   'payroll.payslip()': 'package', 'payroll.ctc()': 'package', 'payroll.form16()': 'package',
+  'POST /api/pre-onboarding/candidates': 'record', 'preonboarding.check_document()': 'classify', 'preonboarding.verify()': 'compare', 'preonboarding.accept()': 'record', 'preonboarding.personal()': 'record', 'bgv.check()': 'compare', 'offer_letter.generate()': 'package', 'email.send()': 'sent', 'joining.send()': 'sent', 'preonboarding.complete()': 'record',
 };
 const VIZ_BY_KIND = { trigger: 'inbound', agent: 'think', tool: 'record', api: 'external', human: 'approval', notify: 'sent' };
 

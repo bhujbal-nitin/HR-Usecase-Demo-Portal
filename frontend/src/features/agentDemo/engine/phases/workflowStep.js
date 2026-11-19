@@ -5,7 +5,18 @@ import { runVerificationWorkflow } from '../../../../api/documents';
  * instance reaches Complete; on any other status the runner shows Rerun / Stop (Stop ends the run with the failure shown).
  * Without AutomationEdge credentials the backend reports "skipped" and the step shows a warning instead.
  */
-export function documentWorkflowStep(label) {
+export function documentWorkflowStep(label, { live = true } = {}) {
+  // Simulated runs show the same step, in the same place, with a scripted "Complete" answer (nothing is called).
+  if (!live) {
+    return {
+      kind: 'api', agent: 'ver', title: 'Run the document verification workflow', name: 'HR Demo Document Verification', lat: 900,
+      note: `Simulated: AutomationEdge would run "HR Demo Document Verification" for the ${label}; the next step starts only after it is Complete.`,
+      payload: {
+        status: 'Complete', message: 'Document verified',
+        automationEdge: [{ workflowName: 'HR Demo Document Verification', status: 'Complete', message: 'Document verified' }],
+      },
+    };
+  }
   return {
     kind: 'api', agent: 'ver', title: 'Run the document verification workflow', name: 'HR Demo Document Verification', live: true,
     note: `AutomationEdge runs "HR Demo Document Verification" for the ${label}; this step waits until it is Complete before the next one starts.`,

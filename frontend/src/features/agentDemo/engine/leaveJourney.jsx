@@ -10,9 +10,9 @@ import { trigger } from './phases/common';
 import { leaveWorkflowStep } from './phases/leaveWorkflow';
 
 // Leave & attendance. Manual: YOU are the employee and the chat waits for you at every step. Auto-play: the same journey with the
-// chosen employee's answers filled in for you. Live: leave types, balances, holidays and punches are worked out in OrangeHRM (each step is
+// chosen employee's answers filled in for you. Live: leave types, balances, holidays and punches are worked out in HRMS (each step is
 // preceded by its AutomationEdge workflow), the manager decides on the Approvals page (Leave tab), and the approved leave or attendance request is then
-// recorded in OrangeHRM. Auto-play · Simulated: the very same journey runs against simulatedLeaveApi, so the three flows cannot
+// recorded in HRMS. Auto-play · Simulated Environment: the very same journey runs against simulatedLeaveApi, so the three flows cannot
 // drift apart; its steps are tagged Simulated. A failed or unconfigured system makes its step fail, with Rerun / Skip.
 
 /**
@@ -32,7 +32,7 @@ export const makeAsk = (r, auto) => async (awaiting, scripted) => {
 };
 
 const DECISION_POLL_MS = 2000;
-const FALLBACK_LEAVE_TYPES = Object.keys(LEAVE_POLICY); // only used if the step that reads them from OrangeHRM is skipped
+const FALLBACK_LEAVE_TYPES = Object.keys(LEAVE_POLICY); // only used if the step that reads them from HRMS is skipped
 export const firstName = (employee) => employee.fullName.split(/\s+/)[0];
 export const days = (count) => `${count} day${count === 1 ? '' : 's'}`;
 
@@ -120,19 +120,20 @@ const LEAVE_DECISION = {
  * @param channel  where the record waits (default: leave & attendance requests)
  */
 export async function awaitDecision({ r, S, set, record, channel = LEAVE_DECISION }) {
-  const phase = r.phase('Manager approval', `The ${channel.noun} goes to the employee’s manager. Nothing is changed until it is decided.`);
+  const who = channel.who ?? 'the manager';
+  const phase = r.phase(channel.phase ?? 'Manager approval', channel.phaseNote ?? `The ${channel.noun} goes to the employee’s manager. Nothing is changed until it is decided.`);
   let outcome = 'approved';
   await r.runSteps(phase, [{
-    kind: 'human', agent: channel.agent, title: 'Manager approval', name: 'hr.approve()', live: !S.api.simulated,
+    kind: 'human', agent: channel.agent, title: channel.phase ?? 'Manager approval', name: channel.stepName ?? 'hr.approve()', live: !S.api.simulated,
     note: S.api.simulated
-      ? `Simulated: the ${channel.noun} waits for the manager for a moment, then approves itself. Click Approve now to go sooner.`
-      : `The manager decides on the Approvals page (${channel.tabName}); the run continues as soon as the ${channel.noun} is approved or rejected.`,
+      ? `Simulated: the ${channel.noun} waits for ${who} for a moment, then approves itself. Click Approve now to go sooner.`
+      : `${who[0].toUpperCase()}${who.slice(1)} decides on the Approvals page (${channel.tabName}); the run continues as soon as the ${channel.noun} is approved or rejected.`,
     run: async ({ patch, waitForGate }) => {
       if (S.api.simulated) {
         const waitMs = r.timing.approvalWaitMs;
         patch({
           gate: true,
-          payload: { waiting_for: 'the manager', request: record.id, autoApproveAt: Date.now() + waitMs, warning: 'Simulated: nothing is saved anywhere. This approves itself shortly, or click now.', approveLabel: 'Approve now' },
+          payload: { waiting_for: who, request: record.id, autoApproveAt: Date.now() + waitMs, warning: 'Simulated: nothing is saved anywhere. This approves itself shortly, or click now.', approveLabel: 'Approve now' },
         });
         const choice = await Promise.race([waitForGate(), r.wait(waitMs).then(() => 'auto')]);
         patch({ gate: false });
@@ -140,19 +141,20 @@ export async function awaitDecision({ r, S, set, record, channel = LEAVE_DECISIO
           outcome = 'stopped';
           return { payload: { decision: 'STOPPED_BY_OPERATOR', note: 'The demo was stopped before approval.' }, warn: true, lat: 0 };
         }
-        return { payload: { decision: choice === 'auto' ? 'AUTO_APPROVED' : 'APPROVED', approver: choice === 'auto' ? 'automatic after the wait (demo)' : 'the manager (this browser)', request: record.id }, lat: 0 };
+        return { payload: { decision: choice === 'auto' ? 'AUTO_APPROVED' : 'APPROVED', approver: choice === 'auto' ? 'automatic after the wait (demo)' : `${who} (this browser)`, request: record.id }, lat: 0 };
       }
-      patch({ awaitHr: true, payload: { waiting_for: 'the manager, on the Approvals page', request: record.id, openTo: `/approvals?tab=${channel.tab}` } });
+      patch({ awaitHr: true, payload: { waiting_for: `${who}, on the Approvals page`, request: record.id, openTo: `/approvals?tab=${channel.tab}` } });
       for (;;) {
         const current = await channel.get(S.api, record.id);
-        if (current.status !== 'Pending Approval') {
+        const stillWaiting = channel.pending ? channel.pending(current) : current.status === 'Pending Approval';
+        if (!stillWaiting) {
           patch({ awaitHr: false });
-          outcome = current.status === 'Rejected' ? 'rejected' : 'approved';
+          outcome = (channel.rejected ? channel.rejected(current) : current.status === 'Rejected') ? 'rejected' : 'approved';
           break;
         }
         await r.wait(DECISION_POLL_MS);
       }
-      return { payload: { decision: outcome === 'rejected' ? 'REJECTED' : 'APPROVED', approver: 'the manager (Approvals page)', request: record.id }, warn: outcome === 'rejected', lat: 0 };
+      return { payload: { decision: outcome === 'rejected' ? 'REJECTED' : 'APPROVED', approver: `${who} (Approvals page)`, request: record.id }, warn: outcome === 'rejected', lat: 0 };
     },
   }]);
   if (outcome === 'stopped') {
@@ -164,24 +166,37 @@ export async function awaitDecision({ r, S, set, record, channel = LEAVE_DECISIO
   return outcome;
 }
 
+/**
+ * Remembers everything this live run did in HRMS (the balances it read and every request it saved), so the HRMS button at the
+ * top can open each of them, not only the last one. Simulated runs create nothing, so they keep no record.
+ */
+function trackRun(set, S, { balance, requestId }) {
+  if (S.api.simulated) return;
+  const run = (S.run ??= { kind: 'leave', balance: false, requestIds: [] });
+  if (balance) run.balance = true;
+  if (requestId && !run.requestIds.includes(requestId)) run.requestIds = [...run.requestIds, requestId];
+  set({ runRecord: { ...run } });
+}
+
 // ------------------------------------------------------------------------------------------------ the three requests
 /** 1. Balances and holidays. */
-async function balances({ r, S, employee }) {
+async function balances({ r, S, set, employee }) {
   let list = [];
   let holidays = [];
-  const phase = r.phase('Leave balance and holidays', 'The leave balances and the company holiday calendar are read from OrangeHRM.');
+  const phase = r.phase('Leave balance and holidays', 'The leave balances and the company holiday calendar are read from HRMS.');
   await r.runSteps(phase, [
     leaveWorkflowStep(S, 'balance'),
     {
-      kind: 'tool', agent: 'leave', title: 'Read the leave balances in OrangeHRM', name: 'orangehrm.leave_balances()', live: !S.api.simulated,
+      kind: 'tool', agent: 'leave', title: 'Read the leave balances in HRMS', name: 'orangehrm.leave_balances()', live: !S.api.simulated,
       note: 'Reads the employee’s balance for every leave type they have an entitlement for.',
       run: async () => {
         list = await S.api.getBalances(employee.employeeId);
+        trackRun(set, S, { balance: true }); // the HRMS button can now open the balances
         return { payload: Object.fromEntries(list.map((b) => [b.leaveType, `${b.left} left of ${b.total}`])) };
       },
     },
     {
-      kind: 'tool', agent: 'leave', title: 'Read the holiday calendar in OrangeHRM', name: 'orangehrm.holidays()', live: !S.api.simulated,
+      kind: 'tool', agent: 'leave', title: 'Read the holiday calendar in HRMS', name: 'orangehrm.holidays()', live: !S.api.simulated,
       note: 'Looks up the next company holidays.',
       run: async () => {
         holidays = await S.api.getHolidays();
@@ -199,7 +214,7 @@ async function balances({ r, S, employee }) {
     await r.bot('And the next company holidays:', { wait: 500 });
     showCard(r, card('Company holidays', 'fa-champagne-glasses', { label: 'Calendar', tone: 'approved' }, holidays.map((h) => [`${formatDate(h.date)}:`, h.name])));
   } else {
-    await r.bot('There are no upcoming company holidays set up in OrangeHRM yet.', { wait: 500 });
+    await r.bot('There are no upcoming company holidays set up in HRMS yet.', { wait: 500 });
   }
 }
 
@@ -207,13 +222,13 @@ async function balances({ r, S, employee }) {
 async function checkLeave({ r, S, employee, values }) {
   let check = null;
   const request = { employeeRef: employee.employeeId, leaveType: values.leaveType, startDate: values.startDate, endDate: values.endDate };
-  const phase = r.phase('Check the leave request', 'The dates are checked against OrangeHRM (work week, holidays, your balance and existing leave) before anything is saved.');
+  const phase = r.phase('Check the leave request', 'The dates are checked against HRMS (work week, holidays, your balance and existing leave) before anything is saved.');
   await r.runSteps(phase, [
     trigger('Form submission received', 'The form arrives as a structured reply, not free text.', { type: 'interactive', nfm_reply: { name: 'leave_application_v1', response_json: { employee: employee.employeeId, ...values } } }),
     leaveWorkflowStep(S, 'check'),
     {
-      kind: 'tool', agent: 'leave', title: 'Check the balance in OrangeHRM', name: 'orangehrm.check_leave()', live: !S.api.simulated,
-      note: 'Counts the working days (OrangeHRM’s work week and holidays) and compares them with the employee’s balance there.',
+      kind: 'tool', agent: 'leave', title: 'Check the balance in HRMS', name: 'orangehrm.check_leave()', live: !S.api.simulated,
+      note: 'Counts the working days (HRMS’s work week and holidays) and compares them with the employee’s balance there.',
       run: async () => {
         check = await S.api.checkLeave(request);
         return { payload: { leaveType: check.leaveType, workingDays: check.days, balanceBefore: check.balanceBefore, balanceAfter: check.balanceAfter, holidaysInThePeriod: check.holidaysSkipped.map((h) => h.name).join(', ') || 'none' } };
@@ -247,10 +262,10 @@ async function pickSampleLeave({ S, employee, leaveTypes: available }) {
 /** 2. Applying for leave. */
 async function applyForLeave({ r, S, set, ask, auto, employee }) {
   let leaveTypes = FALLBACK_LEAVE_TYPES;
-  const prepare = r.phase('Prepare the leave form', 'The leave types you can choose from are read from OrangeHRM.');
+  const prepare = r.phase('Prepare the leave form', 'The leave types you can choose from are read from HRMS.');
   await r.runSteps(prepare, [{
-    kind: 'tool', agent: 'leave', title: 'Read the leave types in OrangeHRM', name: 'orangehrm.leave_types()', live: !S.api.simulated,
-    note: 'Reads the leave types that are set up in OrangeHRM, for the form.',
+    kind: 'tool', agent: 'leave', title: 'Read the leave types in HRMS', name: 'orangehrm.leave_types()', live: !S.api.simulated,
+    note: 'Reads the leave types that are set up in HRMS, for the form.',
     run: async () => {
       leaveTypes = (await S.api.getLeaveOptions()).leaveTypes;
       return { payload: { leaveTypes } };
@@ -297,7 +312,7 @@ async function applyForLeave({ r, S, set, ask, auto, employee }) {
     note: 'Saves the request. The days are held in your balance while it waits.',
     run: async () => {
       record = await S.api.submitLeave({ employeeRef: employee.employeeId, ...values });
-      if (!S.api.simulated) set({ runRecord: { kind: 'leave', id: record.id } }); // lets the header open what this run created
+      trackRun(set, S, { requestId: record.id }); // lets the header open what this run created
       return { payload: { reference: record.id, status: record.status, leaveType: record.leaveType, workingDays: record.days, balanceAfter: record.balanceAfter } };
     },
   }]);
@@ -315,20 +330,20 @@ async function applyForLeave({ r, S, set, ask, auto, employee }) {
 
   let approved = record;
   let balance = null;
-  const apply = r.phase('Apply the decision', 'The approved leave is booked in OrangeHRM and the balance is read again.');
+  const apply = r.phase('Apply the decision', 'The approved leave is booked in HRMS and the balance is read again.');
   await r.runSteps(apply, [
     leaveWorkflowStep(S, 'assign-leave'),
     {
-      kind: 'api', agent: 'leave', title: 'Record the leave in OrangeHRM', name: 'orangehrm.assign_leave()', live: !S.api.simulated,
-      note: 'Books the approved leave on the employee’s OrangeHRM record.',
+      kind: 'api', agent: 'leave', title: 'Record the leave in HRMS', name: 'orangehrm.assign_leave()', live: !S.api.simulated,
+      note: 'Books the approved leave on the employee’s HRMS record.',
       run: async () => {
         approved = await S.api.applyLeaveRequest(record.id);
-        return { payload: { reference: approved.id, status: 'Recorded in OrangeHRM', leaveType: approved.leaveType, from: approved.startDate, to: approved.endDate, workingDays: approved.days } };
+        return { payload: { reference: approved.id, status: 'Recorded in HRMS', leaveType: approved.leaveType, from: approved.startDate, to: approved.endDate, workingDays: approved.days } };
       },
     },
     {
       kind: 'tool', agent: 'leave', title: 'Read the new balance', name: 'orangehrm.leave_balances()', live: !S.api.simulated,
-      note: 'Reads the balance again from OrangeHRM, now that the leave is booked.',
+      note: 'Reads the balance again from HRMS, now that the leave is booked.',
       run: async () => {
         balance = (await S.api.getBalances(employee.employeeId)).find((b) => b.leaveType === record.leaveType);
         return { payload: { leaveType: record.leaveType, used: balance?.used ?? null, left: balance?.left ?? null } };
@@ -352,7 +367,7 @@ async function applyForLeave({ r, S, set, ask, auto, employee }) {
   ]);
 }
 
-/** Auto-play: the latest recent working day OrangeHRM holds no punch record for (an approved request replaces a day, so a free one is kinder). */
+/** Auto-play: the latest recent working day HRMS holds no punch record for (an approved request replaces a day, so a free one is kinder). */
 async function pickSampleDay({ S, employee }) {
   const days = previousWorkingDays(8);
   for (const day of days) {
@@ -362,7 +377,7 @@ async function pickSampleDay({ S, employee }) {
   return days[0];
 }
 
-/** 3. An attendance request: the day and both times come from the employee; the day is written to OrangeHRM once the manager approves. */
+/** 3. An attendance request: the day and both times come from the employee; the day is written to HRMS once the manager approves. */
 async function attendanceRequest({ r, S, set, ask, auto, employee }) {
   await r.bot('Sure. Tell me the day, when you came in and when you left, and why, and I’ll send the request to your manager.', { wait: 500 });
   const { min, max } = attendanceDateRange();
@@ -377,13 +392,13 @@ async function attendanceRequest({ r, S, set, ask, auto, employee }) {
   await r.phaseGap();
 
   let day = null;
-  const read = r.phase('Attendance check', 'The day is looked up in OrangeHRM before the request is sent.');
+  const read = r.phase('Attendance check', 'The day is looked up in HRMS before the request is sent.');
   await r.runSteps(read, [
     trigger('Form submission received', 'The form arrives as a structured reply, not free text.', { type: 'interactive', nfm_reply: { name: 'attendance_request_v1', response_json: { employee: employee.employeeId, ...values } } }),
     leaveWorkflowStep(S, 'attendance'),
     {
-      kind: 'tool', agent: 'leave', title: 'Read the punch records in OrangeHRM', name: 'orangehrm.punch_log()', live: !S.api.simulated,
-      note: 'Reads what OrangeHRM already holds for that day. An approved request replaces it.',
+      kind: 'tool', agent: 'leave', title: 'Read the punch records in HRMS', name: 'orangehrm.punch_log()', live: !S.api.simulated,
+      note: 'Reads what HRMS already holds for that day. An approved request replaces it.',
       run: async () => {
         day = await S.api.getAttendance(employee.employeeId, values.attendanceDate);
         return { payload: { day: formatDate(day.date), records: day.records.length ? day.records.map((p) => `In ${p.inPunch}, out ${p.outPunch ?? 'missing'}`) : 'none' } };
@@ -397,7 +412,7 @@ async function attendanceRequest({ r, S, set, ask, auto, employee }) {
   ]);
   if (day?.records.length) {
     const held = day.records.map((p) => `in ${p.inPunch}, out ${p.outPunch ?? 'missing'}`).join('; ');
-    await r.bot(<>OrangeHRM already has a punch record for <b>{formatDate(values.attendanceDate)}</b> ({held}). If your manager approves, it is replaced with the times you gave.</>, { wait: 500 });
+    await r.bot(<>HRMS already has a punch record for <b>{formatDate(values.attendanceDate)}</b> ({held}). If your manager approves, it is replaced with the times you gave.</>, { wait: 500 });
   }
   await r.phaseGap();
 
@@ -405,10 +420,10 @@ async function attendanceRequest({ r, S, set, ask, auto, employee }) {
   const submit = r.phase('Send for approval', 'The request is saved and goes to the manager.');
   await r.runSteps(submit, [{
     kind: 'api', agent: 'leave', title: 'Submit the attendance request', name: 'POST /api/leave/requests', live: !S.api.simulated, noSkip: true,
-    note: 'Saves the request. It is written to OrangeHRM only once the manager approves it.',
+    note: 'Saves the request. It is written to HRMS only once the manager approves it.',
     run: async () => {
       record = await S.api.submitRegularization({ employeeRef: employee.employeeId, attendanceDate: values.attendanceDate, inPunch: values.inPunch, outPunch: values.outPunch, reason: values.reason });
-      if (!S.api.simulated) set({ runRecord: { kind: 'leave', id: record.id } });
+      trackRun(set, S, { requestId: record.id });
       return { payload: { reference: record.id, status: record.status, day: formatDate(record.attendanceDate), inTime: record.inPunch, outTime: record.outPunch, hoursWorked: record.hoursWorked } };
     },
   }]);
@@ -425,13 +440,13 @@ async function attendanceRequest({ r, S, set, ask, auto, employee }) {
   await r.phaseGap();
 
   let saved = null;
-  const apply = r.phase('Apply the decision', 'The approved day is written to OrangeHRM (punch in, then punch out) and read back.');
+  const apply = r.phase('Apply the decision', 'The approved day is written to HRMS (punch in, then punch out) and read back.');
   await r.runSteps(apply, [
     leaveWorkflowStep(S, 'punch-in'),
     leaveWorkflowStep(S, 'punch-out'),
     {
-      kind: 'api', agent: 'leave', title: 'Record the attendance in OrangeHRM', name: 'orangehrm.record_attendance()', live: !S.api.simulated,
-      note: 'Punches the employee in and out in OrangeHRM at the approved times, replacing any record the day already had, then reads the day back.',
+      kind: 'api', agent: 'leave', title: 'Record the attendance in HRMS', name: 'orangehrm.record_attendance()', live: !S.api.simulated,
+      note: 'Punches the employee in and out in HRMS at the approved times, replacing any record the day already had, then reads the day back.',
       run: async () => {
         await S.api.applyLeaveRequest(record.id);
         saved = (await S.api.getAttendance(employee.employeeId, record.attendanceDate)).records.at(-1);
@@ -463,10 +478,10 @@ export async function runLeaveAttendance({ r, set, auto = null, simulated = fals
   const S = { api: simulated ? createSimulatedLeaveApi(r.timing.stepScale) : realApi, stopped: false };
   const ask = makeAsk(r, auto);
   r.msg('sys', simulated
-    ? 'Auto-play · Simulated: this plays the three requests for a sample employee. Nothing is contacted or saved anywhere.'
+    ? 'Auto-play · Simulated Environment: this plays the three requests for a sample employee. Nothing is contacted or saved anywhere.'
     : auto
-    ? 'Auto-play · Live: this plays the three requests for the employee you chose. It is real: everything is read from and recorded in OrangeHRM, after the manager decides on the Approvals page.'
-    : 'Manual mode: you are the employee. Type a message to begin. It is real: everything is read from and recorded in OrangeHRM, after the manager decides on the Approvals page.');
+    ? 'Auto-play · Live: this plays the three requests for the employee you chose. It is real: everything is read from and recorded in HRMS, after the manager decides on the Approvals page.'
+    : 'Manual mode: you are the employee. Type a message to begin. It is real: everything is read from and recorded in HRMS, after the manager decides on the Approvals page.');
   set({ stage: 'idle' });
 
   const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });

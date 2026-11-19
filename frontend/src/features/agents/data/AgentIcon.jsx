@@ -1,4 +1,14 @@
 const ICON_PATHS = {
+  pre_onboarding: (
+    <>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <path d="M9 13h6"></path>
+      <path d="M9 17h3"></path>
+      <circle cx="17" cy="17" r="3"></circle>
+      <path d="m15.5 17 1 1 2-2"></path>
+    </>
+  ),
   onboarding: (
     <>
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>

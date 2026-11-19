@@ -1,6 +1,6 @@
 """Use-cases for payroll & salary: the three documents an employee can download (payslip, CTC statement, Form 16).
 
-The employee's annual CTC is read from OrangeHRM (PIM -> Salary, where onboarding recorded it); the split into pay components, the deductions
+The employee's annual CTC is read from HRMS (PIM -> Salary, where onboarding recorded it); the split into pay components, the deductions
 and the income tax are worked out here by the rules in ``payroll.policy``. The three documents are drawn as PDFs (``payroll.pdf``). Nothing is written anywhere.
 """
 
@@ -48,16 +48,21 @@ class PayrollService:
         return self._dir.find(ref, "salary records")
 
     def _annual_ctc(self, employee: Employee) -> int:
-        """The annual CTC from the employee's CTC component in OrangeHRM."""
+        """The annual CTC from the employee's CTC component in HRMS."""
         components = self._oh.salary_components(self._dir.emp_number(employee))
         ctc = next((c for c in components if c["name"].lower() == "ctc" and c["amount"] > 0), None)
         if ctc is None:
-            raise ConflictError(f"OrangeHRM has no CTC salary recorded for {employee.full_name} (PIM → employee → Salary).")
+            raise ConflictError(f"HRMS has no CTC salary recorded for {employee.full_name} (PIM → employee → Salary).")
         return round(ctc["amount"])
 
     # ------------------------------------------------------------- use-cases
     def options(self) -> PayrollOptions:
         return PayrollOptions(months=_recent_months(date.today()))
+
+    def links(self, ref: str) -> dict:
+        """Where the employee's salary can be seen in HRMS (PIM -> employee -> Salary), the page the figures are read from."""
+        number = self._dir.emp_number(self._employee(ref))
+        return {"salaryUrl": f"{self._oh.ui_url}/pim/viewSalaryList/empNumber/{number}"}
 
     def lookup(self, ref: str) -> EmployeeSummary:
         return self._dir.summary(self._employee(ref))

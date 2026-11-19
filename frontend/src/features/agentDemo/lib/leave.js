@@ -1,5 +1,5 @@
 // The leave & attendance chat: what the employee can ask for, the two forms (fields and rules) and the sample company
-// data the simulated run uses. The live run gets its balances, holidays and punches from OrangeHRM instead.
+// data the simulated run uses. The live run gets its balances, holidays and punches from HRMS instead.
 
 import { todayIso } from './resignation';
 
@@ -54,14 +54,18 @@ const reasonError = (reason) => {
   return text.length > 300 ? 'Keep the reason under 300 characters.' : '';
 };
 
+const isSunday = (iso) => new Date(`${iso}T00:00:00`).getDay() === 0;
+
 /** Returns { field: message } (empty when valid). The backend repeats these checks. */
 export function validateLeave(values) {
   const errors = {};
   if (!values.leaveType) errors.leaveType = 'Choose a leave type.';
   if (!values.startDate) errors.startDate = 'Choose the first day of leave.';
   else if (values.startDate < todayIso()) errors.startDate = 'The leave cannot start in the past.';
+  else if (isSunday(values.startDate)) errors.startDate = 'Sunday is a weekly off. Please choose another date.';
   if (!values.endDate) errors.endDate = 'Choose the last day of leave.';
   else if (values.startDate && values.endDate < values.startDate) errors.endDate = 'The end date cannot be before the start date.';
+  else if (isSunday(values.endDate)) errors.endDate = 'Sunday is a weekly off. Please choose another date.';
   const reason = reasonError(values.reason);
   if (reason) errors.reason = reason;
   return errors;

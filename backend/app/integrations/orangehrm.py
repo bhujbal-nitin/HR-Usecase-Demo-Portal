@@ -1,4 +1,4 @@
-"""OrangeHRM 5.x client (web-session login + PIM REST API)."""
+"""HRMS 5.x client (web-session login + PIM REST API)."""
 
 import base64
 import logging
@@ -18,7 +18,7 @@ from app.schemas.employee import Employee, OrangeHrmInfo
 from app.utils.formatting import split_name
 
 logger = logging.getLogger(__name__)
-SYSTEM = "OrangeHRM"
+SYSTEM = "HRMS"
 _UA = {"User-Agent": "Mozilla/5.0 (HR Demo Portal)"}
 
 # Used only to fill city/state from the free-text address when it is recognisable.
@@ -33,11 +33,11 @@ _CITY_STATE = {
 }
 
 
-_KNOWN_PROFILE_SECONDS = 300  # a profile seen in OrangeHRM is not asked about again for a few minutes
+_KNOWN_PROFILE_SECONDS = 300  # a profile seen in HRMS is not asked about again for a few minutes
 
 
 class ProfileNotFound(IntegrationError):
-    """OrangeHRM has no current profile with that name (as opposed to OrangeHRM being unreachable)."""
+    """HRMS has no current profile with that name (as opposed to HRMS being unreachable)."""
 
 
 @dataclass
@@ -50,14 +50,24 @@ class ProfileResult:
 class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
     def __init__(self, settings: Settings):
         self._s = settings
-        self._known_profiles: dict[int, float] = {}  # empNumber -> when OrangeHRM last confirmed it
+        self._known_profiles: dict[int, float] = {}  # empNumber -> when HRMS last confirmed it
 
     @property
     def base_url(self) -> str:
-        return self._s.orangehrm_base_url.rstrip("/")
+        return self._s.hrms_base_url.strip().rstrip("/") or f"http://127.0.0.1:{self._s.port}/api/hrms"
+
+    @property
+    def ui_url(self) -> str:
+        """Where HRMS pages open: ``{ui_url}/<page path>`` (ORANGEHRM_UI_URL, else the server's own /web/index.php)."""
+        configured = self._s.hrms_ui_url.strip().rstrip("/")
+        if configured:
+            return configured
+        if not self._s.hrms_base_url.strip() and self._s.cors_origin_list:  # the portal itself: its own HRMS pages
+            return f"{self._s.cors_origin_list[0].rstrip('/')}/hr/simulated/hrms"
+        return f"{self.base_url}/web/index.php"
 
     def is_configured(self) -> bool:
-        return bool(self.base_url and self._s.orangehrm_username and self._s.orangehrm_password.get_secret_value())
+        return bool(self._s.hrms_enabled and self.base_url and self._s.hrms_admin_username and self._s.hrms_admin_password.get_secret_value())
 
     def _require(self) -> None:
         if not self.is_configured():
@@ -74,15 +84,15 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
             if page.status_code == 403:  # the web server itself refuses this computer: nothing to do with the user name or password
                 raise IntegrationError(SYSTEM, (
                     "the server refused this computer (HTTP 403 Forbidden), so the portal cannot log in. It is not the user name or password: "
-                    "ask whoever runs the OrangeHRM server to allow this computer's IP address, or check that you are on the right network / VPN."))
+                    "ask whoever runs the HRMS server to allow this computer's IP address, or check that you are on the right network / VPN."))
             token_match = re.search(r':token="&quot;([^&]+)&quot;"', page.text) or re.search(
                 r'name="_token"\s+value="([^"]+)"', page.text
             )
             token = token_match.group(1) if token_match else ""
             session.post(
                 f"{self.base_url}/web/index.php/auth/validate",
-                data={"_token": token, "username": self._s.orangehrm_username,
-                      "password": self._s.orangehrm_password.get_secret_value()},
+                data={"_token": token, "username": self._s.hrms_admin_username,
+                      "password": self._s.hrms_admin_password.get_secret_value()},
                 headers={"Referer": login_url},
                 timeout=15,
             )
@@ -90,7 +100,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
         except requests.RequestException as exc:
             raise IntegrationError(SYSTEM, f"login failed: {exc}") from exc
         if probe.status_code == 403:
-            raise IntegrationError(SYSTEM, "the server refused the portal's request (HTTP 403 Forbidden) after the login. Check the user's permissions in OrangeHRM.")
+            raise IntegrationError(SYSTEM, "the server refused the portal's request (HTTP 403 Forbidden) after the login. Check the user's permissions in HRMS.")
         if not probe.ok:  # the login page sets a cookie even for bad credentials, so probe the API
             raise IntegrationError(SYSTEM, "login failed - check ORANGEHRM_USERNAME / ORANGEHRM_PASSWORD")
         return session
@@ -117,7 +127,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
 
     @staticmethod
     def _invalid_params(response: requests.Response) -> str:
-        """OrangeHRM's 422 names the rejected fields in error.data.invalidParamKeys; say which ones."""
+        """HRMS's 422 names the rejected fields in error.data.invalidParamKeys; say which ones."""
         try:
             keys = response.json().get("error", {}).get("data", {}).get("invalidParamKeys") or []
         except (ValueError, AttributeError):
@@ -137,14 +147,14 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
         try:
             created = self._api(session, "POST", "pim/employees", json={**person, "employeeId": employee_id})
         except IntegrationError as exc:
-            # The id we derive from the portal id may already be taken in OrangeHRM: let OrangeHRM assign its own.
+            # The id we derive from the portal id may already be taken in HRMS: let HRMS assign its own.
             if "employeeId" not in exc.message:
                 raise
-            logger.warning("OrangeHRM rejected employeeId %s; retrying with an assigned id", employee_id)
+            logger.warning("HRMS rejected employeeId %s; retrying with an assigned id", employee_id)
             created = self._api(session, "POST", "pim/employees", json=person)
         emp_number = created.get("empNumber")
         if not emp_number:
-            raise IntegrationError(SYSTEM, "profile was created but OrangeHRM returned no empNumber")
+            raise IntegrationError(SYSTEM, "profile was created but HRMS returned no empNumber")
         assigned_id = created.get("employeeId", employee_id)
 
         warnings: list[str] = []
@@ -155,7 +165,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
                 self._api(session, method, path, json=payload)
             except IntegrationError as exc:
                 warnings.append(f"{label}: {exc.message}")
-                logger.warning("OrangeHRM %s failed: %s", label, exc.message)
+                logger.warning("HRMS %s failed: %s", label, exc.message)
 
         # Personal details: only data the candidate actually supplied (no invented gender / marital status).
         attempt("personal details", "PUT", f"pim/employees/{emp_number}/personal-details", {
@@ -176,16 +186,16 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
         try:
             self._api(session, "PUT", contact_path, json=contact)
         except IntegrationError as exc:
-            # OrangeHRM refuses an e-mail address another profile already uses. The profile exists, so save the rest of the
+            # HRMS refuses an e-mail address another profile already uses. The profile exists, so save the rest of the
             # contact details without those e-mails and say so, instead of failing (a rerun would create a second profile).
             rejected = [k for k in ("workEmail", "otherEmail") if k in exc.message]
             if not rejected:
                 warnings.append(f"contact details: {exc.message}")
-                logger.warning("OrangeHRM contact details failed: %s", exc.message)
+                logger.warning("HRMS contact details failed: %s", exc.message)
             else:
                 attempt("contact details", "PUT", contact_path, {**contact, **{k: "" for k in rejected}})
-                notes.append(f"{' and '.join(rejected)} not saved: OrangeHRM rejected it (probably already used by another profile)")
-                logger.warning("OrangeHRM rejected %s for empNumber %s; saved the other contact details", rejected, emp_number)
+                notes.append(f"{' and '.join(rejected)} not saved: HRMS rejected it (probably already used by another profile)")
+                logger.warning("HRMS rejected %s for empNumber %s; saved the other contact details", rejected, emp_number)
         attempt("emergency contact", "POST", f"pim/employees/{emp_number}/emergency-contacts", {
             "name": emp.emergency_name, "relationship": "Family",
             "homePhone": "", "mobilePhone": emp.emergency_phone, "officePhone": "",
@@ -210,7 +220,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
             emp_number=emp_number,
             employee_id=str(assigned_id),
             work_email=work_email,
-            profile_url=f"{self.base_url}/web/index.php/pim/viewPersonalDetails/empNumber/{emp_number}",
+            profile_url=f"{self.ui_url}/pim/viewPersonalDetails/empNumber/{emp_number}",
             attached_documents=attached,
         )
         return ProfileResult(info=info, warnings=warnings, notes=notes)
@@ -225,7 +235,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
 
     # ------------------------------------------------------------ termination
     def employee_exists(self, emp_number: int) -> bool:
-        """Whether OrangeHRM still has this profile. A rebuilt or reset OrangeHRM no longer knows the numbers saved earlier."""
+        """Whether HRMS still has this profile. A rebuilt or reset HRMS no longer knows the numbers saved earlier."""
         if time.time() - self._known_profiles.get(emp_number, 0.0) < _KNOWN_PROFILE_SECONDS:
             return True
         try:
@@ -252,7 +262,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
             session, "POST", f"pim/employees/{emp_number}/terminations",
             json={"date": last_day, "terminationReasonId": reason_id, "note": note[:250]},
         )
-        return {"empNumber": emp_number, "terminationDate": last_day, "profileUrl": f"{self.base_url}/web/index.php/pim/viewPersonalDetails/empNumber/{emp_number}"}
+        return {"empNumber": emp_number, "terminationDate": last_day, "profileUrl": f"{self.ui_url}/pim/viewPersonalDetails/empNumber/{emp_number}"}
 
     def _find_emp_number(self, session: requests.Session, full_name: str) -> int:
         found = self._api(session, "GET", "pim/employees", params={"nameOrId": full_name, "limit": 10})
@@ -261,7 +271,7 @@ class OrangeHRMClient(LeaveAttendanceMixin, PayrollMixin, ClaimMixin):
             parts = [item.get("firstName"), item.get("middleName"), item.get("lastName")]
             if " ".join(" ".join(p.strip() for p in parts if p and p.strip()).lower().split()) == wanted:
                 return item["empNumber"]
-        raise ProfileNotFound(SYSTEM, f"no OrangeHRM profile named {full_name} was found")
+        raise ProfileNotFound(SYSTEM, f"no HRMS profile named {full_name} was found")
 
     def _termination_reason_id(self, session: requests.Session) -> int:
         """The id of the 'Resigned' reason (created if the instance has none with that name)."""

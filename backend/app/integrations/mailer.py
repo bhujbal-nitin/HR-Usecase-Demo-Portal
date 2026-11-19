@@ -10,6 +10,7 @@ from app.core.exceptions import IntegrationError, IntegrationNotConfiguredError
 
 logger = logging.getLogger(__name__)
 SYSTEM = "SMTP"
+_SUBTYPES = {".pdf": "pdf", ".docx": "vnd.openxmlformats-officedocument.wordprocessingml.document"}  # a PDF unless told otherwise
 
 
 class Mailer:
@@ -18,6 +19,22 @@ class Mailer:
 
     def is_configured(self) -> bool:
         return bool(self._s.smtp_server and self._s.smtp_username and self._s.smtp_password.get_secret_value())
+
+    def check_connection(self) -> str:
+        if not self.is_configured():
+            raise IntegrationNotConfiguredError(SYSTEM)
+        try:
+            if self._s.smtp_port == 465:
+                server = smtplib.SMTP_SSL(self._s.smtp_server, self._s.smtp_port, timeout=10)
+            else:
+                server = smtplib.SMTP(self._s.smtp_server, self._s.smtp_port, timeout=10)
+            with server:
+                if self._s.smtp_port != 465:
+                    server.starttls()
+                server.login(self._s.smtp_username, self._s.smtp_password.get_secret_value().replace(" ", ""))
+        except (smtplib.SMTPException, OSError) as exc:
+            raise IntegrationError(SYSTEM, f"SMTP connection failed: {exc}") from exc
+        return "Authenticated"
 
     def send(self, to: str, subject: str, html_body: str, attachment: Path | None = None) -> None:
         if not self.is_configured():
@@ -31,7 +48,7 @@ class Mailer:
         message.add_alternative(html_body, subtype="html")
         if attachment and attachment.exists():
             message.add_attachment(
-                attachment.read_bytes(), maintype="application", subtype="pdf", filename=attachment.name
+                attachment.read_bytes(), maintype="application", subtype=_SUBTYPES.get(attachment.suffix.lower(), "pdf"), filename=attachment.name
             )
 
         try:

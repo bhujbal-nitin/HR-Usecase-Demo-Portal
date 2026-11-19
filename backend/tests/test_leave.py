@@ -96,6 +96,9 @@ class FakeOrangeHRM:
     def attendance_url(self):
         return "http://hrm.example/attendance"
 
+    def balance_report_url(self):
+        return "http://hrm.example/leave/viewLeaveEntitlementReport"
+
     def employee_exists(self, emp_number):
         return True
 
@@ -137,6 +140,25 @@ def balance(client, leave_type: str = "Casual Leave", ref: str = "AE-111111") ->
 
 
 # ------------------------------------------------------------------------------------------------- the rules
+def test_the_balance_page_in_orangehrm_has_a_link(world):
+    client, _ = world
+    assert client.get("/api/leave/links").json() == {"balanceReportUrl": "http://hrm.example/leave/viewLeaveEntitlementReport"}
+
+
+def test_leave_cannot_start_or_end_on_a_sunday_but_can_run_over_one(world):
+    client, _ = world
+    sunday = date.today() + timedelta(days=14)
+    sunday += timedelta(days=(6 - sunday.weekday()) % 7)
+    friday, monday = sunday - timedelta(days=2), sunday + timedelta(days=1)
+    starts = client.post("/api/leave/check", json=leave_body(sunday, monday))
+    assert any("Sunday" in p and "start" in p for p in starts.json()["problems"])
+    ends = client.post("/api/leave/check", json=leave_body(friday, sunday))
+    assert any("Sunday" in p and "end" in p for p in ends.json()["problems"])
+    over = client.post("/api/leave/check", json=leave_body(friday, monday))
+    assert not any("Sunday" in p for p in over.json()["problems"])  # Friday to Monday is fine; the Sunday inside is not counted
+    assert client.post("/api/leave/requests/leave", json=leave_body(sunday, monday)).status_code in (400, 422)
+
+
 def test_working_days_use_the_work_week_and_holidays():
     mon, fri = date(2026, 11, 2), date(2026, 11, 6)
     assert policy.working_days(mon, date(2026, 11, 8), policy.DEFAULT_WORK_WEEK, {}) == 5
@@ -187,7 +209,7 @@ def test_check_finds_each_problem(world):
     assert not past["ok"] and "past" in past["problems"][0]
 
     saturday = date.today() + timedelta(days=(5 - date.today().weekday()) % 7 + 7)
-    assert "weekends or holidays" in client.post("/api/leave/check", json=leave_body(saturday, saturday + timedelta(days=1))).json()["problems"][0]
+    assert "weekends or holidays" in client.post("/api/leave/check", json=leave_body(saturday, saturday)).json()["problems"][0]
 
     long = client.post("/api/leave/check", json=leave_body(start, start + timedelta(days=40), "Sick Leave")).json()
     assert any("left" in p for p in long["problems"])
@@ -195,7 +217,7 @@ def test_check_finds_each_problem(world):
     assert client.post("/api/leave/check", json=leave_body(end, start)).status_code == 422  # ends before it starts
 
     gw.orangehrm.assigned.append({"emp": 77, "type": 1, "start": start, "end": end, "days": 2, "comment": ""})
-    assert "already have leave in these dates in OrangeHRM" in client.post("/api/leave/check", json=leave_body(start, end)).json()["problems"][0]
+    assert "already have leave in these dates in HRMS" in client.post("/api/leave/check", json=leave_body(start, end)).json()["problems"][0]
 
 
 def test_a_failing_orangehrm_call_is_reported_not_hidden(world):

@@ -1,6 +1,6 @@
 // A stand-in for the leave & attendance service calls, used by Auto-play · Simulated. The journey code is exactly the same as in
 // the live flow (see leaveJourney.jsx); only the calls behind it are replaced by this timed, in-memory play-through, so the
-// flows cannot drift apart. Nothing here contacts any system (the live flow works in OrangeHRM).
+// flows cannot drift apart. Nothing here contacts any system (the live flow works in HRMS).
 
 import {
   IN_PUNCH, LEAVE_POLICY, SHIFT_END, attendanceDateRange, fromIso, holidayOn, hoursWorked, isAfter, previousWorkingDays, toIso, upcomingHolidays, workingDays,
@@ -39,6 +39,9 @@ export function createSimulatedLeaveApi(scale = 1) {
     const left = balances().find((b) => b.leaveType === leaveType).left;
     const problems = [];
     if (startDate < todayIso()) problems.push('The leave cannot start in the past.');
+    for (const [label, day] of [['start', startDate], ['end', endDate]]) {
+      if (new Date(`${day}T00:00:00`).getDay() === 0) problems.push(`Sunday is a weekly off, so the leave cannot ${label} on ${day}. Please choose another date.`);
+    }
     if (days === 0) problems.push('These dates are all weekends or holidays, so no leave is needed.');
     if (days > left) problems.push(`Only ${left} day(s) of ${leaveType} are left, but ${days} were asked for.`);
     leaveRequests().filter((r) => holds(r) && r.startDate <= endDate && startDate <= r.endDate)
@@ -46,7 +49,7 @@ export function createSimulatedLeaveApi(scale = 1) {
     return { leaveType, startDate, endDate, days, balanceBefore: left, balanceAfter: left - days, holidaysSkipped: skipped(startDate, endDate), problems, ok: problems.length === 0 };
   };
 
-  // The simulated OrangeHRM holds one sample punch-in without an out-punch on the latest working day, until an attendance request
+  // The simulated HRMS holds one sample punch-in without an out-punch on the latest working day, until an attendance request
   // for a day is recorded (an approved request replaces whatever the day held).
   const sampleDay = previousWorkingDays(1)[0];
   const punchesOn = (day) => {
@@ -100,7 +103,7 @@ export function createSimulatedLeaveApi(scale = 1) {
       record.decidedAt = new Date().toISOString();
       return { ...record };
     },
-    /** "Record it in OrangeHRM": the simulated system just remembers it. */
+    /** "Record it in HRMS": the simulated system just remembers it. */
     applyLeaveRequest: async (id) => {
       await pause(1000);
       const record = requests.find((r) => r.id === id);

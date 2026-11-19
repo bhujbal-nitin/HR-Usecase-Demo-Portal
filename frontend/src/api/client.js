@@ -36,6 +36,9 @@ async function request(path, { method = 'GET', body, signal } = {}) {
   return response.status === 204 ? null : response.json();
 }
 
+/** Raised on the window when a call is refused because the session ended, so the portal can show the sign-in page. */
+export const SESSION_ENDED_EVENT = 'hr:session-ended';
+
 /** The ApiError for a failed response: the server's own message when it gave one. */
 async function failure(response) {
   let detail = 'The HR service could not complete the request. Please try again.';
@@ -46,6 +49,9 @@ async function failure(response) {
     if (data.fields) fields = data.fields;
   } catch {
     /* non-JSON error body: keep the generic message */
+  }
+  if (response.status === 401 && !new URL(response.url, window.location.origin).pathname.includes('/api/auth/')) {
+    window.dispatchEvent(new Event(SESSION_ENDED_EVENT));
   }
   return new ApiError(detail, { status: response.status, fields });
 }
@@ -76,6 +82,7 @@ async function download(path, fallbackName = 'download') {
 export const api = {
   get: (path, options) => request(path, options),
   post: (path, body, options) => request(path, { ...options, method: 'POST', body }),
+  patch: (path, body, options) => request(path, { ...options, method: 'PATCH', body }),
   delete: (path, options) => request(path, { ...options, method: 'DELETE' }),
   download,
 };

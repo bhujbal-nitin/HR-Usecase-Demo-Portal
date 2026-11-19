@@ -10,13 +10,13 @@ const sim = (title, systems, steps, result) => ({
   result,
 });
 
-const OHRM = 'OrangeHRMS';
+const OHRM = 'HRMSS';
 const AE = 'AutomationEdge';
 
 export const SIMULATED_PROCESSES = {
   // ---- Offboarding -------------------------------------------------------
   'offboarding.init_resignation': sim('Preparing resignation notice', [OHRM, AE], [
-    ['Reading employee record', 'OrangeHRMS PIM · Samantha Chang (AE-8821)', 900],
+    ['Reading employee record', 'HRMSS PIM · Samantha Chang (AE-8821)', 900],
     ['Calculating notice period', '30 days (Standard Engineering Contract)', 1000],
     ['Resolving last working day', 'Tentative: November 20, 2026', 800],
     ['Looking up reporting manager', 'Michael Torres (Engineering Director)', 900],
@@ -24,7 +24,7 @@ export const SIMULATED_PROCESSES = {
 
   'offboarding.submit_resignation': sim('Submitting resignation to HR', [OHRM, AE, 'Microsoft 365'], [
     ['Authenticating with AutomationEdge', 'Session established', 800],
-    ['Recording resignation in OrangeHRMS', 'Resignation request created', 1200],
+    ['Recording resignation in HRMSS', 'Resignation request created', 1200],
     ['Starting notice-period tracking', 'Countdown to Nov 20, 2026', 900],
     ['Notifying manager', 'Approval request e-mailed to Michael Torres', 1000],
   ], { title: 'Resignation recorded', rows: [['Reference', 'EXIT-347'], ['Manager approval', 'Requested']] }),
@@ -53,7 +53,7 @@ export const SIMULATED_PROCESSES = {
 
   // ---- Leave & Attendance ------------------------------------------------
   'leave_attendance.check_balances': sim('Fetching leave balances', [OHRM], [
-    ['Authenticating with OrangeHRMS', 'Session established', 800],
+    ['Authenticating with HRMSS', 'Session established', 800],
     ['Loading leave entitlements', 'Casual, Sick, Earned, Comp-off', 1000],
     ['Subtracting approved leave', 'Used days applied per type', 900],
   ], { title: 'Balances up to date', rows: [['Casual', '14 days'], ['Sick', '10 days'], ['Earned', '8 days'], ['Comp-off', '2 days']] }),
@@ -66,7 +66,7 @@ export const SIMULATED_PROCESSES = {
 
   'leave_attendance.submit_leave': sim('Submitting leave request', [OHRM, AE], [
     ['Calling AutomationEdge workflow', 'Apply Leave', 1000],
-    ['Creating leave in OrangeHRMS', 'Casual Leave · Oct 27–28', 1200],
+    ['Creating leave in HRMSS', 'Casual Leave · Oct 27–28', 1200],
     ['Deducting balance', '14 → 12 days', 800],
     ['Sending calendar invite to manager', 'Notification dispatched', 900],
   ], { title: 'Leave approved & logged', rows: [['Balance after', '12 days']] }),

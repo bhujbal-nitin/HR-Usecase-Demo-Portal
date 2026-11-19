@@ -1,4 +1,4 @@
-"""Working-day, holiday and punch arithmetic for leave & attendance. The balances, holidays and work week themselves come from OrangeHRM."""
+"""Working-day, holiday and punch arithmetic for leave & attendance. The balances, holidays and work week themselves come from HRMS."""
 
 from datetime import date, timedelta
 
@@ -25,7 +25,7 @@ def _span(start: date, end: date):
 
 
 def full_day_holidays(holidays: list[dict]) -> dict[date, str]:
-    """{date: name} for the holidays that take the whole day off (OrangeHRM length 0)."""
+    """{date: name} for the holidays that take the whole day off (HRMS length 0)."""
     return {date.fromisoformat(h["date"]): h["name"] for h in holidays if h.get("length", 0) == 0}
 
 

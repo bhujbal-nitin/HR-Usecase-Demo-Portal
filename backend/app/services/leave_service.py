@@ -1,7 +1,7 @@
 """Use-cases for leave and attendance.
 
-OrangeHRM is the source of the balances, holidays, work week and punch records, and is where approved leave and punch corrections are
-recorded. The demo works with three standard leave types (policy.STANDARD_LEAVE_TYPES): any that OrangeHRM lacks is created, and an
+HRMS is the source of the balances, holidays, work week and punch records, and is where approved leave and punch corrections are
+recorded. The demo works with three standard leave types (policy.STANDARD_LEAVE_TYPES): any that HRMS lacks is created, and an
 employee with no quota for one is given the default. Nothing else is involved. The portal keeps only the approval record
 (pending, approved or rejected) so a manager can decide on the Approvals page.
 """
@@ -55,7 +55,7 @@ def _work_email(e: Employee) -> str:
 
 
 def _holds_days(r: LeaveAttendanceRequest) -> bool:
-    """Leave that is not in OrangeHRM yet but still has to come off the balance: waiting for approval, or approved and not yet recorded."""
+    """Leave that is not in HRMS yet but still has to come off the balance: waiting for approval, or approved and not yet recorded."""
     return r.status == RequestStatus.PENDING or (r.status == RequestStatus.APPROVED and not r.applied)
 
 
@@ -65,7 +65,7 @@ class LeaveService:
         self._employees = employees
         self._gw = gateways
         self._offboardings = offboardings
-        self._apply_lock = threading.Lock()  # recording a request in OrangeHRM must never happen twice
+        self._apply_lock = threading.Lock()  # recording a request in HRMS must never happen twice
 
     # ------------------------------------------------------------------ employee
     def _find_employee(self, ref: str) -> Employee:
@@ -82,7 +82,7 @@ class LeaveService:
         raise NotFoundError("No employee onboarded through this portal matches that ID or e-mail address.")
 
     def _emp_number(self, employee: Employee) -> int:
-        """The employee's OrangeHRM number (see ``resolve_emp_number``)."""
+        """The employee's HRMS number (see ``resolve_emp_number``)."""
         return resolve_emp_number(self._employees, self._gw.orangehrm, employee)
 
     def lookup(self, ref: str) -> EmployeeSummary:
@@ -91,19 +91,19 @@ class LeaveService:
             employee_id=e.id, full_name=e.full_name, department=e.department, job_title=e.job_title, manager=e.manager, work_email=_work_email(e)
         )
 
-    # --------------------------------------------------------------- OrangeHRM reads
+    # --------------------------------------------------------------- HRMS reads
     def _leave_types(self) -> dict[str, int]:
-        """The standard leave types and their OrangeHRM ids; a type OrangeHRM does not have yet is created."""
+        """The standard leave types and their HRMS ids; a type HRMS does not have yet is created."""
         oh = self._gw.orangehrm
         known = {t["name"]: t["id"] for t in oh.leave_types()}
         for name in policy.STANDARD_LEAVE_TYPES:
             if name not in known:
                 known[name] = oh.create_leave_type(name)
-                logger.info("Created the leave type '%s' in OrangeHRM", name)
+                logger.info("Created the leave type '%s' in HRMS", name)
         return {name: known[name] for name in policy.STANDARD_LEAVE_TYPES}
 
     def _balance_rows(self, emp_number: int, types: dict[str, int], names: list[str]) -> list[dict]:
-        """OrangeHRM's balances; an employee with no quota for one of ``names`` is first given the default quota for it."""
+        """HRMS's balances; an employee with no quota for one of ``names`` is first given the default quota for it."""
         oh = self._gw.orangehrm
         rows = oh.leave_balances(emp_number)
         have = {r["leaveTypeId"] for r in rows}
@@ -112,14 +112,18 @@ class LeaveService:
             start, end = oh.leave_period(date.today())
             for name in missing:
                 oh.add_entitlement(emp_number, types[name], policy.STANDARD_LEAVE_TYPES[name], start, end)
-                logger.info("Gave employee %s a default %s quota in OrangeHRM", emp_number, name)
+                logger.info("Gave employee %s a default %s quota in HRMS", emp_number, name)
             rows = oh.leave_balances(emp_number)
         return rows
 
     def _calendar(self, start: date, end: date) -> tuple[dict[str, int], dict[date, str]]:
-        """The company's work week and its full-day holidays in the period, from OrangeHRM."""
+        """The company's work week and its full-day holidays in the period, from HRMS."""
         oh = self._gw.orangehrm
         return oh.work_week() or policy.DEFAULT_WORK_WEEK, policy.full_day_holidays(oh.holidays(start, end))
+
+    def links(self) -> dict:
+        """Pages in HRMS that the leave & attendance run can open (the balances live on the entitlement report)."""
+        return {"balanceReportUrl": self._gw.orangehrm.balance_report_url()}
 
     def options(self) -> LeaveOptions:
         return LeaveOptions(leave_types=list(self._leave_types()), shift_end=policy.SHIFT_END)
@@ -164,11 +168,11 @@ class LeaveService:
         return self._check(employee, self._emp_number(employee), data, self._repo.list_all(), date.today())[0]
 
     def _check(self, employee: Employee, emp_number: int, data: LeaveCheckRequest, records: list[LeaveAttendanceRequest], today: date) -> tuple[LeaveCheck, float]:
-        """The balance and policy checks against OrangeHRM. Returns the check and OrangeHRM's own balance for the leave type."""
+        """The balance and policy checks against HRMS. Returns the check and HRMS's own balance for the leave type."""
         oh = self._gw.orangehrm
         types = self._leave_types()
         if data.leave_type not in types:
-            raise ValidationFailedError(f"Unknown leave type. Choose one of: {', '.join(types) or 'none are set up in OrangeHRM'}.")
+            raise ValidationFailedError(f"Unknown leave type. Choose one of: {', '.join(types) or 'none are set up in HRMS'}.")
         work_week, holidays = self._calendar(data.start_date, data.end_date)
         days = policy.working_days(data.start_date, data.end_date, work_week, holidays)
         row = next((b for b in self._balance_rows(emp_number, types, [data.leave_type]) if b["leaveTypeId"] == types[data.leave_type]), None)
@@ -178,17 +182,20 @@ class LeaveService:
         problems: list[str] = []
         if data.start_date < today:
             problems.append("The leave cannot start in the past.")
+        for label, day in (("start", data.start_date), ("end", data.end_date)):
+            if day.weekday() == 6:  # Sunday is the weekly off: leave can run over it, but cannot begin or end on it
+                problems.append(f"Sunday is a weekly off, so the leave cannot {label} on {day:%d %b}. Please choose another date.")
         if days == 0:
             problems.append("These dates are all weekends or holidays, so no leave is needed.")
         if row is None:
-            problems.append(f"You have no {data.leave_type} entitlement in OrangeHRM.")
+            problems.append(f"You have no {data.leave_type} entitlement in HRMS.")
         elif days > left:
             problems.append(f"Only {left:g} day(s) of {data.leave_type} are left, but {days} were asked for.")
         own = self._own_overlap(records, employee.id, data.start_date, data.end_date)
         if own:
             problems.append(f"You already have leave from {own.start_date:%d %b} to {own.end_date:%d %b} ({own.id}).")
         elif oh.has_overlapping_leave(emp_number, data.start_date, data.end_date):
-            problems.append("You already have leave in these dates in OrangeHRM.")
+            problems.append("You already have leave in these dates in HRMS.")
 
         check = LeaveCheck(
             leave_type=data.leave_type, start_date=data.start_date, end_date=data.end_date, days=days, balance_before=left, balance_after=left - days,
@@ -223,7 +230,7 @@ class LeaveService:
         }
 
     def attendance(self, ref: str, day: date) -> AttendanceDayRecords:
-        """The punch records OrangeHRM holds for ``day`` (an approved attendance request for the day replaces them)."""
+        """The punch records HRMS holds for ``day`` (an approved attendance request for the day replaces them)."""
         employee = self._find_employee(ref)
         records = self._gw.orangehrm.attendance_records(self._emp_number(employee), day, day)
         return AttendanceDayRecords(
@@ -231,7 +238,7 @@ class LeaveService:
         )
 
     def submit_regularization(self, data: RegularizationApplication) -> LeaveAttendanceRequest:
-        """An attendance request: the day and the in and out times the employee gives, recorded in OrangeHRM once approved."""
+        """An attendance request: the day and the in and out times the employee gives, recorded in HRMS once approved."""
         employee = self._find_employee(data.employee_ref)
         if problem := policy.attendance_date_problem(data.attendance_date, date.today()):
             raise ValidationFailedError(problem)
@@ -264,11 +271,11 @@ class LeaveService:
         return self._repo.update(request_id, mutate)
 
     def apply(self, request_id: str) -> LeaveAttendanceRequest:
-        """Record an approved request in OrangeHRM: book the leave, or punch the employee out. Safe to call again: it never records twice."""
+        """Record an approved request in HRMS: book the leave, or punch the employee out. Safe to call again: it never records twice."""
         with self._apply_lock:
             record = self._repo.require(request_id)
             if record.status != RequestStatus.APPROVED:
-                raise ConflictError("Only an approved request can be recorded in OrangeHRM.")
+                raise ConflictError("Only an approved request can be recorded in HRMS.")
             if record.applied:
                 return record
             employee = self._find_employee(record.employee_id)
@@ -286,7 +293,7 @@ class LeaveService:
             return self._repo.update(request_id, mutate)
 
     def _record_attendance(self, emp_number: int, record: LeaveAttendanceRequest) -> None:
-        """Write the approved day to OrangeHRM: whatever it holds for the day is replaced by the punch-in and punch-out the employee gave.
+        """Write the approved day to HRMS: whatever it holds for the day is replaced by the punch-in and punch-out the employee gave.
 
         Replacing first also makes a retry safe: a half-written day (punched in, not out) is cleared before it is written again.
         """
@@ -296,7 +303,7 @@ class LeaveService:
         oh.punch_out(emp_number, day, record.out_punch, note)
 
     def clear(self) -> int:
-        """Delete decided requests from the portal. What was recorded in OrangeHRM stays there."""
+        """Delete decided requests from the portal. What was recorded in HRMS stays there."""
         return self._repo.delete_where(lambda r: r.status in _FINAL)
 
     # ------------------------------------------------------------------- helpers

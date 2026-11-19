@@ -46,7 +46,7 @@ VerifierDep = Annotated[DocumentVerificationService, Depends(get_verifier)]
 
 @router.get("/verification", response_model=VerificationStatus)
 def verification_status(verifier: VerifierDep):
-    """Whether OPENAI_API_KEY is set, i.e. whether uploaded documents will be read and checked."""
+    """Whether the Google service-account file is in place, i.e. whether uploaded documents will be read and checked."""
     return VerificationStatus(enabled=verifier.enabled, model=verifier.model if verifier.enabled else None)
 
 

@@ -5,10 +5,10 @@
 export const LEAVE_WORKFLOWS = {
   balance: { name: 'HR Demo Get Leave Balance', title: 'Run the leave balance workflow', note: 'AutomationEdge runs “HR Demo Get Leave Balance”; the next step starts when it is Complete.' },
   check: { name: 'HR Demo Check Leave Request', title: 'Run the leave check workflow', note: 'AutomationEdge runs “HR Demo Check Leave Request”; the next step starts when it is Complete.' },
-  'assign-leave': { name: 'HR Demo Assign Leave OrangeHRM', title: 'Run the assign leave workflow', note: 'AutomationEdge runs “HR Demo Assign Leave OrangeHRM”; the next step starts when it is Complete.' },
+  'assign-leave': { name: 'HR Demo Assign Leave HRMS', title: 'Run the assign leave workflow', note: 'AutomationEdge runs “HR Demo Assign Leave HRMS”; the next step starts when it is Complete.' },
   attendance: { name: 'HR Demo Get Attendance Records', title: 'Run the attendance records workflow', note: 'AutomationEdge runs “HR Demo Get Attendance Records”; the next step starts when it is Complete.' },
-  'punch-in': { name: 'HR Demo Add Punch In OrangeHRM', title: 'Run the punch-in workflow', note: 'AutomationEdge runs “HR Demo Add Punch In OrangeHRM”; the next step starts when it is Complete.' },
-  'punch-out': { name: 'HR Demo Punch Out OrangeHRM', title: 'Run the punch-out workflow', note: 'AutomationEdge runs “HR Demo Punch Out OrangeHRM”; the next step starts when it is Complete.' },
+  'punch-in': { name: 'HR Demo Add Punch In HRMS', title: 'Run the punch-in workflow', note: 'AutomationEdge runs “HR Demo Add Punch In HRMS”; the next step starts when it is Complete.' },
+  'punch-out': { name: 'HR Demo Punch Out HRMS', title: 'Run the punch-out workflow', note: 'AutomationEdge runs “HR Demo Punch Out HRMS”; the next step starts when it is Complete.' },
 };
 
 /** What the step card shows for a finished workflow run. */

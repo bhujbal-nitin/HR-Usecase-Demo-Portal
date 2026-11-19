@@ -230,6 +230,39 @@ class ServiceNowClient:
             warnings=warnings,
         )
 
+    # ------------------------------------------------- pre-onboarding (a request for a candidate who has no employee record yet)
+    def create_prehire_request(self, candidate, summary: str) -> CatalogRequest:
+        """A request for pre-onboarding: the REQ and its item, and a work note. ``candidate`` needs ``id`` and ``full_name``."""
+        self._require()
+        title = f"Pre-Onboarding & Document Verification - {candidate.full_name} ({candidate.id})"
+        created = self._call(
+            "POST", "/api/now/table/sc_request",
+            json={"short_description": title, "description": summary, "approval": "requested", "request_state": "requested", "stage": "requested", "state": "1"},
+        )
+        req_number, req_sys_id = created.get("number"), created.get("sys_id")
+        if not req_sys_id:
+            raise IntegrationError(SYSTEM, "request was created but ServiceNow returned no sys_id")
+        warnings: list[str] = []
+        ritm_number, ritm_sys_id = self._ensure_ritm(req_sys_id, candidate, summary, warnings, title=title)
+        note = f"Pre-onboarding request created from the HR Demo Portal for {candidate.full_name} ({candidate.id}); documents will be attached as they are checked."
+        self._note_quietly("sc_request", req_sys_id, note)
+        return CatalogRequest(
+            req_number=req_number, ritm_number=ritm_number, req_sys_id=req_sys_id, ritm_sys_id=ritm_sys_id,
+            req_url=self.record_url("sc_request", req_sys_id), ritm_url=self.record_url("sc_req_item", ritm_sys_id) if ritm_sys_id else None, warnings=warnings,
+        )
+
+    def attach_to_request(self, req_sys_id: str, attachment: Attachment) -> None:
+        self.attach_file("sc_request", req_sys_id, attachment)
+
+    def add_note_to_request(self, req_sys_id: str, note: str) -> None:
+        """A work note on a request (a courtesy: it never fails the caller)."""
+        self._note_quietly("sc_request", req_sys_id, note)
+
+    def close_request(self, req_sys_id: str, note: str) -> None:
+        """Mark the request complete, with a closing work note."""
+        self._call("PUT", f"/api/now/table/sc_request/{req_sys_id}", json={"approval": "approved", "request_state": "closed_complete", "stage": "complete", "state": "3"})
+        self._note_quietly("sc_request", req_sys_id, note)
+
     @staticmethod
     def _candidate_summary(emp: Employee, filenames: list[str]) -> str:
         """The request description: the candidate's details and the documents attached so far."""
@@ -283,7 +316,7 @@ class ServiceNowClient:
             except IntegrationError as exc:
                 logger.warning("ServiceNow description update on %s failed: %s", table, exc.message)
 
-    def _ensure_ritm(self, req_sys_id: str, emp: Employee, summary: str, warnings: list[str]):
+    def _ensure_ritm(self, req_sys_id: str, emp: Employee, summary: str, warnings: list[str], title: str | None = None):
         ritm_number = ritm_sys_id = None
         time.sleep(0.5)  # give the catalog workflow a moment to create the item
         try:
@@ -295,7 +328,7 @@ class ServiceNowClient:
         except IntegrationError as exc:
             warnings.append(f"RITM lookup: {exc.message}")
 
-        title = f"HRMS Onboarding & Document Verification - {emp.full_name} ({emp.id})"
+        title = title or f"HRMS Onboarding & Document Verification - {emp.full_name} ({emp.id})"
         try:
             if ritm_sys_id:
                 self._call(
@@ -392,7 +425,7 @@ class ServiceNowClient:
         self._note_quietly("incident", sys_id, f"Ticket resolved from the HR Demo Portal. {note}")
 
     def create_hardware_incident(self, emp: Employee, description: str, orange_emp_number: int | None) -> Incident:
-        suffix = f" (OrangeHRM #{orange_emp_number})" if orange_emp_number else ""
+        suffix = f" (HRMS #{orange_emp_number})" if orange_emp_number else ""
         return self._open_incident(
             {
                 "short_description": f"IT Provisioning: Deploy {emp.hardware} for {emp.full_name}{suffix}",

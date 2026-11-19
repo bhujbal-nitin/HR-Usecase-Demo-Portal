@@ -1,5 +1,5 @@
 // The Reimbursement & Benefits agent runs from features/agentDemo (reimbursementJourney.jsx): its bills are scanned and its
-// claims go to the manager and into OrangeHRM. This file only describes the agent on its card.
+// claims go to the manager and into HRMS. This file only describes the agent on its card.
 
 export const config = {
   id: 'reimbursement_benefits',
@@ -7,8 +7,8 @@ export const config = {
   catalogName: 'Reimbursement & Benefits',
   category: 'compliance',
   description:
-    'Reads expense bills of any kind (PDF or photo), marks what is within the policy, lets the manager approve or reject each bill and records the approved ones in OrangeHRM.',
-  tags: ['Bill Reading', 'All Bill Types', 'Per-Bill Approval', 'OrangeHRM Claim'],
+    'Reads expense bills of any kind (PDF or photo), marks what is within the policy, lets the manager approve or reject each bill and records the approved ones in HRMS.',
+  tags: ['Bill Reading', 'All Bill Types', 'Per-Bill Approval', 'HRMS Claim'],
   badge: 'Instant Approvals',
   greeting: (
     <>

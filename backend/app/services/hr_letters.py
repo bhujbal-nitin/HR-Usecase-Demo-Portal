@@ -36,7 +36,7 @@ def values_for(employee: Employee, today: date) -> dict[str, str]:
     """What each field of a letter is filled with (the keys are ``field_key`` names)."""
     first, middle, last = split_name(employee.full_name)
     code_number = employee.orange_hrm.employee_id if employee.orange_hrm and employee.orange_hrm.employee_id else re.sub(r"\D", "", employee.id)
-    code = f"AE{code_number}"  # "AE" + the employee ID shown in OrangeHRM (the number in the portal ID if there is no OrangeHRM profile)
+    code = f"AE{code_number}"  # "AE" + the employee ID shown in HRMS (the number in the portal ID if there is no HRMS profile)
     shown_today = today.strftime(DATE_FORMAT)
     return {
         "first name": f"{first} {middle}".strip(),

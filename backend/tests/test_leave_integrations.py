@@ -13,6 +13,7 @@ class Stub(LeaveAttendanceMixin):
     """The mixin with the HTTP layer replaced by canned answers; ``calls`` records what was sent."""
 
     base_url = "http://hrm.example/orangehrm"
+    ui_url = base_url + "/web/index.php"
     _s = SimpleNamespace(orangehrm_timezone_name="Asia/Kolkata", orangehrm_timezone_offset=5.5)
 
     def __init__(self, *answers):
@@ -146,7 +147,7 @@ def _client(monkeypatch, login_status, probe_status):
 
     session = _Session(login_status, probe_status)
     monkeypatch.setattr(module, "build_session", lambda verify=True: session)
-    settings = Settings(_env_file=None, orangehrm_base_url="http://hrm.example/orangehrm", orangehrm_username="admin", orangehrm_password="pw")
+    settings = Settings(_env_file=None, hrms_base_url="http://hrm.example/orangehrm")
     return module.OrangeHRMClient(settings), session
 
 

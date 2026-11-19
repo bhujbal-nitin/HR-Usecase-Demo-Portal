@@ -1,4 +1,4 @@
-// The Payroll & Salary agent runs from features/agentDemo (payrollJourney.jsx): the salary is read from OrangeHRM and the documents are made by the
+// The Payroll & Salary agent runs from features/agentDemo (payrollJourney.jsx): the salary is read from HRMS and the documents are made by the
 // backend draws the PDFs. This file only describes the agent on its card.
 
 export const config = {
@@ -6,7 +6,7 @@ export const config = {
   name: 'Payroll & Salary Agent',
   catalogName: 'Payroll & Salary',
   category: 'core',
-  description: 'Gives the employee their payslip, CTC statement and Form 16 to download as PDFs, made from the salary recorded in OrangeHRM.',
+  description: 'Gives the employee their payslip, CTC statement and Form 16 to download as PDFs, made from the salary recorded in HRMS.',
   tags: ['Payslip PDF', 'CTC Statement PDF', 'Form 16 PDF'],
   badge: 'Secure Bank-Grade',
   greeting: (

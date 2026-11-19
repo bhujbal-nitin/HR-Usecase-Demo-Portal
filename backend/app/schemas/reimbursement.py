@@ -56,9 +56,9 @@ class ReimbursementClaim(CamelModel):
     submitted_at: datetime = Field(default_factory=datetime.now)
     decided_at: datetime | None = None
 
-    # recorded in OrangeHRM (Claim) once approved
+    # recorded in HRMS (Claim) once approved
     applied: bool = False
     applied_at: datetime | None = None
-    orange_hrm_id: int | None = None  # the claim request created in OrangeHRM
+    orange_hrm_id: int | None = None  # the claim request created in HRMS
     orange_hrm_url: str | None = None
     expenses_recorded: int = 0  # how many of the approved bills are already in that claim (so a retry carries on, not starts over)

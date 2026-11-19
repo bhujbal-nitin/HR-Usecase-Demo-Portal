@@ -3,8 +3,8 @@ import { plain } from './wording';
 
 describe('plain', () => {
   it('removes request lines and HTTP codes from server messages', () => {
-    expect(plain('OrangeHRM PIM profile: POST pim/employees -> HTTP 422: Invalid Parameter (rejected: workEmail)'))
-      .toBe('OrangeHRM PIM profile: Invalid Parameter (rejected: workEmail)');
+    expect(plain('HRMS PIM profile: POST pim/employees -> HTTP 422: Invalid Parameter (rejected: workEmail)'))
+      .toBe('HRMS PIM profile: Invalid Parameter (rejected: workEmail)');
     expect(plain('The server returned an error (HTTP 500).')).not.toMatch(/HTTP|server returned/);
   });
 

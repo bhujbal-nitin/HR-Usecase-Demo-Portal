@@ -20,7 +20,7 @@ const CHAIN = [
   STEP('ad_disable', 'Disable the Active Directory account', 'AutomationEdge', 1900, 'Active Directory account disabled', { workflows: [WF('HR Demo AD user disable', 3)] }),
   STEP('o365_block', 'Block the Microsoft 365 account', 'Microsoft 365', 2000, 'Sign-in blocked, sessions revoked, 2 licence(s) removed',
     { workflows: [WF('HR Demo O365 User Offboarding', 4)], displayName: SIM_EMPLOYEE.fullName, signInBlocked: true, sessionsRevoked: true, licencesRemoved: 2 }),
-  STEP('hrm_terminate', 'End the employment in OrangeHRM', 'OrangeHRM', 1800, 'Employment ended', { workflows: [WF('HR Demo Terminate emp OrangeHRM', 5)] }),
+  STEP('hrm_terminate', 'End the employment in HRMS', 'HRMS', 1800, 'Employment ended', { workflows: [WF('HR Demo Terminate emp HRMS', 5)] }),
   STEP('asset_return', 'Raise the asset-return ticket', 'ServiceNow', 1700, 'Asset-return ticket INC0044122 created',
     { workflows: [WF('HR Demo Asset Return Request', 6)], ticket: 'INC0044122', asset: SIM_EMPLOYEE.hardware }),
   STEP('clearances', 'Raise the department clearances', 'ServiceNow', 1700, 'Clearance ticket INC0044123 created for IT, Finance, Admin',

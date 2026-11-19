@@ -8,9 +8,11 @@ export const getLeaveOptions = () => api.get('/leave/options');
 export const lookupEmployee = (employeeRef) => api.get(`/leave/lookup?${ref(employeeRef)}`);
 export const getBalances = (employeeRef) => api.get(`/leave/balances?${ref(employeeRef)}`);
 export const getHolidays = () => api.get('/leave/holidays');
-/** { employeeRef, leaveType, startDate, endDate } -> the balance and policy checks against OrangeHRM (nothing is saved). */
+/** { balanceReportUrl } : the HRMS page that shows the leave balances. */
+export const getLeaveLinks = () => api.get('/leave/links');
+/** { employeeRef, leaveType, startDate, endDate } -> the balance and policy checks against HRMS (nothing is saved). */
 export const checkLeave = (request) => api.post('/leave/check', request);
-/** The punch records OrangeHRM holds for one day (YYYY-MM-DD): { date, records: [{ inPunch, outPunch }] }. */
+/** The punch records HRMS holds for one day (YYYY-MM-DD): { date, records: [{ inPunch, outPunch }] }. */
 export const getAttendance = (employeeRef, day) => api.get(`/leave/attendance?${ref(employeeRef)}&date=${day}`);
 /** { employeeRef, leaveType, startDate, endDate, reason } */
 export const submitLeave = (application) => api.post('/leave/requests/leave', application);
@@ -21,7 +23,7 @@ export const listLeaveRequests = (options) => api.get('/leave/requests', options
 export const getLeaveRequest = (requestId) => api.get(`/leave/requests/${id(requestId)}`);
 export const approveLeaveRequest = (requestId) => api.post(`/leave/requests/${id(requestId)}/approve`);
 export const rejectLeaveRequest = (requestId) => api.post(`/leave/requests/${id(requestId)}/reject`);
-/** Record an approved request in OrangeHRM (book the leave / write the day's punch-in and punch-out). Repeating it does nothing. */
+/** Record an approved request in HRMS (book the leave / write the day's punch-in and punch-out). Repeating it does nothing. */
 export const applyLeaveRequest = (requestId) => api.post(`/leave/requests/${id(requestId)}/apply`);
 export const clearLeaveRequests = () => api.delete('/leave/requests');
 

@@ -17,6 +17,9 @@ export const listPolicies = () => api.get('/hr-policy/policies');
 /** Where the policy PDF can be downloaded: { href, filename }. */
 export const policyDownload = (policy) => ({ href: apiUrl(`/hr-policy/policies/${encodeURIComponent(policy.key)}/download`), filename: policy.fileName });
 
+/** Where the policy PDF can be read in the browser (opens in a new tab instead of saving). */
+export const policyViewUrl = (policy) => apiUrl(`/hr-policy/policies/${encodeURIComponent(policy.key)}/download?view=true`);
+
 /**
  * The letters that can be asked for: [{ key, title, available, fileName }]. `available` is false until the Word template is placed in the HR
  * documents folder. With the employee, `fileName` is the name of their own copy (e.g. Address_Proof_Letter_Varun_Chopra.docx).

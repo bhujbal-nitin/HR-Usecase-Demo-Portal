@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useEmployees } from '../../context/EmployeesContext';
+import ChangePasswordDialog from './ChangePasswordDialog';
 
 const tabClass = ({ isActive }) => `sidebar-tab-btn${isActive ? ' active' : ''}`;
 
@@ -52,9 +54,13 @@ function engineStatus(health, backendUp) {
 }
 
 export default function Sidebar({ open, onNavigate, health, backendUp }) {
+  const navigate = useNavigate();
   const { employees } = useEmployees();
+  const { authEnabled, username, fullName, role, logout } = useAuth();
+  const [changingPassword, setChangingPassword] = useState(false);
   const pending = employees.filter((e) => e.status === 'Pending Review').length;
   const engine = engineStatus(health, backendUp);
+  const canSeeAdmin = role === 'admin' || !authEnabled;
 
   return (
     <aside className={`sidebar${open ? ' mobile-open' : ''}`} id="mainSidebar">
@@ -70,7 +76,7 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
 
       <nav className="sidebar-nav" aria-label="Main navigation">
         <div className="sidebar-section-title">AI AGENTS &amp; DEMOS</div>
-        <Tab to="/" end featured icon="fa-wand-magic-sparkles" title="AI Agents" subtitle="6 Interactive Demos" badge="Live" onNavigate={onNavigate} />
+        <Tab to="/" end featured icon="fa-wand-magic-sparkles" title="AI Agents" subtitle="7 Interactive Demos" badge="Live" onNavigate={onNavigate} />
 
         <Tab to="/agent-demo" icon="fa-comments" title="Agent Demo" subtitle="WhatsApp journey" onNavigate={onNavigate} />
 
@@ -86,20 +92,54 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
 
         <div className="sidebar-section-title">SAMPLE DATA</div>
         <TabGroup icon="fa-file-arrow-down" title="Sample Files" subtitle="Documents & bills" prefix="/sample-files">
+          <Tab to="/sample-files/pre-onboarding" icon="fa-file-circle-check" title="Pre-Onboarding" subtitle="3 candidates" onNavigate={onNavigate} />
           <Tab to="/sample-files/onboarding" icon="fa-user-plus" title="Onboarding" subtitle="3 people" onNavigate={onNavigate} />
           <Tab to="/sample-files/reimbursement" icon="fa-file-invoice-dollar" title="Reimbursement" subtitle="9 sample bills" onNavigate={onNavigate} />
         </TabGroup>
+
+        <div className="sidebar-section-title">SIMULATED APPLICATIONS</div>
+        <Tab to="/simulated/hrms" icon="fa-building-user" title="HRMS" subtitle="HR management system" onNavigate={onNavigate} />
+
+        {canSeeAdmin && (
+          <>
+            <div className="sidebar-section-title">ADMIN</div>
+            <Tab to="/admin" icon="fa-user-shield" title="Admin" subtitle="System status & users" onNavigate={onNavigate} />
+          </>
+        )}
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-status-box" style={{ color: engine.color }}>
+        <div
+          className="sidebar-status-box"
+          style={{ color: engine.color, cursor: canSeeAdmin ? 'pointer' : 'default' }}
+          onClick={() => {
+            if (canSeeAdmin) {
+              navigate('/admin');
+              onNavigate?.();
+            }
+          }}
+          title={canSeeAdmin ? 'Click to view all system health & integrations in Admin' : undefined}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="sidebar-status-pulse" style={{ background: engine.color }}></span>
             <span>AE Engine</span>
           </div>
           <span style={{ fontWeight: 700 }}>{engine.label}</span>
         </div>
+        {authEnabled && (
+          <div className="sidebar-user">
+            <i className="fa-solid fa-user" aria-hidden="true"></i>
+            <strong title={fullName || username}>{fullName || username}</strong>
+            <button type="button" className="sidebar-signout sidebar-keybtn" onClick={() => setChangingPassword(true)} title="Change your password" aria-label="Change password">
+              <i className="fa-solid fa-key"></i>
+            </button>
+            <button type="button" className="sidebar-signout" onClick={logout} title="Sign out" aria-label="Sign out">
+              <i className="fa-solid fa-right-from-bracket"></i> <span>Sign out</span>
+            </button>
+          </div>
+        )}
       </div>
+      {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
     </aside>
   );
 }

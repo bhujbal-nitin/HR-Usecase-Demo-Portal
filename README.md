@@ -83,9 +83,31 @@ A system whose credentials are blank is reported as **Not configured** in the he
 shown as **Skipped**. Nothing is simulated or faked, so a demo without credentials still runs the intake and the review
 screens.
 
-### Document verification (OpenAI)
+### OrangeHRM: the built-in replica (HRMS)
 
-Set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`, default `gpt-4o`) in `backend/.env`. In the agent demo's **Manual · Live** mode
+The portal ships its own copy of OrangeHRM 5 (PIM, Leave, Attendance, Claim), so no external OrangeHRM is needed. It speaks the same
+web-session login and `/web/index.php/api/v2` JSON API as the real product, so the portal's OrangeHRM client and AutomationEdge workflows use it unchanged.
+It lives in `backend/app/hrms/` (rules) and `backend/app/api/routes/hrms.py` (routes), is served under `/api/hrms`, and has its own login
+(it is not behind the portal's sign-in). Its data is kept in `backend/data/hrms.json` (or the `portal_records` table when `STORAGE_BACKEND=postgres`)
+and is filled on first start from the portal's employees (leave types Casual / Sick / Privilege with a yearly quota, Indian holidays, claim events
+and expense types, termination reasons).
+
+| Setting (`backend/.env`) | Default | Meaning |
+|---|---|---|
+| `ORANGEHRM_BASE_URL` | `http://127.0.0.1:8000/api/hrms` | Where the portal's OrangeHRM client connects. Use the port the portal really runs on (`run.py` uses 8080 unless `PORT` says otherwise), or a real OrangeHRM URL. |
+| `ORANGEHRM_USERNAME` / `ORANGEHRM_PASSWORD` | `Admin` / `admin123` | The login the client uses. |
+| `HRMS_ADMIN_USERNAME` / `HRMS_ADMIN_PASSWORD` | `Admin` / `admin123` | The login the replica accepts (change both sides together). |
+| `ORANGEHRM_UI_URL` | empty | Where the OrangeHRM links shown in the demos open, e.g. `http://localhost:3000/hr/simulated/hrms`. Empty keeps `{base}/web/index.php/<page>`. |
+
+**AutomationEdge:** point the workflows' OrangeHRM connection at `http://<portal-host>:<port>/api/hrms` with user `Admin` and password `admin123`
+(then calls such as `/api/hrms/web/index.php/api/v2/pim/employees` work as on a real OrangeHRM). The portal host must be reachable from the
+AutomationEdge server (network, firewall, and not `127.0.0.1` unless AE runs on the same machine).
+
+### Document verification (Google Gemini)
+
+Put the Google Cloud service-account key at `backend/credentials/service-account.json` (the folder is git-ignored); optionally set
+`GOOGLE_PROJECT_ID`, `GOOGLE_LOCATION` (default `us-central1`) and `GEMINI_MODEL` (default `gemini-2.5-flash`) in `backend/.env`. The
+service account needs the *Vertex AI User* role and the Vertex AI API must be enabled in the project. In the agent demo's **Manual · Live** mode
 the candidate then uploads the Aadhaar card, the PAN card and the latest salary slip, and each file is read by the model:
 
 - it must be the right kind of document and be readable;
@@ -94,7 +116,7 @@ the candidate then uploads the Aadhaar card, the PAN card and the latest salary 
 - the PAN date of birth must equal the Aadhaar date of birth.
 
 A document that fails is rejected in the chat and asked for again; the record is only created once all three pass. Without a key
-files are just attached. If OpenAI cannot be reached the file is accepted and flagged for HR. Files are sent to OpenAI; only masked
+files are just attached. If Google cannot be reached the file is accepted and flagged for HR. Files are sent to Google; only masked
 numbers (`XXXX XXXX 1234`) are returned to the browser or logged. Accepted formats: PDF and `.docx`.
 
 ## Offboarding
@@ -197,8 +219,8 @@ Authorised Signatory under the company name.
 
 ## Reimbursement & Benefits
 
-The employee uploads expense **bills of any kind** (a PDF or a photo: PNG, JPG, WEBP), one after another. Each bill is read with **OpenAI**
-(the same `OPENAI_API_KEY` and model as the document checks): its category (Travel, Food, Mobile, Stay, Medical or Others), the printed date,
+The employee uploads expense **bills of any kind** (a PDF or a photo: PNG, JPG, WEBP), one after another. Each bill is read with **Google Gemini**
+(the same service account and model as the document checks): its category (Travel, Food, Mobile, Stay, Medical or Others), the printed date,
 the final amount and the vendor. The chat shows the bills in two tables, **Within the policy** (Travel and Food) and **Outside the policy**,
 each with its total. This is only a hint: the employee sends **all** the bills to the manager, who approves or rejects **each bill** on
 **Approvals → Reimbursement** (the bills within the policy start ticked, any bill can be approved). The approved bills are then recorded in
@@ -208,13 +230,13 @@ OrangeHRM as a claim, and the chat tells the employee which bills were approved.
 
 | What | Where it happens |
 |---|---|
-| Reading a bill (category, date, amount, vendor) | OpenAI, `POST /api/reimbursement/bills/read` (nothing is saved; the files are not kept) |
+| Reading a bill (category, date, amount, vendor) | Google Gemini, `POST /api/reimbursement/bills/read` (nothing is saved; the files are not kept) |
 | The Travel / Food policy hint and the totals | the portal's backend (`app/services/reimbursement/policy.py`), applied again on the server whatever the chat sends |
 | The claim waiting for the manager | the portal (`reimbursement_claims.json`), `POST /api/reimbursement/claims`; `POST /claims/{id}/approve` (body `{"approvedBills": [0, 2]}`, the positions of the approved bills; no body approves all) or `/reject`, then `/apply` |
 | After approval: the claim | OrangeHRM Claim: `claim/events`, `claim/expenses/types` (the event "Employee Expense Reimbursement" and an expense type for each category of the approved bills are created if missing), `POST claim/employees/{empNumber}/requests` (Assign Claim), `POST claim/requests/{id}/expenses` for each approved bill (INR), `PUT claim/requests/{id}/action` (submit) |
 
 Only the approved bills are recorded in OrangeHRM; at least one bill must be approved (otherwise the claim is rejected). Without
-`OPENAI_API_KEY` reading a bill fails with a clear message (Rerun / Skip). Recording is safe to repeat: it carries on from the expenses already
+the Google key file, reading a bill fails with a clear message (Rerun / Skip). Recording is safe to repeat: it carries on from the expenses already
 added and never creates a second claim. Where to see it in OrangeHRM: **Claim → Employee Claims** (`/web/index.php/claim/viewAssignClaim`);
 one claim opens at `/web/index.php/claim/assignClaim/id/{id}`. OrangeHRM's API cannot delete a claim, and it shows a claim that was assigned
 and submitted by an admin with the status **Paid**.
@@ -301,8 +323,8 @@ credentials the step fails with Rerun / Skip. Simulated mode plays the same step
 | POST | `/employees/sync-servicenow` | pick up requests approved inside ServiceNow |
 | GET | `/employees/{id}/documents/{idDoc\|panDoc\|uanDoc\|salaryDoc}` | download an uploaded document |
 | DELETE | `/employees?scope=processed\|all` | clear history (never removes in-flight records) |
-| GET | `/documents/verification` | whether `OPENAI_API_KEY` is set (document checks on/off) |
-| POST | `/documents/verify` | read one document with OpenAI and check it against the form (multipart: `docKey`, `file`, `fullName`, `referenceDob`) |
+| GET | `/documents/verification` | whether the Google key file is in place (document checks on/off) |
+| POST | `/documents/verify` | read one document with Gemini and check it against the form (multipart: `docKey`, `file`, `fullName`, `referenceDob`) |
 | GET | `/autofill` | unique sample candidate for the demo Auto-Fill button |
 | GET | `/integrations/health` | live connectivity of the four systems |
 | GET | `/tasks`, `/tasks/{id}` | background-job status and metrics |
@@ -327,3 +349,35 @@ Deliberate changes - tell me if you want any reverted:
 - **Storage is a JSON file** (`backend/data/`, includes candidate PII and uploads). Fine for a demo; use the repository interface to move to a database.
 - **The task queue is in-process.** A restart during provisioning marks the run *completed with errors* (it is not re-run, to avoid duplicate accounts); finished steps are preserved.
 - **Live integrations were not exercised** (no credentials available here). The clients are covered by tests against scripted HTTP responses, and the ServiceNow / AutomationEdge / Microsoft Graph / OrangeHRM call shapes were ported from the working reference code - expect to validate each against your tenants.
+
+
+## Login, roles and token tracking
+
+* `AUTH_ENABLED=true` with the `PG_*` settings turns on login; users live in the PostgreSQL table `portal_users`. The first user is made an **admin**;
+  admins add users (admin or normal) and disable them or reset passwords on the portal's **Admin** page. Command line: `python -m app.tools.add_user`.
+* Every Gemini call is recorded in `ai_usage` (user, what it was used for, model, input / output / total tokens). Admins see totals per user and the
+  full history under **Admin → Token usage / Usage history** (`GET /api/admin/usage`, `/api/admin/usage/history`).
+* `STORAGE_BACKEND=postgres` keeps onboarding, offboarding, leave and reimbursement records in the same database (table `portal_records`). On first
+  start the `.json` files in `backend/data` are copied in once (tracked in `portal_migrations`) and left untouched as a backup. Uploaded files stay on disk.
+
+## Pre-Onboarding
+
+The candidate goes through nine steps (routes under `/api/pre-onboarding`):
+
+1. **Offer released** - HR enters the candidate and job details (`POST /candidates`, which also raises the ServiceNow request); the offer letter is made (`/offer`, a
+   one-page PDF in the payslip's theme: company logo, name and address, blue title band, table of the offer terms, signature block; code in
+   `services/preonboarding/offer.py`) and e-mailed (`/dispatch`, the SMTP settings).
+2. **Offer accepted** - the candidate accepts and confirms the date of joining (`/accept`; a different date must be in the future and not a Sunday).
+3. **Registration and login** - a chat step only; nothing is stored by the backend.
+4. **Personal information** - date of birth (18 or over), gender, marital status, current and permanent address, emergency contact (`/personal`).
+5. **Document upload** - seven documents (10th and 12th marksheets, degree, Aadhaar, PAN, passport photo, resume), each read with Gemini
+   (`POST /candidates/{id}/documents`); a wrong, unclear or not genuine document is reported and not kept. `/verify` then cross-checks the name on all of them.
+6. **Background verification** - a **dummy** (`/bgv`): identity, education, employment and address always come back clear; nothing is sent anywhere.
+7. **HR approval** - the only human step, decided on the Approvals page (`/hr/approve|reject`).
+8. **Joining confirmation** - a joining-instructions PDF (`services/preonboarding/joining.py`) is made and e-mailed (`/joining`).
+9. **Onboarding initiation** - pre-onboarding is completed and the ServiceNow request is closed (`/complete`).
+
+The ServiceNow request is kept for the whole lifecycle: the documents and both letters are attached and every step is a work note; an HR rejection rejects it.
+No AutomationEdge workflow is used. Records made by the earlier flow (eight documents, a document-reviewer approval, status "Awaiting review" or "Offer sent")
+still load. Records are kept in `data/preonboarding.json` or, with `STORAGE_BACKEND=postgres`, in the database (the file is imported once); files are in
+`data/preonboarding/<id>/`.

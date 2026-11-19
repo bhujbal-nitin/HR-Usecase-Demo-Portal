@@ -1,19 +1,35 @@
 import { useEffect, useState } from 'react';
 import { getEmployee } from '../../../api/employees';
-import { getLeaveRequest } from '../../../api/leave';
+import { getLeaveLinks, getLeaveRequest } from '../../../api/leave';
 import { getOffboarding } from '../../../api/offboardings';
+import { getPayrollLinks } from '../../../api/payroll';
+import { getCandidate } from '../../../api/preOnboarding';
 import { getClaim } from '../../../api/reimbursement';
 import { systemLinks } from '../lib/systemLinks';
 
 const SYSTEMS = [
   { id: 'servicenow', label: 'ServiceNow', icon: 'fa-solid fa-headset' },
-  { id: 'orangehrm', label: 'OrangeHRM', icon: 'fa-solid fa-database' },
+  { id: 'orangehrm', label: 'HRMS', icon: 'fa-solid fa-database' },
   { id: 'office365', label: 'Microsoft 365', icon: 'fa-brands fa-microsoft' },
+  { id: 'documents', label: 'Policy documents', icon: 'fa-solid fa-file-pdf' },
 ];
 const POLL_MS = 4000;
-// A run only shows the systems it can create something in (leave & attendance only creates records in OrangeHRM).
-const SYSTEMS_BY_KIND = { leave: ['orangehrm'], reimbursement: ['orangehrm'] };
-const LOAD = { onboarding: getEmployee, offboarding: getOffboarding, leave: getLeaveRequest, reimbursement: getClaim };
+// A run only shows the systems it can create something in (leave & attendance only creates records in HRMS).
+const SYSTEMS_BY_KIND = { leave: ['orangehrm'], reimbursement: ['orangehrm'], payroll: ['orangehrm'], policy: ['documents'], preonboarding: ['servicenow'] };
+const CONNECTED = ['servicenow', 'orangehrm', 'office365'];
+const LOAD = {
+  onboarding: (run) => getEmployee(run.id),
+  offboarding: (run) => getOffboarding(run.id),
+  reimbursement: (run) => getClaim(run.id),
+  preonboarding: (run) => getCandidate(run.id), // the request raised for the candidate in ServiceNow
+  policy: async (run) => ({ items: run.items ?? [] }), // the policy and letter files this run used
+  payroll: (run) => getPayrollLinks(run.employeeId), // the salary is only read, so the link is the employee's Salary page
+  // A leave run opens everything it did: the balances it read and each request it saved.
+  leave: async (run) => ({
+    requests: await Promise.all((run.requestIds ?? []).map((id) => getLeaveRequest(id))),
+    balanceReportUrl: run.balance ? (await getLeaveLinks()).balanceReportUrl : null,
+  }),
+};
 
 /** Live runs only: one button per system; each opens, in a new tab, what this run created there. */
 export default function SystemLinks({ run, busy }) {
@@ -25,7 +41,7 @@ export default function SystemLinks({ run, busy }) {
     let alive = true;
     const load = async () => {
       try {
-        const next = await LOAD[run.kind](run.id);
+        const next = await LOAD[run.kind](run);
         if (alive) setRecord(next);
       } catch { /* the buttons simply stay as they are */ }
     };
@@ -39,7 +55,7 @@ export default function SystemLinks({ run, busy }) {
 
   return (
     <div className="ad-syslinks" role="group" aria-label="Open the connected systems">
-      {SYSTEMS.filter(({ id }) => !SYSTEMS_BY_KIND[run.kind] || SYSTEMS_BY_KIND[run.kind].includes(id)).map(({ id, label, icon }) => {
+      {SYSTEMS.filter(({ id }) => (SYSTEMS_BY_KIND[run.kind] ?? CONNECTED).includes(id)).map(({ id, label, icon }) => {
         const items = links[id];
         return (
           <div key={id} className="ad-sys-wrap">

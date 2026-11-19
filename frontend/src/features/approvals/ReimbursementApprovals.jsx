@@ -76,7 +76,7 @@ function DetailModal({ claim, onClose, onApprove, onReject, onRecord }) {
       footer={
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
-          {needsRecording(claim) && <button type="button" className="btn btn-primary" onClick={() => onRecord(claim)}><i className="fa-solid fa-cloud-arrow-up"></i> Record in OrangeHRM</button>}
+          {needsRecording(claim) && <button type="button" className="btn btn-primary" onClick={() => onRecord(claim)}><i className="fa-solid fa-cloud-arrow-up"></i> Record in HRMS</button>}
           {pending && (
             <>
               <button type="button" className="btn btn-rose" onClick={() => onReject(claim)}><i className="fa-solid fa-xmark"></i> Reject all</button>
@@ -110,10 +110,10 @@ function DetailModal({ claim, onClose, onApprove, onReject, onRecord }) {
       </section>
       {claim.status === 'Approved' && (
         <section className="detail-section">
-          <h4><i className="fa-solid fa-database text-accent"></i> OrangeHRM</h4>
+          <h4><i className="fa-solid fa-database text-accent"></i> HRMS</h4>
           {claim.applied
-            ? <p>Recorded {formatDateTime(claim.appliedAt)}. {claim.orangeHrmUrl && <a href={claim.orangeHrmUrl} target="_blank" rel="noreferrer">Open the claim in OrangeHRM</a>}</p>
-            : <p style={{ color: 'var(--text-muted)' }}>Approved, but not recorded in OrangeHRM yet.</p>}
+            ? <p>Recorded {formatDateTime(claim.appliedAt)}. {claim.orangeHrmUrl && <a href={claim.orangeHrmUrl} target="_blank" rel="noreferrer">Open the claim in HRMS</a>}</p>
+            : <p style={{ color: 'var(--text-muted)' }}>Approved, but not recorded in HRMS yet.</p>}
         </section>
       )}
       {claim.decidedAt && <p style={{ color: 'var(--text-muted)' }}>Decided {formatDateTime(claim.decidedAt)}.</p>}
@@ -177,10 +177,10 @@ export default function ReimbursementApprovals() {
   const confirmAction = async () => {
     const { kind, claim, bills } = confirm;
     if (kind === 'approve') {
-      // A demo waiting for this decision records it in OrangeHRM itself and carries on in the Agent Demo screen; otherwise record it here.
+      // A demo waiting for this decision records it in HRMS itself and carries on in the Agent Demo screen; otherwise record it here.
       if (await act(approveClaim, `${claim.id}: ${bills.length} bill${bills.length === 1 ? '' : 's'} approved.`, claim.id, bills)) {
         if (demoRunning) navigate('/agent-demo/reimbursement_benefits');
-        else await act(applyClaim, `${claim.id} was recorded in OrangeHRM.`, claim.id);
+        else await act(applyClaim, `${claim.id} was recorded in HRMS.`, claim.id);
       }
     } else if (kind === 'reject') {
       if (await act(rejectClaim, `${claim.id} was rejected.`, claim.id) && demoRunning) navigate('/agent-demo/reimbursement_benefits');
@@ -195,7 +195,7 @@ export default function ReimbursementApprovals() {
       <div className="dashboard-header">
         <div>
           <h2>Reimbursement</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Review expense claims bill by bill: tick the bills you approve, the others are rejected. Approved bills are recorded as a claim in OrangeHRM.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Review expense claims bill by bill: tick the bills you approve, the others are rejected. Approved bills are recorded as a claim in HRMS.</p>
         </div>
         <div className="header-actions">
           <button type="button" className="btn btn-secondary" onClick={refresh}><i className="fa-solid fa-rotate"></i> Refresh</button>
@@ -242,7 +242,7 @@ export default function ReimbursementApprovals() {
                 <td>{formatInr(claim.totalAmount)}</td>
                 <td>{claim.approvedTotal === null ? '—' : formatInr(claim.approvedTotal)}</td>
                 <td className="wrap">{claim.manager}</td>
-                <td><StatusBadge status={claim.status} />{needsRecording(claim) && <div className="candidate-email">Not in OrangeHRM yet</div>}</td>
+                <td><StatusBadge status={claim.status} />{needsRecording(claim) && <div className="candidate-email">Not in HRMS yet</div>}</td>
                 <td>
                   <div className="action-btn-group" style={{ justifyContent: 'flex-end' }}>
                     <button type="button" className="icon-btn" onClick={() => setDetailId(claim.id)} title={claim.status === 'Pending Approval' ? 'Review the bills' : 'View details'} aria-label={`View ${claim.id}`}><i className="fa-solid fa-eye"></i></button>
@@ -267,25 +267,25 @@ export default function ReimbursementApprovals() {
           onClose={() => setDetailId(null)}
           onApprove={(c, bills) => { setDetailId(null); setConfirm({ kind: 'approve', claim: c, bills }); }}
           onReject={(c) => { setDetailId(null); setConfirm({ kind: 'reject', claim: c }); }}
-          onRecord={(c) => act(applyClaim, `${c.id} was recorded in OrangeHRM.`, c.id)}
+          onRecord={(c) => act(applyClaim, `${c.id} was recorded in HRMS.`, c.id)}
         />
       )}
 
       {confirm?.kind === 'approve' && (
         <ConfirmDialog title={`Approve ${confirm.bills.length} of ${confirm.claim.items.length} bills in ${confirm.claim.id}?`} icon="fa-check" confirmLabel="Approve" confirmClass="btn-emerald" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
           <p>{confirm.claim.fullName}: {formatInr(sumOf(confirm.claim.items.filter((_, i) => confirm.bills.includes(i))))} of {formatInr(confirm.claim.totalAmount)} is approved; the other bills are rejected.</p>
-          <p>A claim with the approved bills as expenses is created and submitted in OrangeHRM.</p>
+          <p>A claim with the approved bills as expenses is created and submitted in HRMS.</p>
         </ConfirmDialog>
       )}
       {confirm?.kind === 'reject' && (
         <ConfirmDialog title={`Reject ${confirm.claim.id}?`} icon="fa-xmark" confirmLabel="Reject all" confirmClass="btn-rose" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
           <p>{confirm.claim.fullName}: {summaryOf(confirm.claim)}. Every bill in the claim is rejected.</p>
-          <p>Nothing is recorded in OrangeHRM.</p>
+          <p>Nothing is recorded in HRMS.</p>
         </ConfirmDialog>
       )}
       {confirm?.kind === 'clear' && (
         <ConfirmDialog title="Clear decided claims?" icon="fa-broom" confirmLabel="Clear history" busy={busy} onConfirm={confirmAction} onCancel={() => setConfirm(null)}>
-          <p>Removes approved and rejected claims from this list. What was recorded in OrangeHRM stays there. Pending claims are kept.</p>
+          <p>Removes approved and rejected claims from this list. What was recorded in HRMS stays there. Pending claims are kept.</p>
         </ConfirmDialog>
       )}
     </>

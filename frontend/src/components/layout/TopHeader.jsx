@@ -5,6 +5,7 @@ const TITLES = {
   '/': 'HR AI Agents',
   '/agent-demo': 'Onboarding Agent Demo',
   '/approvals': 'Approvals & Provisioning',
+  '/admin': 'Admin',
   '/sample-files/onboarding': 'Sample Files · Onboarding',
   '/sample-files/reimbursement': 'Sample Files · Reimbursement',
 };
@@ -14,9 +15,6 @@ export default function TopHeader({ onToggleSidebar, collapsed }) {
   const location = useLocation();
   const navigate = useNavigate();
   const current = THEMES.find((t) => t.id === theme) ?? THEMES[0];
-
-  // The demo page listens for this navigation state and offers to play the onboarding journey.
-  const autoFill = () => navigate('/agent-demo', { state: { autoplay: Date.now() } });
 
   // Back goes to the previous page; if the portal was opened straight on this page there is none, so it goes to the catalog.
   const goBack = () => (location.key === 'default' ? navigate('/') : navigate(-1));
@@ -40,9 +38,6 @@ export default function TopHeader({ onToggleSidebar, collapsed }) {
       </div>
 
       <div className="top-header-right">
-        <button type="button" className="btn btn-secondary header-btn" onClick={autoFill} title="Play the Onboarding Agent demo with a sample candidate">
-          <i className="fa-solid fa-bolt"></i> Auto-Fill Demo
-        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <select
             value={theme}

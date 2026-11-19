@@ -4,7 +4,7 @@ from functools import lru_cache
 import os
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -32,6 +32,24 @@ class Settings(BaseSettings):
     offers_dir: Path = BACKEND_DIR / "generated_offers"
     max_upload_bytes: int = 10 * 1024 * 1024
     hr_documents_dir: Path = BACKEND_DIR / "hr_documents"  # the ready-made letters (address proof, bank account opening) you place there
+
+    # --- Login (users live in a PostgreSQL database) ---------------------
+    # With AUTH_ENABLED=false (the default) the portal opens without a login, as before.
+    auth_enabled: bool = False
+    auth_secret_key: SecretStr = SecretStr("")  # signs the session cookie; set a long random value so sessions survive a restart
+    auth_session_hours: int = 12
+    auth_cookie_secure: bool = False  # true only when every visitor reaches the portal over https
+    pg_host: str = "127.0.0.1"
+    pg_port: int = 5432
+    pg_database: str = ""
+    pg_user: str = ""
+    pg_password: SecretStr = SecretStr("")
+    pg_schema: str = ""  # empty = the database's default schema; tests use a throw-away one
+
+    # --- Where the records are kept ---------------------------------------
+    # "json" = the files in DATA_DIR (the original behaviour). "postgres" = the PG_* database above; the files are
+    # copied into it once, on first start, and then left untouched as a backup.
+    storage_backend: str = "json"
 
     # --- ServiceNow -----------------------------------------------------
     sn_instance_url: str = ""
@@ -95,10 +113,15 @@ class Settings(BaseSettings):
     o365_default_domain: str = ""
     o365_refresh_token: SecretStr = SecretStr("")
 
-    # --- OrangeHRM ------------------------------------------------------
-    orangehrm_base_url: str = ""
-    orangehrm_username: str = ""
-    orangehrm_password: SecretStr = SecretStr("")
+    # --- HRMS (the portal's built-in HR system, served under /api/hrms) ----------
+    # The demos always use it. HRMS_BASE_URL is only needed when the portal reaches itself at another address than
+    # http://127.0.0.1:<PORT>/api/hrms. HRMS_UI_URL (empty = {base}/web/index.php) is where the links shown in the demos open.
+    hrms_enabled: bool = True
+    hrms_base_url: str = ""
+    hrms_ui_url: str = ""
+    hrms_admin_username: str = "Admin"
+    hrms_admin_password: SecretStr = SecretStr("admin123")
+    hrms_session_hours: int = 12
 
     # --- Outbound mail --------------------------------------------------
     smtp_server: str = "smtp.gmail.com"
@@ -120,12 +143,13 @@ class Settings(BaseSettings):
     km_project_secret: SecretStr = SecretStr("")
     km_timeout_seconds: int = 60
 
-    # --- OpenAI (document verification in the agent demo's manual live mode) -----
-    # Leave the key empty to switch the check off; uploaded documents are then only attached, not read.
-    openai_api_key: SecretStr = SecretStr("")
-    openai_model: str = "gpt-4o"
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_timeout_seconds: int = 90
+    # --- Google Gemini on Vertex AI (reads uploaded documents and bills) -----------
+    # Uses a Google Cloud service account. Leave the file missing to switch the check off; uploaded documents are then only attached.
+    google_credentials_file: Path = BACKEND_DIR / "credentials" / "service-account.json"
+    google_project_id: str = ""  # empty = the project_id inside the service-account file
+    google_location: str = "us-central1"
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_timeout_seconds: int = 90
     # How alike two names must be (0-1) to count as the same person; handles case, punctuation and a missing middle name.
     document_name_match_threshold: float = 0.85
 
@@ -147,7 +171,7 @@ class Settings(BaseSettings):
     demo_live_phase_gap_ms: int = 1500
 
     # --- Leave & attendance ---------------------------------------------------
-    # The time zone sent with punches added in OrangeHRM (it must be one OrangeHRM knows, with its UTC offset in hours).
+    # The time zone sent with punches added in HRMS (it must be one HRMS knows, with its UTC offset in hours).
     orangehrm_timezone_name: str = "Asia/Kolkata"
     orangehrm_timezone_offset: float = 5.5
 
@@ -155,6 +179,11 @@ class Settings(BaseSettings):
     offboarding_notice_period_days: int = 30
     # Share of the monthly gross that is "basic"; leave is encashed at the basic daily rate.
     offboarding_basic_share: float = 0.5
+
+    @field_validator("google_credentials_file")
+    @classmethod
+    def _key_file_relative_to_backend(cls, value: Path) -> Path:
+        return value if value.is_absolute() else BACKEND_DIR / value
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -171,6 +200,19 @@ class Settings(BaseSettings):
     @property
     def reimbursement_claims_file(self) -> Path:
         return self.data_dir / "reimbursement_claims.json"
+
+    @property
+    def hrms_file(self) -> Path:
+        return self.data_dir / "hrms.json"
+
+    @property
+    def preonboarding_file(self) -> Path:
+        return self.data_dir / "preonboarding.json"
+
+    @property
+    def preonboarding_dir(self) -> Path:
+        """The documents and offer letters of the pre-onboarding candidates, one folder each."""
+        return self.data_dir / "preonboarding"
 
     @property
     def employees_file(self) -> Path:

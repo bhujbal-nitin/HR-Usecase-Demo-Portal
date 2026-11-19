@@ -65,6 +65,7 @@ def test_the_reader_only_accepts_pdfs_and_photos():
 # ------------------------------------------------------------------------------------------- the OrangeHRM claim calls
 class Stub(ClaimMixin):
     base_url = "http://hrm.example/orangehrm"
+    ui_url = base_url + "/web/index.php"
 
     def __init__(self, *answers):
         self.answers, self.calls = list(answers), []

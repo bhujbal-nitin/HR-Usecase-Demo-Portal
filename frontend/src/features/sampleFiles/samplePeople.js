@@ -2,7 +2,7 @@
 // details to type into the joining form. Name, date of birth, Aadhaar, PAN, UAN, address and father's name are exactly what the documents show; the
 // e-mail, phones, role, manager, CTC, workstation and work location are fictional.
 
-const DOCUMENT_FOLDER = '/sample-documents/onboarding';
+const DOCUMENT_FOLDER = `${import.meta.env.BASE_URL}sample-documents/onboarding`; // under the portal's base path (/hr/)
 
 export const SAMPLE_PEOPLE = [
   {

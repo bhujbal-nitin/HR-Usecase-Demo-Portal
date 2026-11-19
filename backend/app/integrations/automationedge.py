@@ -1,4 +1,4 @@
-"""AutomationEdge (AE) T4 RPA client: authentication, workflow execution and status polling."""
+"""AutomationEdge (AE) T4 APA client: authentication, workflow execution and status polling."""
 
 import base64
 import json

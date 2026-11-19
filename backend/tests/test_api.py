@@ -16,8 +16,22 @@ def test_liveness(client):
 
 def test_integrations_report_not_configured(client):
     body = client.get("/api/integrations/health").json()
-    assert set(body) == {"servicenow", "automationedge", "office365", "orangehrm"}
+    expected = {"servicenow", "automationedge", "office365", "orangehrm", "gemini", "knowledge_base", "database", "mailer"}
+    assert set(body) == expected
     assert all(item["configured"] is False and item["ok"] is False for item in body.values())
+
+
+def test_single_integration_health_check(client):
+    # Test valid system that is not configured
+    res = client.post("/api/integrations/health/orangehrm/check")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["configured"] is False
+    assert data["ok"] is False
+
+    # Test unknown system
+    res404 = client.post("/api/integrations/health/unknown_sys/check")
+    assert res404.status_code == 404
 
 
 def test_autofill_returns_valid_profile(client, candidate_form, candidate_files):

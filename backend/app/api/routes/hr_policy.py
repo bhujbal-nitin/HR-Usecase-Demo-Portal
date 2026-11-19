@@ -54,10 +54,10 @@ def search_policies(service: HrPolicyDep, query: Annotated[str, Query(max_length
 
 
 @router.get("/policies/{key}/download")
-def download_policy(key: str, service: HrPolicyDep):
-    """The policy PDF as it is kept in the policies folder."""
+def download_policy(key: str, service: HrPolicyDep, view: bool = False):
+    """The policy PDF as it is kept in the policies folder (``view=true`` opens it in the browser instead of saving it)."""
     path = service.policy_file(key)
-    return FileResponse(path, media_type="application/pdf", filename=path.name)
+    return FileResponse(path, media_type="application/pdf", filename=path.name, content_disposition_type="inline" if view else "attachment")
 
 
 @router.get("/letters", response_model=list[Letter])

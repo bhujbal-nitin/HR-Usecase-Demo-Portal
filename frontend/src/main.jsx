@@ -12,6 +12,8 @@ import './styles/sample_files.css';
 import './styles/app.css';
 import './styles/agent-demo.css';
 import './styles/agent-stage.css';
+import './styles/login.css';
+import './styles/hrms.css';
 
 import App from './App.jsx';
 

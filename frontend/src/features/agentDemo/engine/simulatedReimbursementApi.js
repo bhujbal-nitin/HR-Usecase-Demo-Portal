@@ -1,6 +1,6 @@
 // A stand-in for the reimbursement service calls, used by Auto-play · Simulated. The journey code is exactly the same as in the live
 // flow (see reimbursementJourney.jsx); only the calls behind it are replaced by this timed, in-memory play-through, so the flows cannot
-// drift apart. Nothing here contacts any system (the live flow scans bills and records the claim in OrangeHRM).
+// drift apart. Nothing here contacts any system (the live flow scans bills and records the claim in HRMS).
 
 import { totalOf, withinPolicy } from '../lib/reimbursement';
 import { REIMBURSEMENT_WORKFLOWS } from './phases/reimbursementWorkflow';
@@ -52,7 +52,7 @@ export function createSimulatedReimbursementApi(scale = 1, samples = []) {
       claim.decidedAt = new Date().toISOString();
       return { ...claim, items: claim.items.map((b) => ({ ...b })) };
     },
-    /** "Record it in OrangeHRM": the simulated system just remembers it. */
+    /** "Record it in HRMS": the simulated system just remembers it. */
     applyClaim: async (id) => {
       await pause(1100);
       const claim = claims.find((c) => c.id === id);

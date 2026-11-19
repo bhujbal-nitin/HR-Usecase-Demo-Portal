@@ -8,12 +8,22 @@ import { createSimulatedHrPolicyApi } from './simulatedHrPolicyApi';
 // HR policy & documents. Manual: YOU are the employee and the chat waits for you at every step. Auto-play: the same journey with the
 // policy download, the questions and the two letters asked for you. Live: the policy PDFs in the policies folder are offered in a dropdown and
 // the one you pick is downloaded as it is; a policy question goes to the knowledge base (with the earlier questions of the chat,
-// so a follow-up is understood) and a letter is a Word file made from the template in the HR documents folder, with the employee's details. Auto-play · Simulated: the very same
+// so a follow-up is understood) and a letter is a Word file made from the template in the HR documents folder, with the employee's details. Auto-play · Simulated Environment: the very same
 // journey runs against simulatedHrPolicyApi, so the flows cannot drift apart; its steps are tagged Simulated.
 // Five AutomationEdge showcase workflows run, each right AFTER the step it stands for, and the chat goes on once it is Complete: Search Policy after a
 // search, Get Policy Document after a policy is taken, Ask Policy Question after every answer, and a Generate Letter workflow after each letter.
 
 const MAX_HISTORY = 10;
+
+/** Remembers the policy and letter files this live run used, so the Policy documents button at the top can open them. Simulated runs keep none. */
+function trackSource(set, S, item) {
+  if (S.api.simulated) return;
+  const run = (S.run ??= { kind: 'policy', items: [] });
+  if (run.items.some((known) => known.url === item.url)) return;
+  run.items = [...run.items, item];
+  set({ runRecord: { ...run } });
+}
+const stem = (name) => String(name).toLowerCase().replace(/\.[a-z0-9]+$/, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const DONE_LABEL = 'That’s all';
 const ANOTHER_LABEL = 'Another policy';
 
@@ -35,7 +45,7 @@ async function listPolicies({ r, S }) {
 }
 
 /** Hand over one policy: its card and the download. */
-async function givePolicy({ r, S, policy }) {
+async function givePolicy({ r, S, set, policy }) {
   let download = null;
   const phase = r.phase(policy.title, 'The policy document is handed over as it is.');
   await r.runSteps(phase, [{
@@ -43,6 +53,7 @@ async function givePolicy({ r, S, policy }) {
     note: 'Takes the policy PDF from the policies folder.',
     run: async () => {
       download = S.api.policyDownload(policy);
+      trackSource(set, S, { label: policy.title, url: realApi.policyViewUrl(policy) }); // opens as the PDF itself
       return { payload: { policy: policy.title, file: policy.fileName } };
     },
   }, hrPolicyWorkflowStep(S, 'get-policy')]);
@@ -73,7 +84,7 @@ async function policySearch({ r, S, set, ask, auto }) {
     const policy = policies.find((p) => p.key === key);
     r.msg('out', <>{policy.title}</>);
     await r.phaseGap();
-    await givePolicy({ r, S, policy });
+    await givePolicy({ r, S, set, policy });
     if (auto) return;
     await r.bot('Would you like another policy?', { wait: 500 });
     const { text } = await ask({ kind: 'text', suggestions: [ANOTHER_LABEL, DONE_LABEL] });
@@ -87,7 +98,7 @@ async function policySearch({ r, S, set, ask, auto }) {
 
 // ------------------------------------------------------------------------------------------------ Q&A
 /** One question: send it with the chat history, show the answer and the policies it came from. Returns { question, answer } or null. */
-async function answerQuestion({ r, S, question, history }) {
+async function answerQuestion({ r, S, set, question, history }) {
   let result = null;
   const phase = r.phase('Search the policies', 'The question goes to the knowledge base, which answers from the company’s policy documents.');
   await r.runSteps(phase, [{
@@ -103,6 +114,14 @@ async function answerQuestion({ r, S, question, history }) {
     return null;
   }
   await r.bot(null, { wait: 500, kind: 'answer', text: result.answer });
+  if (result.sources.length && !S.api.simulated) {
+    // The answer names its source files: let the button open the matching policy PDFs.
+    const known = await S.api.listPolicies().catch(() => []);
+    for (const name of result.sources) {
+      const policy = known.find((p) => stem(p.fileName) === stem(name) || stem(p.title) === stem(name));
+      if (policy) trackSource(set, S, { label: policy.title, url: realApi.policyViewUrl(policy) });
+    }
+  }
   if (result.sources.length) {
     showCard(r, card('Where this comes from', 'fa-book', { label: 'Policy documents', tone: 'verified' }, result.sources.map((name) => ['Source:', name])));
   }
@@ -110,14 +129,14 @@ async function answerQuestion({ r, S, question, history }) {
 }
 
 /** 1. Policy questions: the first one, then follow-ups until the employee is done. */
-async function policyQuestions({ r, S, ask, auto, employee }) {
+async function policyQuestions({ r, S, set, ask, auto, employee }) {
   const history = [];
   await r.bot('Sure. What would you like to know about our policies?', { wait: 500 });
   let { text } = await ask({ kind: 'text', suggestions: SUGGESTED_QUESTIONS, pick: AUTO_QUESTIONS[0] }, { text: AUTO_QUESTIONS[0] });
   for (;;) {
     r.msg('out', text);
     await r.phaseGap();
-    const turn = await answerQuestion({ r, S, question: text, history });
+    const turn = await answerQuestion({ r, S, set, question: text, history });
     if (turn) history.push(turn);
     await r.phaseGap();
 
@@ -138,7 +157,7 @@ async function policyQuestions({ r, S, ask, auto, employee }) {
 
 // ------------------------------------------------------------------------------------------------ Letters
 /** 2. A letter: list what is on offer, take the one asked for, give its file. */
-async function letters({ r, S, ask, auto, employee }) {
+async function letters({ r, S, set, ask, auto, employee }) {
   let offered = [];
   const list = r.phase('Find the letters', 'The letters that can be asked for are looked up.');
   await r.runSteps(list, [{
@@ -169,12 +188,12 @@ async function letters({ r, S, ask, auto, employee }) {
       continue;
     }
     wanted.push(letter);
-    await giveLetter({ r, S, employee, letter });
+    await giveLetter({ r, S, set, employee, letter });
     if (!auto) await r.bot('Would you like the other letter too? Choose it, or tell me you are done.', { wait: 500 });
   }
 }
 
-async function giveLetter({ r, S, employee, letter }) {
+async function giveLetter({ r, S, set, employee, letter }) {
   let download = null;
   const phase = r.phase(letter.title, 'The employee is recognised and the letter is handed over.');
   await r.runSteps(phase, [{
@@ -183,6 +202,7 @@ async function giveLetter({ r, S, employee, letter }) {
     run: async () => {
       if (!letter.available) return { warn: true, payload: { letter: letter.title, result: 'Not available yet', reason: 'The file has not been placed in the HR documents folder' } };
       download = S.api.letterDownload(employee.employeeId, letter);
+      trackSource(set, S, { label: `${letter.title} (Word file)`, url: download.href });
       return { payload: { letter: letter.title, file: letter.fileName, employee: employee.fullName, designation: employee.jobTitle } };
     },
   }, ...(letter.available ? [hrPolicyWorkflowStep(S, LETTER_WORKFLOWS[letter.key])] : [])]); // a letter that is not there has nothing to run a workflow for
@@ -203,7 +223,7 @@ export async function runHrPolicy({ r, set, auto = null, simulated = false }) {
   const S = { api: simulated ? createSimulatedHrPolicyApi(r.timing.stepScale) : realApi };
   const ask = makeAsk(r, auto);
   r.msg('sys', simulated
-    ? 'Auto-play · Simulated: this downloads a policy, asks a sample policy question and requests both letters for a sample employee. Nothing is contacted anywhere.'
+    ? 'Auto-play · Simulated Environment: this downloads a policy, asks a sample policy question and requests both letters for a sample employee. Nothing is contacted anywhere.'
     : auto
     ? 'Auto-play · Live: this downloads a policy, asks a policy question and requests both letters for the employee you chose. It is real: the policies are the PDFs in the policies folder (offered in a dropdown), the question goes to the knowledge base and the letters are made from the Word templates in the HR documents folder.'
     : 'Manual mode: you are the employee. Type a message to begin. It is real: your questions go to the knowledge base and the letters are made from the Word templates in the HR documents folder.');

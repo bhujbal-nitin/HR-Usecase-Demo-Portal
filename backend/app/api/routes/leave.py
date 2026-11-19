@@ -55,6 +55,12 @@ def options(service: LeaveDep):
     return service.options()
 
 
+@router.get("/links")
+def links(service: LeaveDep) -> dict:
+    """Where to look at the leave balances in HRMS."""
+    return service.links()
+
+
 @router.get("/lookup", response_model=EmployeeSummary)
 def lookup(service: LeaveDep, ref: Ref):
     """Recognise an onboarded employee by Employee ID or e-mail (404 if unknown)."""
@@ -79,7 +85,7 @@ def check_leave(data: LeaveCheckRequest, service: LeaveDep):
 
 @router.get("/attendance", response_model=AttendanceDayRecords)
 def attendance(service: LeaveDep, ref: Ref, day: Annotated[date, Query(alias="date", description="The day, YYYY-MM-DD")]):
-    """The punch records OrangeHRM holds for one day (an approved attendance request for that day replaces them)."""
+    """The punch records HRMS holds for one day (an approved attendance request for that day replaces them)."""
     return service.attendance(ref, day)
 
 
@@ -100,7 +106,7 @@ def submit_regularization(data: RegularizationApplication, service: LeaveDep):
 
 @router.delete("/requests", response_model=ClearResponse)
 def clear_requests(service: LeaveDep):
-    """Delete decided requests from the portal. What was recorded in OrangeHRM stays there."""
+    """Delete decided requests from the portal. What was recorded in HRMS stays there."""
     return ClearResponse(removed=service.clear())
 
 
@@ -121,7 +127,7 @@ def reject(request_id: str, service: LeaveDep):
 
 @router.post("/requests/{request_id}/apply", response_model=LeaveAttendanceRequest)
 def apply(request_id: str, service: LeaveDep):
-    """Record an approved request in OrangeHRM (book the leave / punch the employee out). Repeating it does nothing."""
+    """Record an approved request in HRMS (book the leave / punch the employee out). Repeating it does nothing."""
     return service.apply(request_id)
 
 

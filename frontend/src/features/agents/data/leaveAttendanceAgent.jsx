@@ -7,7 +7,7 @@ export const config = {
   category: 'core',
   description:
     'Applies for leave, checks PTO and sick balances, raises attendance requests for missed punches, and retrieves holiday schedules in one chat.',
-  tags: ['Balances · Holidays', 'Leave Application', 'Attendance Request', 'Manager Approval', 'OrangeHRM'],
+  tags: ['Balances · Holidays', 'Leave Application', 'Attendance Request', 'Manager Approval', 'HRMS'],
   badge: 'Real-Time',
   greeting: (
     <>
@@ -29,7 +29,7 @@ const applyCasualLeave = {
   variant: 'primary',
   effect: {
     process: 'leave_attendance.submit_leave',
-    toast: ['🏖️ Leave request submitted & synced with OrangeHRMS!', 'success'],
+    toast: ['🏖️ Leave request submitted & synced with HRMSS!', 'success'],
     reply: (
       <>
         🎉 <strong>Leave Approved & Logged!</strong>
@@ -46,7 +46,7 @@ export function respond(action) {
         text: (
           <>
             📊 <strong>Your Live Leave Balances (as of October 2026):</strong>
-            <br />Fetched directly from your OrangeHRMS employee profile.
+            <br />Fetched directly from your HRMSS employee profile.
           </>
         ),
         widget: {
@@ -68,7 +68,7 @@ export function respond(action) {
         text: (
           <>
             🏖️ <strong>2-Day Casual Leave Request Prepared:</strong>
-            <br />Review your leave dates and confirm submission to your manager and OrangeHRMS.
+            <br />Review your leave dates and confirm submission to your manager and HRMSS.
           </>
         ),
         widget: {

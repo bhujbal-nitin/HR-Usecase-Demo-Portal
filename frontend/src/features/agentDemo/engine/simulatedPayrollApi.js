@@ -1,6 +1,6 @@
 // A stand-in for the payroll service calls, used by Auto-play · Simulated. The journey code is exactly the same as in the live flow
 // (see payrollJourney.jsx); only the calls behind it are replaced by this timed, in-memory play-through, so the flows cannot
-// drift apart. Nothing here contacts any system (the live flow reads the salary from OrangeHRM and the backend makes the documents).
+// drift apart. Nothing here contacts any system (the live flow reads the salary from HRMS and the backend makes the documents).
 
 import { monthLabel, recentMonths } from '../lib/payroll';
 import { PAYROLL_WORKFLOWS } from './phases/payrollWorkflow';

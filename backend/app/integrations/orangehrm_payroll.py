@@ -1,4 +1,4 @@
-"""OrangeHRM 5.x salary read (PIM -> employee -> Salary), the same web-session /api/v2 API the OrangeHRM screens use.
+"""HRMS 5.x salary read (PIM -> employee -> Salary), the same web-session /api/v2 API the HRMS screens use.
 
 Mixed into ``OrangeHRMClient`` next to the leave calls; it relies on ``_leave_call`` from ``LeaveAttendanceMixin``.
 """

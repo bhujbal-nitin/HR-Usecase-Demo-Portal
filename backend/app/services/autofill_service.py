@@ -105,7 +105,7 @@ class AutofillService:
 
     # ------------------------------------------------------------- internals
     def _cached_directory_names(self) -> set[str]:
-        """Names already in OrangeHRM. Refreshed in the background so the request never blocks on it."""
+        """Names already in HRMS. Refreshed in the background so the request never blocks on it."""
         with self._lock:
             if time.time() - self._directory_refreshed_at > _DIRECTORY_REFRESH_SECONDS:
                 self._directory_refreshed_at = time.time()
@@ -117,7 +117,7 @@ class AutofillService:
         try:
             names = self._ohrm.list_employee_names()
         except Exception as exc:  # noqa: BLE001 - purely best-effort
-            logger.info("OrangeHRM directory refresh skipped: %s", exc)
+            logger.info("HRMS directory refresh skipped: %s", exc)
             return
         with self._lock:
             self._directory_names = names

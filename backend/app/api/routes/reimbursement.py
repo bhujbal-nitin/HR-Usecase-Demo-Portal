@@ -49,7 +49,7 @@ def lookup(service: ReimbursementDep, ref: Ref):
 async def read_bill(request: Request, service: ReimbursementDep, settings: SettingsDep):
     """``multipart/form-data``: ``ref`` (employee ID or e-mail) and ``file`` (a PDF or a photo of one bill).
 
-    Returns what is on the bill (category, date, amount, vendor); nothing is saved. Without ``OPENAI_API_KEY`` this answers 502.
+    Returns what is on the bill (category, date, amount, vendor); nothing is saved. Without the Google service-account file this answers 502.
     """
     form = await request.form()
     upload = form.get("file")
@@ -74,7 +74,7 @@ def submit_claim(data: ClaimSubmission, service: ReimbursementDep):
 
 @router.delete("/claims", response_model=ClearResponse)
 def clear_claims(service: ReimbursementDep):
-    """Delete decided claims from the portal. What was recorded in OrangeHRM stays there."""
+    """Delete decided claims from the portal. What was recorded in HRMS stays there."""
     return ClearResponse(removed=service.clear())
 
 
@@ -97,7 +97,7 @@ def reject(claim_id: str, service: ReimbursementDep):
 
 @router.post("/claims/{claim_id}/apply", response_model=ReimbursementClaim)
 def apply(claim_id: str, service: ReimbursementDep):
-    """Record an approved claim in OrangeHRM (Claim module). Repeating it does nothing."""
+    """Record an approved claim in HRMS (Claim module). Repeating it does nothing."""
     return service.apply(claim_id)
 
 

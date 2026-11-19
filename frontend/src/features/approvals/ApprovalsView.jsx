@@ -125,7 +125,7 @@ export default function ApprovalsView({ embedded = false }) {
         <div>
           <h2>Approvals &amp; Provisioning</h2>
           <p style={{ color: 'var(--text-muted)' }}>
-            Review candidate documents, then approve to provision ServiceNow, Active Directory, Microsoft 365, OrangeHRM and IT hardware.
+            Review candidate documents, then approve to provision ServiceNow, Active Directory, Microsoft 365, HRMS and IT hardware.
           </p>
         </div>
         <div className="header-actions">
@@ -260,7 +260,7 @@ export default function ApprovalsView({ embedded = false }) {
             <li>AutomationEdge management approval</li>
             <li>Active Directory account</li>
             <li>Microsoft 365 account</li>
-            <li>OrangeHRM employee profile</li>
+            <li>HRMS employee profile</li>
             <li>Laptop request and ServiceNow hardware incident</li>
           </ol>
           <p>These actions create real records in the connected systems and cannot be undone from here.</p>

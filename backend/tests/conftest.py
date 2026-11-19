@@ -23,7 +23,9 @@ def settings(tmp_path) -> Settings:
         data_dir=tmp_path / "data",
         offers_dir=tmp_path / "offers",
         hr_documents_dir=tmp_path / "hr_documents",
+        google_credentials_file=tmp_path / "no-service-account.json",  # a real key on this machine must not leak into the tests
         approval_poller_enabled=False,
+        hrms_enabled=False,  # the built-in HRMS is the default; tests that need it switch it on
         cors_origins="http://localhost:3000",
     )
 

@@ -4,6 +4,7 @@ import * as offboarding from './offboardingAgent.jsx';
 import * as onboarding from './onboardingAgent.jsx';
 import * as hrPolicy from './hrPolicyAgent.jsx';
 import * as payrollSalary from './payrollSalaryAgent.jsx';
+import * as preOnboarding from './preOnboardingAgent.jsx';
 import * as reimbursementBenefits from './reimbursementBenefitsAgent.jsx';
 
 /** Look up a scripted process by key (`<agentId>.<action>`). Undefined if none is defined. */
@@ -20,8 +21,8 @@ function withProcess(agentId, respond = () => null) {
   };
 }
 
-// Catalog order matches the Piraji portal.
-export const AGENTS = [onboarding, offboarding, leaveAttendance, payrollSalary, hrPolicy, reimbursementBenefits].map(
+// Catalog order matches the Piraji portal; Pre-Onboarding comes first because it happens before Onboarding.
+export const AGENTS = [preOnboarding, onboarding, offboarding, leaveAttendance, payrollSalary, hrPolicy, reimbursementBenefits].map(
   (module) => ({ ...module.config, respond: withProcess(module.config.id, module.respond) }),
 );
 

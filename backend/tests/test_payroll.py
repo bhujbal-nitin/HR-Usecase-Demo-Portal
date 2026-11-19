@@ -150,6 +150,9 @@ class FakeOrangeHRM:
     def __init__(self, components):
         self.components, self.asked = components, []
 
+    base_url = "http://hrm.example"
+    ui_url = base_url + "/web/index.php"
+
     def salary_components(self, emp_number):
         self.asked.append(emp_number)
         return self.components
@@ -190,6 +193,12 @@ def test_the_payslip_is_a_pdf_for_that_month(world):
     assert 'filename="Payslip_October_2026_Aarav_Sharma.pdf"' in answer.headers["content-disposition"]
     assert answer.content.startswith(b"%PDF") and b"Aarav Sharma" in answer.content and b"AE111111" in answer.content and b"1,48,525" in answer.content
     assert fake.asked == [77]  # the CTC of the right employee was read from OrangeHRM
+
+
+def test_the_salary_page_in_orangehrm_has_a_link(world):
+    client, _ = world
+    answer = client.get("/api/payroll/links", params={"ref": "AE-111111"})
+    assert answer.json() == {"salaryUrl": "http://hrm.example/web/index.php/pim/viewSalaryList/empNumber/77"}
 
 
 def test_the_ctc_statement_is_a_pdf(world):

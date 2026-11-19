@@ -25,7 +25,7 @@ export const getClaim = (claimId) => api.get(`/reimbursement/claims/${id(claimId
 export const approveClaim = (claimId, approvedBills) => api.post(`/reimbursement/claims/${id(claimId)}/approve`, approvedBills ? { approvedBills } : undefined);
 /** Reject the whole claim. */
 export const rejectClaim = (claimId) => api.post(`/reimbursement/claims/${id(claimId)}/reject`);
-/** Record an approved claim in OrangeHRM (Claim module). Repeating it does nothing. */
+/** Record an approved claim in HRMS (Claim module). Repeating it does nothing. */
 export const applyClaim = (claimId) => api.post(`/reimbursement/claims/${id(claimId)}/apply`);
 export const clearClaims = () => api.delete('/reimbursement/claims');
 

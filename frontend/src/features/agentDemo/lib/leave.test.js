@@ -39,6 +39,13 @@ describe('forms', () => {
     expect(Object.keys(errors).sort()).toEqual(['endDate', 'leaveType', 'reason', 'startDate']);
   });
 
+  it('refuses leave that starts or ends on a Sunday, but not one that runs over it', () => {
+    const base = { leaveType: 'Casual Leave', reason: 'Family function' };
+    expect(validateLeave({ ...base, startDate: '2999-01-06', endDate: '2999-01-07' }).startDate).toMatch(/Sunday/); // 6 Jan 2999 is a Sunday
+    expect(validateLeave({ ...base, startDate: '2999-01-05', endDate: '2999-01-06' }).endDate).toMatch(/Sunday/);
+    expect(validateLeave({ ...base, startDate: '2999-01-05', endDate: '2999-01-07' })).toEqual({});
+  });
+
   it('works out the days an attendance request can be for', () => {
     expect(attendanceDateRange(new Date(2026, 9, 29))).toEqual({ min: '2026-09-29', max: '2026-10-28' });
     expect(attendanceDateRange(new Date(2026, 0, 5))).toEqual({ min: '2025-12-06', max: '2026-01-04' });

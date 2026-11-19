@@ -43,8 +43,8 @@ export async function openRequest({ r, D, S, set, live, ask }) {
         return { payload: { request: 'POST /api/employees/start (multipart, no documents)', response: { id: employee.id, status: employee.status, submittedAt: employee.submittedAt } } };
       },
     } : {
-      kind: 'api', agent: 'orch', title: 'Create the onboarding record', note: 'Simulated: a record would be created in the HR system.', name: 'hrms.create_employee()', lat: 520,
-      payload: { request: 'POST /api/v2/pim/employees', response: { status: 201, empNumber: 'AE-DEMO' } },
+      kind: 'api', agent: 'orch', title: 'Create the onboarding record', note: 'Simulated: the details would be validated and the record saved. The ServiceNow request is raised from it next.', name: 'POST /api/employees/start', lat: 520,
+      payload: { request: 'POST /api/employees/start (multipart, no documents)', response: { id: 'AE-DEMO', status: 'Pending Review' } },
       after: async () => { S.employeeId = 'AE-DEMO'; },
     },
     ...(live ? [] : [{

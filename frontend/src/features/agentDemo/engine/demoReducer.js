@@ -11,7 +11,7 @@ export const initialState = {
   stats: { steps: 0, tools: 0, lat: 0, human: 0 },
   outcome: null,
   stopped: false,
-  runRecord: null, // { kind, id } of the live record this run created (for the system buttons)
+  runRecord: null, // { kind, id } of the live record this run created (for the system buttons); a leave run holds { kind, balance, requestIds }
   manual: false,
   chips: null, // auto-play: the suggestion chips shown above the chat bar, { list, picked }
   awaiting: null, // manual mode: what the chat is waiting for (see runner.ask)

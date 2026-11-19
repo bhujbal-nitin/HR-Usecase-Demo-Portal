@@ -1,14 +1,14 @@
-"""OrangeHRM 5.x Claim calls (the same web-session /api/v2 API the OrangeHRM screens use).
+"""HRMS 5.x Claim calls (the same web-session /api/v2 API the HRMS screens use).
 
 Mixed into ``OrangeHRMClient`` next to the leave calls; it relies on ``_leave_call`` from ``LeaveAttendanceMixin``.
-Paths and field names follow the OrangeHRM 5 source (orangehrmClaimPlugin).
+Paths and field names follow the HRMS 5 source (orangehrmClaimPlugin).
 """
 
 from datetime import date
 
 from app.core.exceptions import IntegrationError
 
-SYSTEM = "OrangeHRM"
+SYSTEM = "HRMS"
 
 
 def _as_list(data) -> list[dict]:
@@ -39,7 +39,7 @@ class ClaimMixin:
 
     # ------------------------------------------------------------------------------------- the claim
     def assign_claim(self, emp_number: int, event_id: int, currency: str, remarks: str) -> int:
-        """Create a claim for the employee (OrangeHRM's 'Assign Claim') and return its id."""
+        """Create a claim for the employee (HRMS's 'Assign Claim') and return its id."""
         body = self._leave_call("POST", f"claim/employees/{emp_number}/requests", json={
             "claimEventId": event_id, "currencyId": currency, "remarks": remarks[:250],
         })
@@ -56,11 +56,11 @@ class ClaimMixin:
         self._leave_call("PUT", f"claim/requests/{claim_id}/action", json={"action": "SUBMIT"})
 
     def claim_url(self, claim_id: int) -> str:
-        return f"{self.base_url}/web/index.php/claim/assignClaim/id/{claim_id}"
+        return f"{self.ui_url}/claim/assignClaim/id/{claim_id}"
 
     @staticmethod
     def _new_id(body: dict, what: str) -> int:
         new_id = (body.get("data") or {}).get("id")
         if not new_id:
-            raise IntegrationError(SYSTEM, f"OrangeHRM did not return an id for {what}.")
+            raise IntegrationError(SYSTEM, f"HRMS did not return an id for {what}.")
         return new_id

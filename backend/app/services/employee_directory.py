@@ -1,4 +1,4 @@
-"""Finding an onboarded employee and their OrangeHRM number (shared by the demos that work on one employee's records)."""
+"""Finding an onboarded employee and their HRMS number (shared by the demos that work on one employee's records)."""
 
 import logging
 import threading
@@ -18,7 +18,7 @@ def work_email(e: Employee) -> str:
 
 
 def require_still_employed(offboardings: OffboardingRepository | None, employee: Employee, purpose: str) -> None:
-    """Stop work for an employee whose offboarding is complete: OrangeHRM has terminated them, so it refuses new records (``purpose`` words the message)."""
+    """Stop work for an employee whose offboarding is complete: HRMS has terminated them, so it refuses new records (``purpose`` words the message)."""
     if offboardings and any(o.employee_id == employee.id and o.status == OffboardingStatus.COMPLETED for o in offboardings.list_all()):
         raise ConflictError(f"{employee.full_name} has left the company (offboarding is complete), so there are no {purpose} to work on.")
 
@@ -27,9 +27,9 @@ _profile_lock = threading.Lock()  # two requests for the same employee must not 
 
 
 def resolve_emp_number(employees: EmployeeRepository, orangehrm: OrangeHRMClient, employee: Employee) -> int:
-    """The employee's number in the OrangeHRM that is running now.
+    """The employee's number in the HRMS that is running now.
 
-    The number saved at onboarding is used while OrangeHRM still has that profile. If OrangeHRM was rebuilt or reset, the person is
+    The number saved at onboarding is used while HRMS still has that profile. If HRMS was rebuilt or reset, the person is
     looked up by name, and a profile is created from the saved onboarding details when there is none; the new number is saved.
     """
     stored = employee.orange_hrm.emp_number if employee.orange_hrm else None
@@ -41,12 +41,12 @@ def resolve_emp_number(employees: EmployeeRepository, orangehrm: OrangeHRMClient
         except ProfileNotFound:
             result = orangehrm.create_employee_profile(employee, work_email(employee), [])
             number, info = result.info.emp_number, result.info
-            logger.info("OrangeHRM had no profile for %s (saved number %s); created #%s", employee.id, stored, number)
+            logger.info("HRMS had no profile for %s (saved number %s); created #%s", employee.id, stored, number)
             if result.warnings:
-                logger.warning("OrangeHRM profile for %s created with gaps: %s", employee.id, "; ".join(result.warnings))
+                logger.warning("HRMS profile for %s created with gaps: %s", employee.id, "; ".join(result.warnings))
         else:
             info = (employee.orange_hrm or OrangeHrmInfo()).model_copy(update={"emp_number": number})
-            logger.info("OrangeHRM profile for %s is now #%s (saved number %s)", employee.id, number, stored)
+            logger.info("HRMS profile for %s is now #%s (saved number %s)", employee.id, number, stored)
         employees.update(employee.id, lambda e: setattr(e, "orange_hrm", info))
         return number
 
@@ -73,7 +73,7 @@ class EmployeeDirectory:
         raise NotFoundError("No employee onboarded through this portal matches that ID or e-mail address.")
 
     def emp_number(self, employee: Employee) -> int:
-        """The employee's OrangeHRM number (see ``resolve_emp_number``)."""
+        """The employee's HRMS number (see ``resolve_emp_number``)."""
         return resolve_emp_number(self._employees, self._orangehrm, employee)
 
     @staticmethod

@@ -5,7 +5,7 @@ const SAMPLE_COUNT = 2;
 
 /**
  * The onboarded and approved employees a demo can be run for. For offboarding only those with no offboarding yet; for leave and
- * reimbursement not those who have already left (OrangeHRM has terminated them). `kind` is 'offboarding', 'leave', 'reimbursement',
+ * reimbursement not those who have already left (HRMS has terminated them). `kind` is 'offboarding', 'leave', 'reimbursement',
  * 'payroll' or 'hr_policy'.
  */
 export async function eligibleEmployees(kind) {

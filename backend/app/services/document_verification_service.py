@@ -1,4 +1,4 @@
-"""Checks an uploaded document with OpenAI: right type, name matches the form, Aadhaar and PAN dates of birth agree."""
+"""Checks an uploaded document with Google Gemini: right type, name matches the form, Aadhaar and PAN dates of birth agree."""
 
 import logging
 import re
@@ -8,7 +8,8 @@ from difflib import SequenceMatcher
 
 from app.core.config import Settings
 from app.core.exceptions import ValidationFailedError
-from app.integrations.openai_documents import OpenAIDocumentReader, clean_digits
+from app.core.request_context import feature
+from app.integrations.gemini_documents import GeminiDocumentReader, clean_digits
 
 logger = logging.getLogger(__name__)
 
@@ -79,10 +80,10 @@ def _mask(doc_type: str, number: str | None) -> str | None:
 
 
 class DocumentVerificationService:
-    def __init__(self, settings: Settings, reader: OpenAIDocumentReader):
+    def __init__(self, settings: Settings, reader: GeminiDocumentReader):
         self._threshold = settings.document_name_match_threshold
         self._reader = reader
-        self._model = settings.openai_model
+        self._model = settings.gemini_model
 
     @property
     def enabled(self) -> bool:
@@ -107,7 +108,8 @@ class DocumentVerificationService:
         if not form_name.strip():
             raise ValidationFailedError("The name from the joining form is required.")
 
-        read = self._reader.read(filename, content, content_type)
+        with feature("Onboarding document check"):
+            read = self._reader.read(filename, content, content_type)
         detected = read.get("documentType") if read.get("documentType") in TYPE_LABEL else "other"
         holder = (read.get("holderName") or "").strip() or None
         dob = read.get("dateOfBirth") if _iso(read.get("dateOfBirth")) else None

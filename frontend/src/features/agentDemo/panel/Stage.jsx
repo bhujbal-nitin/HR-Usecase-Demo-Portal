@@ -94,7 +94,7 @@ function Idle() {
           <span key={kind} className="i"><span className={`ad-kind ${kind}`}>{label}</span>{text}</span>
         ))}
         <span className="i"><span className="ad-tag live">Live</span>really executed</span>
-        <span className="i"><span className="ad-tag sim">Simulated</span>scripted</span>
+        <span className="i"><span className="ad-tag sim">Simulated Environment</span>scripted</span>
       </div>
     </div>
   );
@@ -126,7 +126,7 @@ export default function Stage({ step, onGate }) {
       <div className="ad-st-head">
         <span className={`ad-ico k-${step.kind}`}><Icon name={iconFor(step)} size={16} /></span>
         <b>{plain(step.title)}</b>
-        <span className={`ad-tag ${step.live ? 'live' : 'sim'}`}>{step.live ? 'Live' : 'Simulated'}</span>
+        <span className={`ad-tag ${step.live ? 'live' : 'sim'}`}>{step.live ? 'Live' : 'Simulated Environment'}</span>
         <span className={`ad-st-verb${verb ? '' : ' done'}${step.status === 'failed' ? ' bad' : ''}`}>
           {verb ? <>{verb}{running && <span className="ad-dots"><i></i><i></i><i></i></span>}</> : <><Icon name="check" size={14} /> Done{step.latLabel ? ` in ${step.latLabel}` : ''}</>}
         </span>

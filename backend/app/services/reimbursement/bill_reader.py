@@ -1,10 +1,11 @@
-"""Reads one bill (a PDF or a photo) with OpenAI: its category, date, amount and vendor."""
+"""Reads one bill (a PDF or a photo) with Google Gemini: its category, date, amount and vendor."""
 
 import logging
 from datetime import date
 
 from app.core.exceptions import ValidationFailedError
-from app.integrations.openai_documents import OpenAIDocumentReader
+from app.core.request_context import feature
+from app.integrations.gemini_documents import GeminiDocumentReader
 from app.schemas.reimbursement import ExpenseItem
 from app.services.reimbursement import policy
 
@@ -49,7 +50,7 @@ def _amount(value: object) -> float | None:
 
 
 class BillReader:
-    def __init__(self, reader: OpenAIDocumentReader):
+    def __init__(self, reader: GeminiDocumentReader):
         self._reader = reader
 
     @property
@@ -60,7 +61,8 @@ class BillReader:
         """The bill's details. Raises ValidationFailedError (with a plain message) if the file is not a readable bill."""
         if not filename.lower().endswith(ACCEPTED_EXTENSIONS):
             raise ValidationFailedError("Please upload the bill as a PDF or a photo (PNG, JPG or WEBP).")
-        answer = self._reader.read(filename, content, content_type, prompt=_PROMPT)
+        with feature("Reimbursement bill"):
+            answer = self._reader.read(filename, content, content_type, prompt=_PROMPT)
 
         amount = _amount(answer.get("amount"))
         issues = "; ".join(str(i) for i in (answer.get("issues") or [])[:3])

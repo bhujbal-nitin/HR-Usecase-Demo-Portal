@@ -376,6 +376,9 @@ def test_policies_are_searched_and_downloaded_through_the_api(world):
     pdf = client.get("/api/hr-policy/policies/ae-health-and-safety-policy/download")
     assert pdf.status_code == 200 and pdf.headers["content-type"] == "application/pdf" and pdf.content == b"%PDF-1.4 AE Health and Safety Policy"
     assert "AE%20Health%20and%20Safety%20Policy.pdf" in pdf.headers["content-disposition"]  # the space is encoded in the header
+    shown = client.get("/api/hr-policy/policies/ae-health-and-safety-policy/download", params={"view": "true"})
+    assert shown.headers["content-disposition"].startswith("inline")  # opens in the browser instead of saving
+    assert pdf.headers["content-disposition"].startswith("attachment")
     assert client.get("/api/hr-policy/policies/ae-no-such-policy/download").status_code == 404
     assert client.get("/api/hr-policy/policies/..%2F..%2Fsecret/download").status_code == 404  # only listed policies can be downloaded
 

@@ -54,7 +54,7 @@ export async function aadhaar({ r, D, S, set, live }) {
       kind: 'tool', agent: 'ver', title: 'Mask personal data', note: 'Only the last 4 digits would be kept in the conversation record.', name: 'pii_guard.apply()', lat: 140,
       payload: { stored: { uid_last4: D.aadhaar.slice(-4) }, discarded: ['full_uid', 'raw_ocr_text'] },
     },
-    ...(live ? [documentWorkflowStep('Aadhaar card')] : []),
+    documentWorkflowStep('Aadhaar card', { live }),
     {
       kind: 'notify', agent: 'orch', title: 'Confirm and ask for the PAN card', note: 'Tells the candidate the result and asks for the next document.', name: 'whatsapp.send_text()', lat: 170,
       payload: { state_change: 'AWAITING_AADHAAR → AWAITING_PAN' },
@@ -94,7 +94,7 @@ export async function pan({ r, D, S, live }) {
         return { aadhaar_name: D.fullName, pan_name: D.panName, similarity: D.checks.panName, dob: { aadhaar: D.dob, pan: D.dob, match: true }, threshold: 0.9, result: D.checks.panName >= 0.9 ? 'MATCH' : 'NEEDS_REVIEW' };
       },
     },
-    ...(live ? [documentWorkflowStep('PAN card')] : []),
+    documentWorkflowStep('PAN card', { live }),
     {
       kind: 'notify', agent: 'orch', title: 'Confirm PAN and ask for the salary slip', note: 'Short confirmation, then the next request.', name: 'whatsapp.send_text()', lat: 160,
       payload: { state_change: 'AWAITING_PAN → AWAITING_SALARY_SLIP' },
@@ -127,7 +127,7 @@ export async function payslips({ r, D, S, live }) {
         return { offered_monthly_ctc: offered, previous_monthly_gross: previous, plausible_range: [Math.round(offered * 0.5), Math.round(offered * 1.5)], result: D.checks.payslips ? 'plausible' : 'review' };
       },
     },
-    ...(live ? [documentWorkflowStep('salary slip')] : []),
+    documentWorkflowStep('salary slip', { live }),
     {
       kind: 'notify', agent: 'orch', title: 'Confirm all documents received', note: 'Tells the candidate what happens next.', name: 'whatsapp.send_text()', lat: 150,
       payload: { state_change: 'AWAITING_SALARY_SLIP → DOCUMENTS_COMPLETE', to: maskPhone(D.mobile) },

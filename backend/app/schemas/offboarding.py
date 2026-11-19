@@ -66,7 +66,7 @@ class Offboarding(CamelModel):
     manager: str
     hardware: str
     annual_ctc: int
-    emp_number: int | None = None  # OrangeHRM profile, when known from onboarding
+    emp_number: int | None = None  # HRMS profile, when known from onboarding
     user_principal_name: str | None = None  # Microsoft 365 account, when known from onboarding
 
     reason: str

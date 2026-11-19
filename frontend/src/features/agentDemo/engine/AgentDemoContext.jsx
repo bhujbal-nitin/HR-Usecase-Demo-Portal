@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useReducer, useRef, useState } from 'react';
+import { finishDemoRun, startDemoRun } from '../../../api/demoRuns';
 import { getDemoConfig } from '../../../api/system';
 import { AGENT_BY_ID } from '../../agents/data/agentRegistry';
 import { buildCandidate } from './candidate';
@@ -8,6 +9,7 @@ import { runManualOnboarding } from './manualJourney.jsx';
 import { runHrPolicy } from './hrPolicyJourney.jsx';
 import { runLeaveAttendance } from './leaveJourney.jsx';
 import { runPayrollSalary } from './payrollJourney.jsx';
+import { runPreOnboarding } from './preOnboardingJourney.jsx';
 import { runReimbursement } from './reimbursementJourney.jsx';
 import { runLiveOffboarding } from './offboardingJourney.jsx';
 import { SIM_EMPLOYEE } from './simulatedOffboardingApi';
@@ -58,6 +60,11 @@ export function AgentDemoProvider({ children }) {
     dispatch({ type: 'reset' });
     set({ mode, manual, busy: true });
 
+    // Demo history: note who started which demo (never blocks or breaks the run).
+    const logged = startDemoRun({ agent: agentId, mode, manual });
+    let outcome = 'completed';
+    let detail = '';
+
     try {
       // Pacing from backend/.env (DEMO_SIMULATED_* / DEMO_LIVE_*); defaults if the backend is unreachable.
       const config = await getDemoConfig().catch(() => null);
@@ -71,16 +78,20 @@ export function AgentDemoProvider({ children }) {
       } else if (agentId === 'offboarding' && !manual) {
         await runLiveOffboarding({ r, set, auto: { employeeId: SIM_EMPLOYEE.employeeId }, simulated: true });
       } else if (agentId === 'leave_attendance') {
-        // Manual · Live, Auto-play · Live and Auto-play · Simulated all run the same journey; only the calls behind it differ.
+        // Manual · Live, Auto-play · Live and Auto-play · Simulated Environment all run the same journey; only the calls behind it differ.
         await runLeaveAttendance({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
+      } else if (agentId === 'pre_onboarding') {
+        // Manual · Live, Auto-play · Live and Auto-play · Simulated Environment run one journey; only the calls behind it differ. `employeeRef` is the
+        // e-mail address the offer letter really goes to in Auto-play · Live (the sample candidate has none of their own).
+        await runPreOnboarding({ r, set, auto: manual ? null : { email: mode === 'live' ? employeeRef : undefined }, simulated: mode === 'simulated' });
       } else if (agentId === 'payroll_salary') {
-        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated run one journey; only the calls behind it differ.
+        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated Environment run one journey; only the calls behind it differ.
         await runPayrollSalary({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
       } else if (agentId === 'hr_policy') {
-        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated run one journey; only the calls behind it differ.
+        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated Environment run one journey; only the calls behind it differ.
         await runHrPolicy({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
       } else if (agentId === 'reimbursement_benefits') {
-        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated run one journey; only the calls behind it differ.
+        // Same idea as leave: Manual · Live, Auto-play · Live and Auto-play · Simulated Environment run one journey; only the calls behind it differ.
         await runReimbursement({ r, set, auto: manual ? null : { employeeId: mode === 'live' ? employeeRef : SIM_EMPLOYEE.employeeId }, simulated: mode === 'simulated' });
       } else if (manual) {
         await runGenericManual({ r, agent: AGENT_BY_ID[agentId], set });
@@ -92,8 +103,11 @@ export function AgentDemoProvider({ children }) {
         await runGenericJourney({ r, agent: AGENT_BY_ID[agentId], set });
       }
     } catch (error) {
-      if (error !== CANCELLED) set({ error: error.message ?? String(error) });
+      if (error === CANCELLED) outcome = 'stopped';
+      else { outcome = 'failed'; detail = error.message ?? String(error); set({ error: detail }); }
     } finally {
+      if (!isCurrent() && outcome !== 'failed') outcome = 'stopped'; // Restart, or another run of this demo took over
+      logged.then((id) => finishDemoRun(id, outcome, detail));
       if (isCurrent()) {
         set({ busy: false, typing: false });
         dispatch({ type: 'agent', agent: null });

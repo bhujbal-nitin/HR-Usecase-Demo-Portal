@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { formatDate } from '../../../utils/format';
-import { VALIDATORS } from '../lib/leave';
+import { VALIDATORS as LEAVE_VALIDATORS } from '../lib/leave';
+import { validateAcceptance, validateCandidate, validatePersonal } from '../lib/preOnboarding';
 import { todayIso } from '../lib/resignation';
 
 // A small in-chat form for the leave & attendance agent. `form` describes it:
 //   { title, hint, fields: [{ id, label, type: 'select'|'date'|'time'|'text', options?: [{ value, label }], minToday?, min?, max? }],
-//     validator: 'leave' | 'attendance', defaults?, values, submitted, auto }
+//     validator: 'leave' | 'attendance' | 'candidate', defaults?, values, submitted, auto }
 // Manual: the employee fills it in. Auto-play: it fills itself in, one field at a time, then submits. Submitted: read-only.
+
+const VALIDATORS = { ...LEAVE_VALIDATORS, candidate: validateCandidate, acceptance: validateAcceptance, personal: validatePersonal };
 
 const shown = (field, value) => {
   if (value === undefined || value === '') return '';

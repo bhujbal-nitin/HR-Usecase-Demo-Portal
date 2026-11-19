@@ -20,7 +20,7 @@ REBATE_LIMIT = 1_200_000  # no tax when the taxable income is within this
 SLABS = [(400_000, 0.0), (800_000, 0.05), (1_200_000, 0.10), (1_600_000, 0.15), (2_000_000, 0.20), (2_400_000, 0.25), (None, 0.30)]  # (upper limit, rate)
 
 ASSUMPTIONS = [
-    "The annual CTC recorded in OrangeHRM is the gross yearly pay: basic 40%, HRA 50% of basic, conveyance 1,600 a month, special allowance the rest.",
+    "The annual CTC recorded in HRMS is the gross yearly pay: basic 40%, HRA 50% of basic, conveyance 1,600 a month, special allowance the rest.",
     "Provident fund is 12% of basic pay; professional tax is 200 per month.",
     "Income tax uses the new tax regime with 4% cess; no surcharge, marginal relief or HRA / home-loan exemptions.",
     "The tax is spread equally over the 12 months and the employee is paid for the full month.",

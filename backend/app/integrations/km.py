@@ -49,6 +49,10 @@ class KnowledgeBaseClient:
     def is_configured(self) -> bool:
         return bool(self._s.km_project_id.strip() and self._s.km_project_secret.get_secret_value().strip())
 
+    def check_connection(self) -> str:
+        self._authorization()
+        return "Authenticated"
+
     def _base(self) -> str:
         return self._s.km_base_url.rstrip("/")
 

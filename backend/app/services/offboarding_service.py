@@ -84,11 +84,11 @@ class OffboardingService:
         )
 
     def _orangehrm_number(self, employee: Employee) -> int | None:
-        """The employee's number in the OrangeHRM running now; the saved one if OrangeHRM cannot be asked (the OrangeHRM step then reports it)."""
+        """The employee's number in the HRMS running now; the saved one if HRMS cannot be asked (the HRMS step then reports it)."""
         try:
             return resolve_emp_number(self._employees, self._gw.orangehrm, employee)
         except IntegrationError as exc:
-            logger.warning("Could not confirm the OrangeHRM profile of %s: %s", employee.id, exc)
+            logger.warning("Could not confirm the HRMS profile of %s: %s", employee.id, exc)
             return employee.orange_hrm.emp_number if employee.orange_hrm else None
 
     # ---------------------------------------------------------------- submit

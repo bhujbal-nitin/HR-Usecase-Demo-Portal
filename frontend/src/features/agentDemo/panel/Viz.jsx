@@ -271,7 +271,7 @@ export function Compare({ step }) {
 }
 
 const PROVIDER = { 'epfo.lookup()': ['EPFO', 'bank'], 'POST /api/employees': ['HR system', 'db'], 'servicenow.create_request()': ['ServiceNow', 'ticket'],
-  'orangehrm.assign_leave()': ['OrangeHRM', 'db'], 'orangehrm.punch_out()': ['OrangeHRM', 'db'] };
+  'orangehrm.assign_leave()': ['HRMS', 'db'], 'orangehrm.punch_out()': ['HRMS', 'db'] };
 export function External({ step }) {
   const [label, icon] = PROVIDER[step.name] ?? [step.title, 'cloud'];
   const p = step.payload ?? {};

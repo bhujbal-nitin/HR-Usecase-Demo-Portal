@@ -300,3 +300,8 @@
 .agent-demo .ad-sysmenu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 30; min-width: 14rem; display: grid; padding: 0.3rem; border-radius: 0.6rem; background: var(--ad-surface); border: 1px solid var(--ad-line); box-shadow: var(--ad-shadow); }
 .agent-demo .ad-sysmenu a { padding: 0.45rem 0.6rem; border-radius: 0.4rem; color: var(--ad-ink); text-decoration: none; font-size: 0.82rem; white-space: nowrap; }
 .agent-demo .ad-sysmenu a:hover { background: var(--ad-surface-2); }
+.agent-demo .ad-picker-email, .ad-picker-email { display: grid; gap: 0.35rem; margin-top: 0.6rem; font-weight: 700; color: var(--text-main); }
+.ad-picker-email input { font-weight: 400; }
+
+/* The link in the chat that hands a finished pre-onboarding over to the Onboarding demo. */
+.agent-demo .ad-inline-link { color: var(--accent-primary); font-weight: 600; text-decoration: underline; }

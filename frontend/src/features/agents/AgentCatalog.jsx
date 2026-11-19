@@ -101,7 +101,7 @@ export default function AgentCatalog() {
             Explore our autonomous HR AI Agents catalog below. Click{" "}
             <strong>Live Demo</strong> on any agent card to launch an
             interactive conversational session where you can execute real
-            employee workflows across OrangeHRMS, Active Directory, ServiceNow
+            employee workflows across HRMSS, Active Directory, ServiceNow
             &amp; Office 365.
           </p>
         </div>

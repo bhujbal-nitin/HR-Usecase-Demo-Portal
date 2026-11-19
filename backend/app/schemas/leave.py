@@ -75,7 +75,7 @@ class LeaveOptions(CamelModel):
 
 
 class LeaveBalance(CamelModel):
-    """From OrangeHRM. ``pending`` is leave asked for in this portal that is not in OrangeHRM yet; ``left`` already takes it off."""
+    """From HRMS. ``pending`` is leave asked for in this portal that is not in HRMS yet; ``left`` already takes it off."""
 
     leave_type: str
     total: float
@@ -109,7 +109,7 @@ class PunchRecord(CamelModel):
 
 
 class AttendanceDayRecords(CamelModel):
-    """What OrangeHRM already holds for one day; an approved attendance request replaces it."""
+    """What HRMS already holds for one day; an approved attendance request replaces it."""
 
     date: date
     records: list[PunchRecord]
@@ -133,7 +133,7 @@ class LeaveAttendanceRequest(CamelModel):
     leave_type: str | None = None
     start_date: date | None = None
     end_date: date | None = None
-    leave_type_id: int | None = None  # the leave type in OrangeHRM
+    leave_type_id: int | None = None  # the leave type in HRMS
     days: int | None = None
     balance_after: float | None = None
 
@@ -147,10 +147,10 @@ class LeaveAttendanceRequest(CamelModel):
     submitted_at: datetime = Field(default_factory=datetime.now)
     decided_at: datetime | None = None
 
-    # recorded in OrangeHRM once approved (see LeaveService.apply)
+    # recorded in HRMS once approved (see LeaveService.apply)
     applied: bool = False
     applied_at: datetime | None = None
-    orange_hrm_id: int | None = None  # the leave request created in OrangeHRM
+    orange_hrm_id: int | None = None  # the leave request created in HRMS
     orange_hrm_url: str | None = None
 
 

@@ -41,6 +41,12 @@ def options(service: PayrollDep):
     return service.options()
 
 
+@router.get("/links")
+def links(service: PayrollDep, ref: Ref) -> dict:
+    """The employee's Salary page in HRMS."""
+    return service.links(ref)
+
+
 @router.get("/lookup", response_model=EmployeeSummary)
 def lookup(service: PayrollDep, ref: Ref):
     """Recognise an onboarded employee by Employee ID or e-mail (404 if unknown)."""

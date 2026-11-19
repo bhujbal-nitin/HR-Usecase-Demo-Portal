@@ -7,21 +7,22 @@ import { fillForm, firstName, identify, loadSamples, askWho, makeAsk, understand
 
 // Payroll & salary. Manual: YOU are the employee and the chat waits for you at every step. Auto-play: the same journey with the chosen
 // employee's answers filled in for you. The employee can download three documents, PDFs the backend draws from their figures: the payslip of a month, the
-// CTC statement and Form 16 (the full year). Live: the annual CTC is read from OrangeHRM (PIM -> Salary,
-// where onboarding recorded it) and the backend fills the template. Auto-play · Simulated: the very same journey runs against simulatedPayrollApi, so the flows
+// CTC statement and Form 16 (the full year). Live: the annual CTC is read from HRMS (PIM -> Salary,
+// where onboarding recorded it) and the backend fills the template. Auto-play · Simulated Environment: the very same journey runs against simulatedPayrollApi, so the flows
 // cannot drift apart; its steps are tagged Simulated. Nothing is shown in the chat but the download: no breakdown, no tables.
 // AutomationEdge showcase workflows run BEFORE each document (Fetch Salary Details, then the document's own Generate workflow); the chat goes on once they are Complete.
 
 const PDF_ICON = 'fa-file-pdf';
 
 /** Make one document in a single step (the file is fetched now, so a problem shows up as this step failing) and hand it over as a download. */
-async function makeDocument({ r, S, phaseTitle, phaseNote, workflow, step, make, icon, intro }) {
+async function makeDocument({ r, S, set, employee, phaseTitle, phaseNote, workflow, step, make, icon, intro }) {
   let file = null;
   const phase = r.phase(phaseTitle, phaseNote);
   await r.runSteps(phase, [payrollWorkflowStep(S, 'fetch-salary'), payrollWorkflowStep(S, workflow), {
     kind: 'api', agent: 'pay', title: step.title, name: step.name, live: !S.api.simulated, note: step.note,
     run: async () => {
       file = await make(); // a problem here fails the step (Rerun / Skip)
+      if (!S.api.simulated) set({ runRecord: { kind: 'payroll', employeeId: employee.employeeId } }); // the salary was read: the HRMS button can open it
       return { payload: { file: file.filename } };
     },
   }]);
@@ -56,31 +57,31 @@ async function payslip({ r, S, set, ask, auto, employee }) {
   await r.phaseGap();
 
   await makeDocument({
-    r, S, icon: PDF_ICON,
-    phaseTitle: 'Make the payslip', phaseNote: 'The salary workflows run, the salary is read from OrangeHRM and the payslip is made as a PDF.', workflow: 'generate-payslip',
-    step: { title: 'Generate the payslip PDF', name: 'payroll.payslip()', note: 'Reads the employee’s annual CTC from OrangeHRM (PIM → Salary), works out the month’s pay and deductions and draws the payslip as a PDF.' },
+    r, S, set, employee, icon: PDF_ICON,
+    phaseTitle: 'Make the payslip', phaseNote: 'The salary workflows run, the salary is read from HRMS and the payslip is made as a PDF.', workflow: 'generate-payslip',
+    step: { title: 'Generate the payslip PDF', name: 'payroll.payslip()', note: 'Reads the employee’s annual CTC from HRMS (PIM → Salary), works out the month’s pay and deductions and draws the payslip as a PDF.' },
     make: () => S.api.fetchPayslip(employee.employeeId, month),
     intro: <>Here is your payslip for <b>{monthLabel(month)}</b>, {firstName(employee)}.</>,
   });
 }
 
 /** 2. CTC statement. */
-async function ctc({ r, S, employee }) {
+async function ctc({ r, S, set, employee }) {
   await makeDocument({
-    r, S, icon: PDF_ICON,
-    phaseTitle: 'Make the CTC statement', phaseNote: 'The salary workflows run, the annual CTC is read from OrangeHRM and the CTC statement is made as a PDF.', workflow: 'generate-ctc',
-    step: { title: 'Generate the CTC statement PDF', name: 'payroll.ctc()', note: 'Reads the employee’s annual CTC from OrangeHRM (PIM → Salary), splits it into its components, monthly and yearly, and draws the CTC statement as a PDF.' },
+    r, S, set, employee, icon: PDF_ICON,
+    phaseTitle: 'Make the CTC statement', phaseNote: 'The salary workflows run, the annual CTC is read from HRMS and the CTC statement is made as a PDF.', workflow: 'generate-ctc',
+    step: { title: 'Generate the CTC statement PDF', name: 'payroll.ctc()', note: 'Reads the employee’s annual CTC from HRMS (PIM → Salary), splits it into its components, monthly and yearly, and draws the CTC statement as a PDF.' },
     make: () => S.api.fetchCtc(employee.employeeId),
     intro: <>Here is your <b>CTC statement</b>, {firstName(employee)}.</>,
   });
 }
 
 /** 3. Form 16 for the last financial year. */
-async function form16({ r, S, employee }) {
+async function form16({ r, S, set, employee }) {
   await makeDocument({
-    r, S, icon: PDF_ICON,
+    r, S, set, employee, icon: PDF_ICON,
     phaseTitle: 'Make Form 16', phaseNote: 'The salary workflows run and Form 16 is made as a PDF with the employee’s full-year figures for the last financial year.', workflow: 'generate-form16',
-    step: { title: 'Generate the Form 16 PDF', name: 'payroll.form16()', note: 'Reads the employee’s annual CTC from OrangeHRM (PIM → Salary) and draws Form 16 as a PDF with the full-year salary, deductions and tax.' },
+    step: { title: 'Generate the Form 16 PDF', name: 'payroll.form16()', note: 'Reads the employee’s annual CTC from HRMS (PIM → Salary) and draws Form 16 as a PDF with the full-year salary, deductions and tax.' },
     make: () => S.api.fetchForm16(employee.employeeId),
     intro: <>Here is your <b>Form 16</b>, {firstName(employee)}.</>,
   });
@@ -93,10 +94,10 @@ export async function runPayrollSalary({ r, set, auto = null, simulated = false 
   const S = { api: simulated ? createSimulatedPayrollApi(r.timing.stepScale) : realApi, stopped: false };
   const ask = makeAsk(r, auto);
   r.msg('sys', simulated
-    ? 'Auto-play · Simulated: this asks for the three documents for a sample employee. Nothing is contacted or saved anywhere.'
+    ? 'Auto-play · Simulated Environment: this asks for the three documents for a sample employee. Nothing is contacted or saved anywhere.'
     : auto
-    ? 'Auto-play · Live: this asks for the three documents for the employee you chose. It is real: the salary is read from OrangeHRM and the backend makes the three PDFs.'
-    : 'Manual mode: you are the employee. Type a message to begin. It is real: the salary is read from OrangeHRM and the backend makes the three PDFs.');
+    ? 'Auto-play · Live: this asks for the three documents for the employee you chose. It is real: the salary is read from HRMS and the backend makes the three PDFs.'
+    : 'Manual mode: you are the employee. Type a message to begin. It is real: the salary is read from HRMS and the backend makes the three PDFs.');
   set({ stage: 'idle' });
 
   const first = await ask({ kind: 'text', suggestions: ['Hi'] }, { text: 'Hi' });

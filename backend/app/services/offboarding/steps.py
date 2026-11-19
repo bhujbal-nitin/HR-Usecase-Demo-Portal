@@ -3,7 +3,7 @@
 Intake (right after the resignation is submitted): the umbrella ServiceNow ticket, then "HR Demo Get Exit Details".
 Offboarding (after HR approves): exit approval, access removal, asset return, clearances, settlement, relieving letter, close-out.
 A workflow must reach 'Complete' before the next step starts; where a step also makes a backend call (Microsoft 365,
-OrangeHRM, ServiceNow) that call only happens after its workflow succeeded.
+HRMS, ServiceNow) that call only happens after its workflow succeeded.
 A step whose system has no credentials is skipped (not failed); the chain stops at the first real failure.
 """
 
@@ -130,15 +130,15 @@ def office365(ctx: OffboardingContext) -> StepOutcome:
 
 def orangehrm(ctx: OffboardingContext) -> StepOutcome:
     r, attempts = ctx.record, Attempts()
-    _workflow(attempts, "HR Demo Terminate emp OrangeHRM workflow", ctx.gateways.automationedge.terminate_emp_orangehrm)
+    _workflow(attempts, "HR Demo Terminate emp HRMS workflow", ctx.gateways.automationedge.terminate_emp_orangehrm)
     if attempts.failed:
         return attempts.outcome()
-    info = attempts.run("End the employment in OrangeHRM", lambda: ctx.gateways.orangehrm.terminate_employee(
+    info = attempts.run("End the employment in HRMS", lambda: ctx.gateways.orangehrm.terminate_employee(
         r.emp_number, r.full_name, r.last_working_day.isoformat(), f"Resigned: {r.reason}. {r.comments}".strip(),
     ))
     if info:
         attempts.details.update(info)
-    return attempts.outcome(f"Employment ended on {r.last_working_day.isoformat()} (OrangeHRM #{info['empNumber'] if info else ''})")
+    return attempts.outcome(f"Employment ended on {r.last_working_day.isoformat()} (HRMS #{info['empNumber'] if info else ''})")
 
 
 def asset_return(ctx: OffboardingContext) -> StepOutcome:
@@ -221,7 +221,7 @@ OFFBOARDING_STEPS = [
     OffboardingStep("exit_approval", "Exit management approval", "AutomationEdge", exit_approval),
     OffboardingStep("ad_disable", "Disable the Active Directory account", "AutomationEdge", active_directory),
     OffboardingStep("o365_block", "Block the Microsoft 365 account", "Microsoft 365", office365),
-    OffboardingStep("hrm_terminate", "End the employment in OrangeHRM", "OrangeHRM", orangehrm),
+    OffboardingStep("hrm_terminate", "End the employment in HRMS", "HRMS", orangehrm),
     OffboardingStep("asset_return", "Raise the asset-return ticket", "ServiceNow", asset_return),
     OffboardingStep("clearances", "Raise the department clearances", "ServiceNow", clearances),
     OffboardingStep("settlement", "Calculate the final settlement", "Backend", settlement),

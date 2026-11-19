@@ -150,7 +150,7 @@ def test_full_approval_pipeline_succeeds(wired, candidate_form):
 
     assert done.orange_hrm.emp_number == 17
     assert done.laptop.ticket_number == "INC0012345"
-    assert "OrangeHRM profile: #17" in gw.servicenow.incident_descriptions[0]
+    assert "HRMS profile: #17" in gw.servicenow.incident_descriptions[0]
 
     assert gw.automationedge.calls == ["details", "mgmt", "ad", "o365", "ohrm", "laptop"]
 
@@ -307,7 +307,7 @@ def test_rerun_resumes_from_the_failed_step_without_repeating_earlier_ones(wired
     assert gw.automationedge.calls == ["ohrm", "laptop"]
     assert gw.servicenow.approved == ["req-sys"]  # approved once only
     assert gw.orangehrm.work_email == "aarav.sharma@corp.example"  # M365 address carried over from the first run
-    assert "OrangeHRM profile: #17" in gw.servicenow.incident_descriptions[0]
+    assert "HRMS profile: #17" in gw.servicenow.incident_descriptions[0]
     assert done.office365.user_principal_name == "aarav.sharma@corp.example"
 
 
