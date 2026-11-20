@@ -189,6 +189,8 @@
   border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
+.sidebar-tab-btn .tab-badge.tab-badge-alert, .sidebar-tab-btn.active .tab-badge.tab-badge-alert { background: var(--accent-rose, #ef4444); color: #fff; border-color: transparent; }
+
 .sidebar-tab-btn.active .tab-badge {
   background: #2563eb;
   color: #ffffff;

@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     pg_user: str = ""
     pg_password: SecretStr = SecretStr("")
     pg_schema: str = ""  # empty = the database's default schema; tests use a throw-away one
+    # Who is e-mailed when someone asks for access on the login page (comma-separated; empty = nobody), and the portal's public address for the link in that e-mail.
+    access_approver_emails: str = ""
+    portal_url: str = ""  # e.g. https://s1.automationedge.com/hr
 
     # --- Where the records are kept ---------------------------------------
     # "json" = the files in DATA_DIR (the original behaviour). "postgres" = the PG_* database above; the files are

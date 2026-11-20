@@ -83,6 +83,12 @@ def access_requests(container: ContainerDep) -> list[dict]:
     return container.access_requests.list_requests()
 
 
+@router.get("/access-requests/pending-count")
+def pending_access_requests(container: ContainerDep) -> dict:
+    """How many requests are waiting: the number shown on the Admin menu."""
+    return {"count": container.access_requests.pending_count()}
+
+
 @router.post("/access-requests/{request_id}/approve")
 def approve_request(request_id: int, data: ApproveRequest, request: Request, container: ContainerDep) -> dict:
     """Make the user and e-mail the user name and a generated password to the address they gave."""

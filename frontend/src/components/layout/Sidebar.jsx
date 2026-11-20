@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEmployees } from '../../context/EmployeesContext';
+import usePendingRequests from '../../features/admin/usePendingRequests';
 import ChangePasswordDialog from './ChangePasswordDialog';
 
 const tabClass = ({ isActive }) => `sidebar-tab-btn${isActive ? ' active' : ''}`;
 
-function Tab({ to, icon, title, subtitle, badge, featured, onNavigate, end }) {
+function Tab({ to, icon, title, subtitle, badge, alert, featured, onNavigate, end }) {
   return (
     <NavLink
       to={to}
@@ -20,7 +21,7 @@ function Tab({ to, icon, title, subtitle, badge, featured, onNavigate, end }) {
         <span className="tab-title">{title}</span>
         <span className="tab-subtitle">{subtitle}</span>
       </div>
-      {badge !== undefined && badge !== null && <span className="tab-badge">{badge}</span>}
+      {badge !== undefined && badge !== null && <span className={`tab-badge${alert ? ' tab-badge-alert' : ''}`}>{badge}</span>}
     </NavLink>
   );
 }
@@ -60,6 +61,7 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
   const [changingPassword, setChangingPassword] = useState(false);
   const pending = employees.filter((e) => e.status === 'Pending Review').length;
   const engine = engineStatus(health, backendUp);
+  const waitingRequests = usePendingRequests(role === 'admin' && authEnabled);
   const canSeeAdmin = role === 'admin' || !authEnabled;
 
   return (
@@ -103,7 +105,7 @@ export default function Sidebar({ open, onNavigate, health, backendUp }) {
         {canSeeAdmin && (
           <>
             <div className="sidebar-section-title">ADMIN</div>
-            <Tab to="/admin" icon="fa-user-shield" title="Admin" subtitle="System status & users" onNavigate={onNavigate} />
+            <Tab to="/admin" icon="fa-user-shield" title="Admin" subtitle="System status & users" badge={waitingRequests > 0 ? waitingRequests : undefined} alert onNavigate={onNavigate} />
           </>
         )}
       </nav>

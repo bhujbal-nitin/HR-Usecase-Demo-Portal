@@ -97,11 +97,35 @@ class AccessRequestService:
             if sum(1 for r in store.list_all() if r["status"] == "pending") >= MAX_PENDING:
                 raise SignupUnavailable("Too many requests are waiting. Please try again later.")
             store.add(address, name, phone, country)
+            self._notify_approvers(name, address, phone, country)
         except AppError:
             raise
         except Exception as exc:  # noqa: BLE001
             logger.error("Access request from %s was not saved: %s", address, exc)
             raise SignupUnavailable("Your request could not be saved. Please try again later.") from exc
+
+    def _approvers(self) -> list[str]:
+        found = [a.strip() for a in re.split(r"[,;\s]+", self._settings.access_approver_emails) if a.strip()]
+        return [a for a in dict.fromkeys(found) if _EMAIL.match(a)]
+
+    def _notify_approvers(self, name: str, email: str, phone: str, country: str) -> None:
+        """Tell the approvers named in ACCESS_APPROVER_EMAILS that a request is waiting. Never fails the request itself."""
+        approvers = self._approvers()
+        if not approvers or not self._mailer.is_configured():
+            return
+        body = self._waiting_mail(name, email, phone, country, self._settings.portal_url.strip().rstrip("/"))
+
+        def send_all() -> None:
+            for to in approvers:
+                try:
+                    self._mailer.send(to, "New access request for the HR AI Agents portal", body)
+                except Exception as exc:  # noqa: BLE001 - one bad address must not stop the others
+                    logger.warning("Approver note to %s was not sent: %s", to, exc)
+
+        threading.Thread(target=send_all, daemon=True).start()
+
+    def pending_count(self) -> int:
+        return sum(1 for r in self._store().list_all() if r["status"] == "pending")
 
     # ---------------------------------------------------------------- the admin
     def list_requests(self) -> list[dict]:
@@ -155,6 +179,15 @@ class AccessRequestService:
             f"<p>User name: <b>{html.escape(username)}</b><br>Password: <b>{html.escape(password)}</b></p>"
             "<p>For your security you will be asked to choose your own password the first time you sign in.</p>"
             "<p>Regards,<br>AutomationEdge</p>"
+        )
+
+    @staticmethod
+    def _waiting_mail(name: str, email: str, phone: str, country: str, portal_url: str) -> str:
+        link = f'<p><a href="{html.escape(portal_url)}/admin">Open the Admin page</a> and choose the "Access requests" tab to approve or reject it.</p>' if portal_url else             '<p>Open the Admin page of the portal and choose the "Access requests" tab to approve or reject it.</p>'
+        return (
+            "<p>Hello,</p><p>Someone asked for access to the HR AI Agents portal:</p>"
+            f"<p>Name: <b>{html.escape(name)}</b><br>E-mail: <b>{html.escape(email)}</b><br>Phone: <b>{html.escape(phone)}</b><br>Country: <b>{html.escape(country)}</b></p>"
+            f"{link}<p>Regards,<br>AutomationEdge</p>"
         )
 
     @staticmethod

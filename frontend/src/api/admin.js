@@ -6,6 +6,7 @@ export const createUser = (user) => api.post('/admin/users', user);
 export const changeUser = (username, changes) => api.patch(`/admin/users/${encodeURIComponent(username)}`, changes);
 
 /** People who asked for access: { id, email, fullName, status: 'pending' | 'approved' | 'rejected', requestedAt, decidedAt, decidedBy, username }, waiting ones first. */
+export const getPendingAccessCount = () => api.get('/admin/access-requests/pending-count');
 export const getAccessRequests = () => api.get('/admin/access-requests');
 /** Make the user and e-mail the login. `choices`: { role, accessType, accessDays, expiresAt }. */
 export const approveAccessRequest = (id, choices) => api.post(`/admin/access-requests/${id}/approve`, choices);

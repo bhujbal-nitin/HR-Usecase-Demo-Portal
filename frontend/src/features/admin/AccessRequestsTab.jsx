@@ -4,6 +4,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Modal from '../../components/common/Modal';
 import { useToast } from '../../context/ToastContext';
 import { when } from './format';
+import { announceRequestsChanged } from './usePendingRequests';
 
 const DEFAULTS = { role: 'user', accessType: 'days', accessDays: 13, expiresAt: '' };
 const BADGE = { pending: 'badge-pending', approved: 'badge-approved', rejected: 'badge-rejected' };
@@ -43,6 +44,7 @@ export default function AccessRequestsTab() {
     } finally {
       setBusy(false);
       load();
+      announceRequestsChanged();
     }
   };
 
@@ -57,6 +59,7 @@ export default function AccessRequestsTab() {
     } finally {
       setBusy(false);
       load();
+      announceRequestsChanged();
     }
   };
 

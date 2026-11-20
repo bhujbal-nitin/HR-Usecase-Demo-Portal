@@ -609,3 +609,31 @@ def test_rejecting_tells_the_person_and_creates_nobody(portal):
     assert portal.users.get("carol.dsouza@example.com") is None
     assert portal.mail.sent[0][0] == "carol.dsouza@example.com"
     assert portal.post("/api/admin/access-requests/1/reject").status_code == 409
+
+
+def test_approvers_are_e_mailed_and_the_waiting_count_is_shown(portal, settings):
+    import time
+
+    mail = FakeMailer()
+    configured = settings.model_copy(update={"access_approver_emails": "a@x.com, b@x.com;not-an-address", "portal_url": "https://p.example/hr/"})
+    service = AccessRequestService(configured, FakeRequests(), portal.users, portal.app.state.container.user_admin, mail)
+    service.submit("Carol Dsouza", "carol@example.com", "1.2.3.4", "+91 98765 43210", "India")
+    for _ in range(50):
+        if len(mail.sent) >= 2:
+            break
+        time.sleep(0.05)
+    assert sorted(m[0] for m in mail.sent) == ["a@x.com", "b@x.com"]
+    body = mail.sent[0][2]
+    assert "Carol Dsouza" in body and "+91 98765 43210" in body and "India" in body and 'href="https://p.example/hr/admin"' in body
+    assert service.pending_count() == 1
+
+    sign_in(portal, "alice")
+    ask(portal)
+    assert portal.get("/api/admin/access-requests/pending-count").json() == {"count": 1}
+    sign_in(portal, "bob")
+    assert portal.get("/api/admin/access-requests/pending-count").status_code == 403
+
+
+def test_no_approvers_means_no_mail_and_the_request_still_saves(portal):
+    assert ask(portal).status_code == 202
+    assert portal.mail.sent == []
