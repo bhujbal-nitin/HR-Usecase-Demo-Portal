@@ -16,17 +16,21 @@ CREATE TABLE IF NOT EXISTS {TABLE} (
     requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     decided_at   TIMESTAMPTZ,
     decided_by   TEXT,
-    username     TEXT
+    username     TEXT,
+    phone        TEXT NOT NULL DEFAULT '',
+    country      TEXT NOT NULL DEFAULT ''
 );
+ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS phone TEXT NOT NULL DEFAULT '';
+ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS country TEXT NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS {TABLE}_status ON {TABLE} (status, requested_at DESC);
 """
 
-_COLUMNS = "id, email, full_name, status, requested_at, decided_at, decided_by, username"
+_COLUMNS = "id, email, full_name, status, requested_at, decided_at, decided_by, username, phone, country"
 
 
 class AccessRequestRepository(Protocol):
     def ensure_schema(self) -> None: ...
-    def add(self, email: str, full_name: str) -> dict: ...
+    def add(self, email: str, full_name: str, phone: str = "", country: str = "") -> dict: ...
     def get(self, request_id: int) -> dict | None: ...
     def pending_for(self, email: str) -> dict | None: ...
     def list_all(self) -> list[dict]: ...
@@ -42,9 +46,11 @@ class PostgresAccessRequestRepository:
         with self._db.connect() as conn:
             conn.execute(_CREATE)
 
-    def add(self, email: str, full_name: str) -> dict:
+    def add(self, email: str, full_name: str, phone: str = "", country: str = "") -> dict:
         with self._db.connect() as conn:
-            return conn.execute(f"INSERT INTO {TABLE} (email, full_name) VALUES (%s, %s) RETURNING {_COLUMNS}", (email, full_name)).fetchone()
+            return conn.execute(
+                f"INSERT INTO {TABLE} (email, full_name, phone, country) VALUES (%s, %s, %s, %s) RETURNING {_COLUMNS}", (email, full_name, phone, country)
+            ).fetchone()
 
     def get(self, request_id: int) -> dict | None:
         with self._db.connect() as conn:

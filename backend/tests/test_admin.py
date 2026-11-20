@@ -105,8 +105,8 @@ class FakeRequests:
     def ensure_schema(self):
         pass
 
-    def add(self, email, full_name):
-        row = {"id": len(self.rows) + 1, "email": email, "full_name": full_name, "status": "pending",
+    def add(self, email, full_name, phone="", country=""):
+        row = {"id": len(self.rows) + 1, "email": email, "full_name": full_name, "phone": phone, "country": country, "status": "pending",
                "requested_at": datetime(2026, 11, 19, 9, 0, tzinfo=UTC), "decided_at": None, "decided_by": None, "username": None}
         self.rows.append(row)
         return row
@@ -511,8 +511,15 @@ def test_create_user_with_lifetime_access(portal):
 
 
 # ------------------------------------------------------------------------------------------------ asking for access
-def ask(c, name="Carol Dsouza", email="carol.dsouza@example.com"):
-    return c.post("/api/auth/request-access", json={"fullName": name, "email": email})
+def ask(c, name="Carol Dsouza", email="carol.dsouza@example.com", phone="+91 98765 43210", country="India"):
+    return c.post("/api/auth/request-access", json={"fullName": name, "email": email, "phone": phone, "country": country})
+
+
+def test_phone_and_country_are_required_and_kept(portal):
+    assert ask(portal, phone="abc").status_code == 422
+    assert ask(portal, country="  ").status_code == 422
+    assert ask(portal).status_code == 202
+    assert (portal.requests.rows[0]["phone"], portal.requests.rows[0]["country"]) == ("+91 98765 43210", "India")
 
 
 def test_anyone_can_ask_for_access_from_the_login_page(portal):

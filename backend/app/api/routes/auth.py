@@ -41,13 +41,15 @@ def change_password(data: PasswordChange, request: Request, container: Container
 
 class AccessRequest(BaseModel):
     fullName: str = Field(min_length=1, max_length=200)
+    phone: str = Field(min_length=1, max_length=40)
     email: str = Field(min_length=3, max_length=200)
+    country: str = Field(min_length=1, max_length=100)
 
 
 @router.post("/request-access", status_code=202)
 def request_access(data: AccessRequest, request: Request, container: ContainerDep) -> dict:
     """From the login page: ask for a portal account. An admin approves or rejects it; the answer is e-mailed."""
-    container.access_requests.submit(data.fullName, data.email, request.client.host if request.client else "unknown")
+    container.access_requests.submit(data.fullName, data.email, request.client.host if request.client else "unknown", data.phone, data.country)
     return {"received": True}
 
 

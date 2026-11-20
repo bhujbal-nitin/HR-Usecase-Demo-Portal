@@ -70,14 +70,16 @@ export default function AccessRequestsTab() {
       {rows && (
         <div className="table-responsive">
           <table className="data-table compact">
-            <thead><tr><th>Name</th><th>E-mail</th><th>Asked</th><th>Status</th><th>Decided</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>E-mail</th><th>Phone</th><th>Country</th><th>Asked</th><th>Status</th><th>Decided</th><th>Actions</th></tr></thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No requests yet.</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No requests yet.</td></tr>
               ) : rows.map((r) => (
                 <tr key={r.id}>
                   <td><strong>{r.fullName}</strong></td>
                   <td>{r.email}</td>
+                  <td>{r.phone || '—'}</td>
+                  <td>{r.country || '—'}</td>
                   <td>{when(r.requestedAt)}</td>
                   <td><span className={`badge ${BADGE[r.status]}`}>{LABEL[r.status]}</span></td>
                   <td>{r.decidedAt ? <>{when(r.decidedAt)}<div className="admin-sub">by {r.decidedBy}{r.username ? ` · user ${r.username}` : ''}</div></> : '—'}</td>

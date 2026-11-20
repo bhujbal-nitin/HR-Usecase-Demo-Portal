@@ -4,7 +4,7 @@ import { api } from './client';
 export const getSession = () => api.get('/auth/me');
 export const signIn = (username, password) => api.post('/auth/login', { username, password });
 /** From the login page: ask for an account. An admin approves it and the login details are e-mailed. */
-export const requestAccess = (fullName, email) => api.post('/auth/request-access', { fullName, email });
+export const requestAccess = (fullName, phone, email, country) => api.post('/auth/request-access', { fullName, phone, email, country });
 export const signOut = () => api.post('/auth/logout');
 
 /** The signed-in user changes their own password (the current one must be right). */

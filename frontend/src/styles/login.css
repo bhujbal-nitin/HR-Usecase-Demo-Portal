@@ -44,6 +44,12 @@
   border: 1px solid var(--accent-emerald);
   background: rgba(16, 185, 129, 0.08);
 }
+.login-card .login-pill { border-radius: 999px; padding: 0.65rem 1rem; }
+.login-card select.login-pill.is-empty { color: var(--text-muted); }
+.login-submit-orange { background: #e85d0c; border: 0; color: #fff; font-weight: 700; border-radius: 10px; padding: 0.8rem 1rem; }
+.login-submit-orange:hover:not(:disabled) { background: #cf520a; }
+.login-submit-orange:disabled { opacity: 0.6; cursor: not-allowed; }
+.login-fineprint { margin: -0.4rem 0 0; text-align: center; font-size: 0.85rem; color: var(--text-main); }
 .login-switch { margin: 0; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
 .login-link { padding: 0; border: 0; background: none; font: inherit; color: var(--accent-primary); cursor: pointer; text-decoration: underline; }
 

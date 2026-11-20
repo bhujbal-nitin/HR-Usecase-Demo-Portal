@@ -21,6 +21,7 @@ from app.services.user_admin_service import UserAdminService
 logger = logging.getLogger(__name__)
 
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_PHONE = re.compile(r"^[0-9+()\-.\s]{6,30}$")
 PER_HOUR = 5  # sign-up requests one address (computer) may send in an hour
 MAX_PENDING = 200
 
@@ -40,6 +41,7 @@ def request_view(row: dict) -> dict:
     return {
         "id": row["id"], "email": row["email"], "fullName": row["full_name"], "status": row["status"],
         "requestedAt": iso(row["requested_at"]), "decidedAt": iso(row["decided_at"]), "decidedBy": row["decided_by"], "username": row["username"],
+        "phone": row.get("phone", ""), "country": row.get("country", ""),
     }
 
 
@@ -75,21 +77,26 @@ class AccessRequestService:
             self._seen[client] = [*recent, now]
 
     # ---------------------------------------------------------------- the person asking
-    def submit(self, full_name: str, email: str, client: str) -> None:
+    def submit(self, full_name: str, email: str, client: str, phone: str = "", country: str = "") -> None:
         """Record a request. Asking twice with the same e-mail while one is waiting does nothing more (and says nothing different)."""
         store = self._store()
         name, address = " ".join(full_name.split()), email.strip().lower()
+        phone, country = " ".join(phone.split()), " ".join(country.split())
         if len(name) < 2:
             raise ValidationFailedError("Please enter your name.")
+        if len(re.sub(r"\D", "", phone)) < 6 or not _PHONE.match(phone):
+            raise ValidationFailedError("Please enter a valid phone number.")
         if not _EMAIL.match(address) or len(address) > 200:
-            raise ValidationFailedError("Please enter a valid e-mail address.")
+            raise ValidationFailedError("Please enter a valid business e-mail address.")
+        if not country or len(country) > 100:
+            raise ValidationFailedError("Please select your country.")
         self._throttle(client)
         try:
             if store.pending_for(address) is not None:
                 return
             if sum(1 for r in store.list_all() if r["status"] == "pending") >= MAX_PENDING:
                 raise SignupUnavailable("Too many requests are waiting. Please try again later.")
-            store.add(address, name)
+            store.add(address, name, phone, country)
         except AppError:
             raise
         except Exception as exc:  # noqa: BLE001
