@@ -1,7 +1,9 @@
 // The only module of the HRMS replica that talks to the network. It uses the same API shape HRMS 5 exposes.
+import { apiUrl } from '../../api/client';
 import { buildQuery, errorText } from './components/helpers';
 
-const ROOT = '/api/hrms/web/index.php';
+// Same base as every other call of the portal (VITE_API_BASE_URL, e.g. /hr when nginx serves the portal under /hr).
+const ROOT = apiUrl('/hrms/web/index.php');
 const API = `${ROOT}/api/v2`;
 
 export const SESSION_ENDED = 'hrms:session-ended';
